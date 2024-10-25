@@ -9,7 +9,8 @@ import IHttpClient from "../../Infra/Interface/IHttpClient";
 export interface ITxService {
     init: (httpClient : IHttpClient) => void;
     createTx: (param: TxParamInfo) => Promise<StatusRequest>;
-    getTx: (txid: string) => Promise<TxResult>;
+    getTx: (txid: number) => Promise<TxResult>;
     listAllTx: () => Promise<TxListResult>;
     listTxLogs: (txid: number) => Promise<TxLogListResult>;
+    proccessTx: (txid: number) => Promise<StatusRequest>;
 }

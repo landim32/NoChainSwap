@@ -47,9 +47,27 @@ export default function ListTxPage() {
                     <Modal.Title>Transaction {txContext.txInfo?.txtype} #{txContext.txInfo?.txid}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
+                    {
+                        txContext.reloadingTx &&
+                        <div className="d-flex justify-content-center">
+                            <div className="spinner-border" role="status">
+                                <span className="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    }
                     <dl className="row">
                         <dt className="col-sm-3">Status</dt>
-                        <dd className="col-sm-9">{txContext.txInfo?.status}</dd>
+                        <dd className="col-sm-9">
+                            {txContext.txInfo?.status}
+                            &nbsp;
+                            <a href="#" onClick={async (e) => {
+                                e.preventDefault();
+                                let ret = await txContext.reloadTx(txContext.txInfo.txid);
+                                if (!ret.sucesso) {
+                                    alert(ret.mensagemErro);
+                                }
+                            }}>(Refresh)</a>
+                        </dd>
                         <dt className="col-sm-3">{txContext.txInfo?.inttype == 1 ? "BTC Address" : "STX Address"}</dt>
                         <dd className="col-sm-9"><a href={
                             txContext.txInfo?.inttype == 1 ?
@@ -149,7 +167,7 @@ export default function ListTxPage() {
                                         );
                                     })
                                     :
-                                    txContext.loadingTxLogs ??
+                                    txContext.loadingTxLogs &&
                                     <tr>
                                         <td colSpan={3}>
                                             <div className="d-flex justify-content-center">
@@ -207,7 +225,7 @@ export default function ListTxPage() {
                                                 )
                                             })
                                             :
-                                            txContext.loadingAllTxInfo ??
+                                            txContext.loadingAllTxInfo &&
                                             <tr>
                                                 <td colSpan={5}>
                                                     <div className="d-flex justify-content-center">

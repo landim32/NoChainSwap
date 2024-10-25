@@ -8,15 +8,15 @@ using NCrontab;
 
 namespace NoChainSwapBackgroundService
 {
-    public class ServiceDaily : BackgroundService
+    public class Service : BackgroundService
     {
         private IConfiguration _configuration;
 
         private CrontabSchedule _schedule;
         private DateTime _nextRun;
-        private readonly GWScheduleTask _gwScheduleTask;
+        private readonly ScheduleTask _gwScheduleTask;
 
-        public ServiceDaily(GWScheduleTask gwScheduleTask, IConfiguration configuration)
+        public Service(ScheduleTask gwScheduleTask, IConfiguration configuration)
         {
             _configuration = configuration;
             _schedule = CrontabSchedule.Parse(_configuration["Schedule:Cron"], new CrontabSchedule.ParseOptions { IncludingSeconds = true });
@@ -29,12 +29,14 @@ namespace NoChainSwapBackgroundService
             {
                 var now = DateTime.UtcNow;
                 var nextrun = _schedule.GetNextOccurrence(now);
+
                 if (now > _nextRun)
                 {
-                    _gwScheduleTask.DoMinning();
+                    await _gwScheduleTask.ProccessAllTransactions();
                     _nextRun = _schedule.GetNextOccurrence(DateTime.UtcNow);
                 }
-                await Task.Delay(120000, stoppingToken);
+                
+                await Task.Delay(60000, stoppingToken);
             }
             while (!stoppingToken.IsCancellationRequested); ;
         }

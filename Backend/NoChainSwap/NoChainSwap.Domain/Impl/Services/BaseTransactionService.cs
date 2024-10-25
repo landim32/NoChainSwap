@@ -12,9 +12,6 @@ namespace NoChainSwap.Domain.Impl.Services
 {
     public class BaseTransactionService
     {
-        protected ICoinMarketCapService _coinMarketCapService;
-        protected ITransactionLogDomainFactory _txLogFactory;
-
         public string GetTransactionEnumToString(TransactionStatusEnum status)
         {
             string str = string.Empty;
@@ -60,9 +57,9 @@ namespace NoChainSwap.Domain.Impl.Services
             return str;
         }
 
-        protected void AddLog(long txId, string msg, LogTypeEnum t = LogTypeEnum.Information)
+        protected void AddLog(long txId, string msg, LogTypeEnum t, ITransactionLogDomainFactory txLogFactory)
         {
-            var md = _txLogFactory.BuildTransactionLogModel();
+            var md = txLogFactory.BuildTransactionLogModel();
             md.TxId = txId;
             md.Date = DateTime.Now;
             md.LogType = t;

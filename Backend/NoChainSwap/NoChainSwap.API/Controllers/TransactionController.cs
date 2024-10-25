@@ -170,8 +170,8 @@ namespace NoChainSwap.API.Controllers
             }
         }
 
-        [HttpGet("processnexttransaction")]
-        public async Task<ActionResult<bool>> ProcessNextTransaction()
+        [HttpGet("processtransaction/{txid}")]
+        public async Task<ActionResult<bool>> ProcessTransaction(long txid)
         {
             try
             {
@@ -182,10 +182,10 @@ namespace NoChainSwap.API.Controllers
                     return StatusCode(401, "Not Authorized");
                 }
                 */
-                var tx = _txService.ListByStatusActive().FirstOrDefault();
+                var tx = _txService.GetTx(txid);
                 if (tx == null)
                 {
-                    return StatusCode(500, "Dont find any transaction");
+                    return StatusCode(500, $"Dont find transaction with ID {txid}");
                 }
                 return await _txService.ProcessTransaction(tx);
                 //return await Task.FromResult(true);

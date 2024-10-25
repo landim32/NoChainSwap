@@ -18,5 +18,6 @@ namespace NoChainSwap.Domain.Interfaces.Services
         IEnumerable<ITransactionLogModel> ListLogById(long txid);
         string GetTransactionEnumToString(TransactionStatusEnum status);
         Task<bool> ProcessTransaction(ITransactionModel tx);
+        Task<bool> ProcessAllTransaction();
     }
 }

@@ -30,10 +30,10 @@ const TxBusiness: ITxBusiness = {
         };
       }
     } catch {
-      throw new Error("Failed to get price information");
+      throw new Error("Failed to create transaction");
     }
   },
-  getTx: async (txid: string) => {
+  getTx: async (txid: number) => {
     try {
       let ret: BusinessResult<TxInfo> = null;
       let retServ = await _txService.getTx(txid);
@@ -51,7 +51,7 @@ const TxBusiness: ITxBusiness = {
         };
       }
     } catch {
-      throw new Error("Failed to get price information");
+      throw new Error("Failed to get transaction");
     }
   },
   listAllTx: async () => {
@@ -73,7 +73,7 @@ const TxBusiness: ITxBusiness = {
         };
       }
     } catch {
-      throw new Error("Failed to get price information");
+      throw new Error("Failed to list transactions");
     }
   },
   listTxLogs: async (txid: number) => {
@@ -94,7 +94,28 @@ const TxBusiness: ITxBusiness = {
         };
       }
     } catch {
-      throw new Error("Failed to get price information");
+      throw new Error("Failed to list logs");
+    }
+  },
+  processTx: async (txid: number) => {
+    try {
+      let ret: BusinessResult<boolean>;
+      let retServ = await _txService.proccessTx(txid);
+      if (retServ.sucesso) {
+        return {
+          ...ret,
+          dataResult: retServ.sucesso,
+          sucesso: true
+        };
+      } else {
+        return {
+          ...ret,
+          sucesso: false,
+          mensagem: retServ.mensagem
+        };
+      }
+    } catch {
+      throw new Error("Failed to process transaction");
     }
   }
 }

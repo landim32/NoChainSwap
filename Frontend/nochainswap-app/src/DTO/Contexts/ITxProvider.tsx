@@ -7,13 +7,15 @@ interface ITxProvider {
     loadingTxInfo: boolean;
     loadingAllTxInfo: boolean;
     loadingTxLogs: boolean;
+    reloadingTx: boolean;
     txInfo?: TxInfo;
     allTxInfo?: TxInfo[];
     txLogs?: TxLogInfo[];
     setTxInfo: (txInfo: TxInfo) => void;
-    loadTx: (txid: string) => Promise<ProviderResult>;
+    loadTx: (txid: number) => Promise<ProviderResult>;
     loadListAllTx: () => Promise<ProviderResult>;
     loadTxLogs: (txid: number) => Promise<ProviderResult>;
+    reloadTx: (txid: number) => Promise<ProviderResult>;
 }
 
 export default ITxProvider;

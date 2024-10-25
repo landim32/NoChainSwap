@@ -18,6 +18,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using NoChainSwap.Domain;
+using NoChainSwap.Domain.Interfaces.Services.Coins;
+using NoChainSwap.Domain.Impl.Services.Coins;
 
 namespace NoChainSwap.Application
 {
@@ -56,6 +58,7 @@ namespace NoChainSwap.Application
             #region Service
             injectDependency(typeof(IUserService), typeof(UserService), services, scoped);
             injectDependency(typeof(ITransactionService), typeof(TransactionService), services, scoped);
+            injectDependency(typeof(IBtcTxService), typeof(BtcTxService), services, scoped);
             injectDependency(typeof(IMempoolService), typeof(MempoolService), services, scoped);
             injectDependency(typeof(ICoinMarketCapService), typeof(CoinMarketCapService), services, scoped);
             injectDependency(typeof(IBitcoinService), typeof(BitcoinService), services, scoped);

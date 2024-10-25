@@ -26,10 +26,10 @@ namespace NoChainSwap.BackgroundService
                 WalletStxApi = Configuration.GetSection("Stacks:WalletApi").Value,
                 StacksApi = Configuration.GetSection("Stacks:StacksApi").Value
             };
-            Initializer.Configure(services, config);
+            Initializer.Configure(services, config, false);
             services.AddHostedService<Service>();
-            services.AddHostedService<ServiceDaily>();
-            services.AddTransient(typeof(GWScheduleTask), typeof(GWScheduleTask));
+            //services.AddHostedService<ServiceDaily>();
+            services.AddTransient(typeof(ScheduleTask), typeof(ScheduleTask));
             
         }
 
