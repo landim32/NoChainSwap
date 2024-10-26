@@ -7,8 +7,7 @@ using System.Threading.Tasks;
 
 namespace NoChainSwap.Domain.Interfaces.Services.Coins
 {
-    public interface IStxTxService
+    public interface IStxTxService: ICoinTxService
     {
-        Task<bool> ProcessTransaction(ITransactionModel tx);
     }
 }

@@ -11,26 +11,30 @@ namespace NoChainSwap.Domain.Interfaces.Models
     public interface ITransactionModel
     {
         long TxId { get; set; }
-        TransactionEnum Type { get; set; }
-        string BtcAddress { get; set; }
-        string StxAddress { get; set; }
+        CoinEnum SenderCoin { get; set; }
+        CoinEnum ReceiverCoin { get; set; }
+        string SenderAddress { get; set; }
+        string ReceiverAddress { get; set; }
         DateTime CreateAt { get; set; }
         DateTime UpdateAt { get; set; }
         TransactionStatusEnum Status { get; set; }
-        string BtcTxid { get; set; }
-        string StxTxid { get; set; }
-        int? BtcFee { get; set; }
-        int? StxFee { get; set; }
-        long? BtcAmount { get; set; }
-        long? StxAmount { get; set; }
+        string SenderTxid { get; set; }
+        string ReceiverTxid { get; set; }
+        int? SenderFee { get; set; }
+        int? ReceiverFee { get; set; }
+        long? SenderAmount { get; set; }
+        long? ReceiverAmount { get; set; }
+
+        string GetSenderCoinSymbol();
+        string GetReceiverCoinSymbol();
 
         ITransactionModel Save();
         ITransactionModel Update();
-        ITransactionModel GetByBtcAddr(string btcAddr, ITransactionDomainFactory factory);
+        ITransactionModel GetBySenderAddr(string senderAddr, ITransactionDomainFactory factory);
         ITransactionModel GetById(long txId, ITransactionDomainFactory factory);
-        ITransactionModel GetByBtcTxId(string txid, ITransactionDomainFactory factory);
-        ITransactionModel GetByStxTxId(string txid, ITransactionDomainFactory factory);
-        IEnumerable<ITransactionModel> ListByBtcAddr(string btcAddr, ITransactionDomainFactory factory);
+        ITransactionModel GetBySenderTxId(string txid, ITransactionDomainFactory factory);
+        ITransactionModel GetByReceiverTxId(string txid, ITransactionDomainFactory factory);
+        IEnumerable<ITransactionModel> ListBySenderAddr(string senderAddr, ITransactionDomainFactory factory);
         IEnumerable<ITransactionModel> ListByStatus(IList<int> status, ITransactionDomainFactory factory);
         IEnumerable<ITransactionModel> ListAll(ITransactionDomainFactory factory);
     }

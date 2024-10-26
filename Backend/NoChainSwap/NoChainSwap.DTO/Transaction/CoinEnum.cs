@@ -4,12 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NoChainSwap.DTO.Enum
+namespace NoChainSwap.DTO.Transaction
 {
-    public enum GenreEnum
+    public enum CoinEnum
     {
-        Undefined = ' ',
-        Male = 'M',
-        Female = 'F'
+        Bitcoin = 0,
+        Stacks = 1
     }
 }

@@ -9,17 +9,18 @@ namespace NoChainSwap.DTO.Transaction
     public class TransactionInfo
     {
         public long TxId { get; set; }
-        public TransactionEnum Type { get; set; }
-        public string BtcAddress { get; set; }
-        public string StxAddress { get; set; }
+        public CoinEnum SenderCoin { get; set; }
+        public CoinEnum ReceiverCoin { get; set; }
+        public string SenderAddress { get; set; }
+        public string ReceiverAddress { get; set; }
         public DateTime CreateAt { get; set; }
         public DateTime UpdateAt { get; set; }
         public TransactionStatusEnum Status { get; set; }
-        public string BtcTxid { get; set; }
-        public string StxTxid { get; set; }
-        public int? BtcFee { get; set; }
-        public int? StxFee { get; set; }
-        public long? BtcAmount { get; set; }
-        public long? StxAmount { get; set; }
+        public string SenderTxid { get; set; }
+        public string ReceiverTxid { get; set; }
+        public int? SenderFee { get; set; }
+        public int? ReceiverFee { get; set; }
+        public long? SenderAmount { get; set; }
+        public long? ReceiverAmount { get; set; }
     }
 }

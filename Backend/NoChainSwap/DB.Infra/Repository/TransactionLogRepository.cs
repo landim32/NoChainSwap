@@ -64,15 +64,15 @@ namespace DB.Infra.Repository
             return rows.Select(x => DbToModel(factory, x));
         }
 
-        public IEnumerable<ITransactionLogModel> ListByBtcTx(string btcTx, ITransactionLogDomainFactory factory)
+        public IEnumerable<ITransactionLogModel> ListBySenderTx(string txId, ITransactionLogDomainFactory factory)
         {
-            var rows = _ccsContext.TransactionLogs.Where(x => x.Tx.BtcTxid == btcTx).OrderByDescending(x => x.Date).ToList();
+            var rows = _ccsContext.TransactionLogs.Where(x => x.Tx.SenderTxid == txId).OrderByDescending(x => x.Date).ToList();
             return rows.Select(x => DbToModel(factory, x));
         }
 
-        public IEnumerable<ITransactionLogModel> ListByStxTx(string StxTx, ITransactionLogDomainFactory factory)
+        public IEnumerable<ITransactionLogModel> ListByReceiverTx(string txId, ITransactionLogDomainFactory factory)
         {
-            var rows = _ccsContext.TransactionLogs.Where(x => x.Tx.StxTxid == StxTx).OrderByDescending(x => x.Date).ToList();
+            var rows = _ccsContext.TransactionLogs.Where(x => x.Tx.ReceiverTxid == txId).OrderByDescending(x => x.Date).ToList();
             return rows.Select(x => DbToModel(factory, x));
         }
     }

@@ -15,11 +15,10 @@ using System.Threading.Tasks;
 
 namespace NoChainSwap.Domain.Impl.Services
 {
-    public class TransactionService : BaseTransactionService, ITransactionService
+    public class TransactionService : ITransactionService
     {
         private readonly ICoinMarketCapService _coinMarketCapService;
         private readonly IMempoolService _mempoolService;
-        private readonly IBitcoinService _btcService;
         private readonly IStacksService _stxService;
         private readonly IBtcTxService _btcTxService;
         private readonly IStxTxService _stxTxService;
@@ -29,7 +28,6 @@ namespace NoChainSwap.Domain.Impl.Services
         public TransactionService(
             ICoinMarketCapService coinMarketCapService,
             IMempoolService mempoolService,
-            IBitcoinService btcService,
             IStacksService stxService,
             IBtcTxService btcTxService,
             IStxTxService stxTxService,
@@ -39,7 +37,6 @@ namespace NoChainSwap.Domain.Impl.Services
         {
             _coinMarketCapService = coinMarketCapService;
             _mempoolService = mempoolService;
-            _btcService = btcService;
             _stxService = stxService;
             _btcTxService = btcTxService;
             _stxTxService = stxTxService;
@@ -47,53 +44,74 @@ namespace NoChainSwap.Domain.Impl.Services
             _txLogFactory = txLogFactory;
         }
 
+        public static string GetTransactionEnumToString(TransactionStatusEnum status)
+        {
+            string str = string.Empty;
+            switch (status)
+            {
+                case TransactionStatusEnum.Initialized:
+                    str = "Initialized";
+                    break;
+                case TransactionStatusEnum.Calculated:
+                    str = "Calculated";
+                    break;
+                case TransactionStatusEnum.SenderNotConfirmed:
+                    str = "Sender Not Confirmed";
+                    break;
+                case TransactionStatusEnum.SenderConfirmed:
+                    str = "Sender Confirmed";
+                    break;
+                case TransactionStatusEnum.SenderConfirmedReiceiverNotConfirmed:
+                    str = "Sender Confirmed, Receiver Not Confirmed";
+                    break;
+                case TransactionStatusEnum.Finished:
+                    str = "Transaction finished";
+                    break;
+                case TransactionStatusEnum.InvalidInformation:
+                    str = "Invalid Information";
+                    break;
+                case TransactionStatusEnum.CriticalError:
+                    str = "Critical Error";
+                    break;
+            }
+            return str;
+        }
+
         public ITransactionModel CreateTx(TransactionParamInfo param)
         {
-            if (!string.IsNullOrEmpty(param.BtcAddress))
+            if (!string.IsNullOrEmpty(param.SenderAddress))
             {
-                param.BtcAddress = param.BtcAddress.ToLower();
+                throw new Exception($"Sender Address '{param.SenderAddress}' not informed");
             }
-            if (!string.IsNullOrEmpty(param.StxAddress))
+            if (!string.IsNullOrEmpty(param.ReceiverAddress))
             {
-                param.StxAddress = param.StxAddress.ToUpper();
+                throw new Exception($"Receiver Address '{param.SenderAddress}' not informed");
             }
-            if (!string.IsNullOrEmpty(param.BtcTxid))
+            if (!string.IsNullOrEmpty(param.SenderTxid))
             {
-                param.BtcTxid = param.BtcTxid.ToLower();
-                var m1 = _txFactory.BuildTransactionModel().GetByBtcTxId(param.BtcTxid, _txFactory);
+                var m1 = _txFactory.BuildTransactionModel().GetBySenderTxId(param.SenderTxid, _txFactory);
                 if (m1 != null)
                 {
-                    throw new Exception($"Transaction '{param.BtcTxid}' is already registered");
-                }
-            }
-            if (!string.IsNullOrEmpty(param.StxTxid))
-            {
-                if (param.StxTxid.StartsWith("0x") || param.StxTxid.StartsWith("0X"))
-                {
-                    param.StxTxid = param.StxTxid.Substring(2);
-                }
-                param.StxTxid = param.StxTxid.ToLower();
-                var m2 = _txFactory.BuildTransactionModel().GetByStxTxId(param.StxTxid, _txFactory);
-                if (m2 != null)
-                {
-                    throw new Exception($"Transaction '{param.StxTxid}' is already registered");
+                    throw new Exception($"Transaction '{param.SenderTxid}' is already registered");
                 }
             }
             try
             {
                 var model = _txFactory.BuildTransactionModel();
-                model.Type = param.BtcToStx ? TransactionEnum.BtcToStx : TransactionEnum.StxToBtc;
-                model.BtcAddress = param.BtcAddress;
-                model.StxAddress = param.StxAddress;
+                //model.Type = param.BtcToStx ? TransactionEnum.BtcToStx : TransactionEnum.StxToBtc;
+                model.SenderCoin = Core.Utils.StrToCoin(param.SenderCoin);
+                model.ReceiverCoin = Core.Utils.StrToCoin(param.ReceiverCoin);
+                model.SenderAddress = param.SenderAddress;
+                model.ReceiverAddress = param.ReceiverAddress;
                 model.CreateAt = DateTime.Now;
                 model.UpdateAt = DateTime.Now;
                 model.Status = TransactionStatusEnum.Initialized;
-                model.BtcAmount = 0;
-                model.StxAmount = 0;
-                model.BtcTxid = param.BtcTxid;
-                model.StxTxid = param.StxTxid;
-                model.BtcFee = null;
-                model.StxFee = null;
+                model.SenderAmount = 0;
+                model.ReceiverAmount = 0;
+                model.SenderTxid = param.SenderTxid;
+                model.ReceiverTxid = null;
+                model.SenderFee = null;
+                model.ReceiverFee = null;
 
                 model.Save();
 
@@ -128,12 +146,12 @@ namespace NoChainSwap.Domain.Impl.Services
                 }
                 model.UpdateAt = DateTime.Now;
                 model.Status = tx.Status;
-                model.BtcAmount = tx.BtcAmount;
-                model.StxAmount = tx.StxAmount;
-                model.BtcTxid = tx.BtcTxid;
-                model.StxTxid = tx.StxTxid;
-                model.BtcFee = tx.BtcFee;
-                model.StxFee = tx.StxFee;
+                model.SenderAmount = tx.SenderAmount;
+                model.ReceiverAmount = tx.ReceiverAmount;
+                model.SenderTxid = tx.SenderTxid;
+                model.ReceiverTxid = tx.ReceiverTxid;
+                model.SenderFee = tx.SenderFee;
+                model.ReceiverFee = tx.ReceiverFee;
                 return model.Update();
             }
             catch (Exception)
@@ -147,12 +165,9 @@ namespace NoChainSwap.Domain.Impl.Services
             var status = new List<int>() {
                 (int) TransactionStatusEnum.Initialized,
                 (int) TransactionStatusEnum.Calculated,
-                (int) TransactionStatusEnum.BtcNotConfirmed,
-                (int) TransactionStatusEnum.StxNotConfirmed,
-                (int) TransactionStatusEnum.BtcConfirmed,
-                (int) TransactionStatusEnum.StxConfirmed,
-                (int) TransactionStatusEnum.BtcConfirmedStxNotConfirmed,
-                (int) TransactionStatusEnum.StxConfirmedBtcNotConfirmed
+                (int) TransactionStatusEnum.SenderNotConfirmed,
+                (int) TransactionStatusEnum.SenderConfirmed,
+                (int) TransactionStatusEnum.SenderConfirmedReiceiverNotConfirmed
             };
             return _txFactory.BuildTransactionModel().ListByStatus(status, _txFactory);
         }
@@ -169,19 +184,7 @@ namespace NoChainSwap.Domain.Impl.Services
 
         public async Task<bool> ProcessAllTransaction()
         {
-            var txList = _txFactory.BuildTransactionModel().ListByStatus(new List<int>
-            {
-                (int)TransactionStatusEnum.Initialized,
-                (int)TransactionStatusEnum.Calculated,
-                (int)TransactionStatusEnum.BtcNotConfirmed,
-                (int)TransactionStatusEnum.StxNotConfirmed,
-                (int)TransactionStatusEnum.BtcConfirmed,
-                (int)TransactionStatusEnum.StxConfirmed,
-                (int)TransactionStatusEnum.BtcConfirmedStxNotConfirmed,
-                (int)TransactionStatusEnum.StxConfirmedBtcNotConfirmed,
-                (int)TransactionStatusEnum.BtcConfirmedStxConfirmed
-            }, _txFactory);
-            foreach (var tx in txList)
+            foreach (var tx in ListByStatusActive())
             {
                 await ProcessTransaction(tx);
             }
@@ -196,22 +199,41 @@ namespace NoChainSwap.Domain.Impl.Services
             }
             try
             {
-                if (tx.Type == TransactionEnum.BtcToStx)
+                if (tx.SenderCoin == CoinEnum.Bitcoin && tx.ReceiverCoin == CoinEnum.Stacks)
                 {
-                    return await _btcTxService.ProcessTransaction(tx);
+                    return await _btcTxService.ProcessTransaction(tx, _stxTxService);
+                }
+                else if (tx.SenderCoin == CoinEnum.Stacks && tx.ReceiverCoin == CoinEnum.Bitcoin)
+                {
+                    return await _stxTxService.ProcessTransaction(tx, _btcTxService);
                 }
                 else
                 {
-                    return await _stxTxService.ProcessTransaction(tx);
+                    throw new Exception("Transaction not suported");
                 }
             }
             catch (Exception err)
             {
-                AddLog(tx.TxId, err.Message, LogTypeEnum.Error, _txLogFactory);
+                _btcTxService.AddLog(tx.TxId, err.Message, LogTypeEnum.Error, _txLogFactory);
                 tx.Status = TransactionStatusEnum.CriticalError;
                 tx.Update();
             }
             return await Task.FromResult(false);
+        }
+
+        public ICoinTxService GetCoinTxService(CoinEnum coin)
+        {
+            ICoinTxService coinTxService = null;
+            switch (coin)
+            {
+                case CoinEnum.Bitcoin:
+                    coinTxService = _btcTxService;
+                    break;
+                case CoinEnum.Stacks:
+                    coinTxService = _stxTxService;
+                    break;
+            }
+            return coinTxService;
         }
     }
 }

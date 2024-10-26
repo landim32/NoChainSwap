@@ -18,7 +18,7 @@ namespace NoChainSwap.Domain.Interfaces.Models
 
         ITransactionLogModel Insert();
         IEnumerable<ITransactionLogModel> ListById(long logId, ITransactionLogDomainFactory factory);
-        IEnumerable<ITransactionLogModel> GetByBtcTx(string txId, ITransactionLogDomainFactory factory);
-        IEnumerable<ITransactionLogModel> GetByStxTx(string txId, ITransactionLogDomainFactory factory);
+        IEnumerable<ITransactionLogModel> GetBySenderTx(string txId, ITransactionLogDomainFactory factory);
+        IEnumerable<ITransactionLogModel> GetByReceiverTx(string txId, ITransactionLogDomainFactory factory);
     }
 }

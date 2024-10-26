@@ -9,21 +9,15 @@ namespace NoChainSwap.DTO.Transaction
 {
     public class TransactionParamInfo
     {
-        [JsonPropertyName("btcToStx")]
-        public bool BtcToStx { get; set; }
-        [JsonPropertyName("btcAddress")]
-        public string BtcAddress { get; set; }
-        [JsonPropertyName("stxAddress")]
-        public string StxAddress { get; set; }
-        [JsonPropertyName("btcTxid")]
-        public string BtcTxid { get; set; }
-        [JsonPropertyName("stxTxid")]
-        public string StxTxid { get; set; }
-        /*
-        [JsonPropertyName("btcAmount")]
-        public long? BtcAmount { get; set; }
-        [JsonPropertyName("stxAmount")]
-        public long? StxAmount { get; set; }
-        */
+        [JsonPropertyName("sendercoin")]
+        public string SenderCoin { get; set; }
+        [JsonPropertyName("receivercoin")]
+        public string ReceiverCoin { get; set; }
+        [JsonPropertyName("senderaddress")]
+        public string SenderAddress { get; set; }
+        [JsonPropertyName("receiveraddress")]
+        public string ReceiverAddress { get; set; }
+        [JsonPropertyName("senderTxid")]
+        public string SenderTxid { get; set; }
     }
 }

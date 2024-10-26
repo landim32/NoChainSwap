@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using NoChainSwap.Domain.Impl.Core;
 
 namespace DB.Infra.Repository
 {
@@ -25,43 +26,45 @@ namespace DB.Infra.Repository
         {
             var md = factory.BuildTransactionModel();
             md.TxId = u.TxId;
-            md.Type = (TransactionEnum) u.Type;
-            md.BtcAddress = u.BtcAddress;
-            md.StxAddress = u.StxAddress;
+            md.SenderCoin = Utils.StrToCoin(u.SenderCoin);
+            md.ReceiverCoin = Utils.StrToCoin(u.ReceiverCoin);
+            md.SenderAddress = u.SenderAddress;
+            md.ReceiverAddress = u.ReceiverAddress;
             md.CreateAt = u.CreateAt;
             md.UpdateAt = u.UpdateAt;
             md.Status = (TransactionStatusEnum)u.Status;
-            md.BtcTxid = u.BtcTxid;
-            md.StxTxid = u.StxTxid;
-            md.BtcFee = u.BtcFee;
-            md.StxFee = u.StxFee;
-            md.BtcAmount = u.BtcAmount;
-            md.StxAmount = u.StxAmount;
+            md.SenderTxid = u.SenderTxid;
+            md.ReceiverTxid = u.ReceiverTxid;
+            md.SenderFee = u.SenderFee;
+            md.ReceiverFee = u.ReceiverFee;
+            md.SenderAmount = u.SenderAmount;
+            md.ReceiverAmount = u.ReceiverAmount;
             return md;
         }
 
         private void ModelToDb(ITransactionModel u, Transaction md)
         {
             md.TxId = u.TxId;
-            md.Type = (int)u.Type;
-            md.BtcAddress = u.BtcAddress;
-            md.StxAddress = u.StxAddress;
+            md.SenderCoin = Utils.CoinToStr(u.SenderCoin);
+            md.ReceiverCoin = Utils.CoinToStr(u.ReceiverCoin);
+            md.SenderAddress = u.SenderAddress;
+            md.ReceiverAddress = u.ReceiverAddress;
             md.CreateAt = u.CreateAt;
             md.UpdateAt = u.UpdateAt;
             md.Status = (int)u.Status;
-            md.BtcTxid = u.BtcTxid;
-            md.StxTxid = u.StxTxid;
-            md.BtcFee = u.BtcFee;
-            md.StxFee = u.StxFee;
-            md.BtcAmount = u.BtcAmount;
-            md.StxAmount = u.StxAmount;
+            md.SenderTxid = u.SenderTxid;
+            md.ReceiverTxid = u.ReceiverTxid;
+            md.SenderFee = u.SenderFee;
+            md.ReceiverFee = u.ReceiverFee;
+            md.SenderAmount = u.SenderAmount;
+            md.ReceiverAmount = u.ReceiverAmount;
         }
 
-        public ITransactionModel GetByBtcAddr(string btcAddr, ITransactionDomainFactory factory)
+        public ITransactionModel GetBySenderAddr(string senderAddr, ITransactionDomainFactory factory)
         {
             try
             {
-                var row = _ccsContext.Transactions.Where(x => x.BtcAddress == btcAddr).FirstOrDefault();
+                var row = _ccsContext.Transactions.Where(x => x.SenderAddress == senderAddr).FirstOrDefault();
                 if (row != null)
                 {
                     return DbToModel(factory, row);
@@ -91,7 +94,7 @@ namespace DB.Infra.Repository
             }
         }
 
-        public IEnumerable<ITransactionModel> ListByBtcAddr(string btcAddr, ITransactionDomainFactory factory)
+        public IEnumerable<ITransactionModel> ListBySenderAddr(string senderAddr, ITransactionDomainFactory factory)
         {
             var rows = _ccsContext.Transactions.ToList();
             return rows.Select(x => DbToModel(factory, x));
@@ -143,11 +146,11 @@ namespace DB.Infra.Repository
             }
         }
 
-        public ITransactionModel GetByBtcTxId(string txid, ITransactionDomainFactory factory)
+        public ITransactionModel GetBySenderTxId(string txid, ITransactionDomainFactory factory)
         {
             try
             {
-                var row = _ccsContext.Transactions.Where(x => x.BtcTxid == txid).FirstOrDefault();
+                var row = _ccsContext.Transactions.Where(x => x.SenderTxid == txid).FirstOrDefault();
                 if (row != null)
                 {
                     return DbToModel(factory, row);
@@ -160,11 +163,11 @@ namespace DB.Infra.Repository
             }
         }
 
-        public ITransactionModel GetByStxTxId(string txid, ITransactionDomainFactory factory)
+        public ITransactionModel GetByReceiverTxId(string txid, ITransactionDomainFactory factory)
         {
             try
             {
-                var row = _ccsContext.Transactions.Where(x => x.StxTxid == txid).FirstOrDefault();
+                var row = _ccsContext.Transactions.Where(x => x.ReceiverTxid == txid).FirstOrDefault();
                 if (row != null)
                 {
                     return DbToModel(factory, row);

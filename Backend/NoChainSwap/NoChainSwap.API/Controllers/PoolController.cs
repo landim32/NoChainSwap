@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
+using NoChainSwap.Domain.Interfaces.Services.Coins;
 
 namespace NoChainSwap.API.Controllers
 {
@@ -14,19 +15,19 @@ namespace NoChainSwap.API.Controllers
     public class PoolController: Controller
     {
         private IUserService _userService;
-        private IBitcoinService _bitcoinService;
+        private IBtcTxService _btcService;
         private IStacksService _stacksService;
         private IMempoolService _mempoolService;
 
         public PoolController(
-            IUserService userService, 
-            IBitcoinService bitcoinService,
+            IUserService userService,
+            IBtcTxService bitcoinService,
             IStacksService stacksService,
             IMempoolService mempoolService
         )
         {
             _userService = userService;
-            _bitcoinService = bitcoinService;
+            _btcService = bitcoinService;
             _stacksService = stacksService;
             _mempoolService = mempoolService;
         }
@@ -43,7 +44,7 @@ namespace NoChainSwap.API.Controllers
                     return StatusCode(401, "Not Authorized");
                 }
                 */
-                var poolBtcAddr = _bitcoinService.GetPoolAddress();
+                var poolBtcAddr = _btcService.GetPoolAddress();
                 var poolStxAddr = await _stacksService.GetPoolAddress();
                 return new PoolInfo()
                 {

@@ -10,8 +10,8 @@ namespace Core.Domain.Repository
     {
         TModel Insert(TModel model);
         IEnumerable<TModel> ListById(long logId, TFactory factory);
-        IEnumerable<TModel> ListByBtcTx(string btcTx, TFactory factory);
-        IEnumerable<TModel> ListByStxTx(string StxTx, TFactory factory);
+        IEnumerable<TModel> ListBySenderTx(string txId, TFactory factory);
+        IEnumerable<TModel> ListByReceiverTx(string txId, TFactory factory);
 
     }
 }

@@ -35,13 +35,13 @@ namespace NoChainSwap.Domain.Impl.Models
         {
             return _repositoryTxLog.ListById(logId, factory);
         }
-        public IEnumerable<ITransactionLogModel> GetByBtcTx(string txId, ITransactionLogDomainFactory factory)
+        public IEnumerable<ITransactionLogModel> GetBySenderTx(string txId, ITransactionLogDomainFactory factory)
         {
-            return _repositoryTxLog.ListByBtcTx(txId, factory);
+            return _repositoryTxLog.ListBySenderTx(txId, factory);
         }
-        public IEnumerable<ITransactionLogModel> GetByStxTx(string txId, ITransactionLogDomainFactory factory)
+        public IEnumerable<ITransactionLogModel> GetByReceiverTx(string txId, ITransactionLogDomainFactory factory)
         {
-            return _repositoryTxLog.ListByBtcTx(txId, factory);
+            return _repositoryTxLog.ListByReceiverTx(txId, factory);
         }
     }
 }

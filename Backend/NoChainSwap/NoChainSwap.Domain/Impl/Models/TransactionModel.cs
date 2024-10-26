@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using NoChainSwap.Domain.Impl.Core;
 
 namespace NoChainSwap.Domain.Impl.Models
 {
@@ -23,30 +24,42 @@ namespace NoChainSwap.Domain.Impl.Models
         }
 
         public long TxId { get; set; }
-        public TransactionEnum Type { get; set; }
-        public string BtcAddress { get; set; }
-        public string StxAddress { get; set; }
+        public CoinEnum SenderCoin { get; set; }
+        public CoinEnum ReceiverCoin { get; set; }
+        public string SenderAddress { get; set; }
+        public string ReceiverAddress { get; set; }
         public DateTime CreateAt { get; set; }
         public DateTime UpdateAt { get; set; }
         public TransactionStatusEnum Status { get; set; }
-        public string BtcTxid { get; set; }
-        public string StxTxid { get; set; }
-        public int? BtcFee { get; set; }
-        public int? StxFee { get; set; }
-        public long? BtcAmount { get; set; }
-        public long? StxAmount { get; set; }
+        public string SenderTxid { get; set; }
+        public string ReceiverTxid { get; set; }
+        public int? SenderFee { get; set; }
+        public int? ReceiverFee { get; set; }
+        public long? SenderAmount { get; set; }
+        public long? ReceiverAmount { get; set; }
 
-        public ITransactionModel GetByBtcTxId(string txid, ITransactionDomainFactory factory)
+
+
+        public string GetSenderCoinSymbol()
         {
-            return _repositoryTx.GetByBtcTxId(txid, factory);
+            return Utils.CoinToStr(SenderCoin);
         }
-        public ITransactionModel GetByStxTxId(string txid, ITransactionDomainFactory factory)
+        public string GetReceiverCoinSymbol()
         {
-            return _repositoryTx.GetByStxTxId(txid, factory);
+            return Utils.CoinToStr(ReceiverCoin);
         }
-        public ITransactionModel GetByBtcAddr(string btcAddr, ITransactionDomainFactory factory)
+
+        public ITransactionModel GetBySenderTxId(string txid, ITransactionDomainFactory factory)
         {
-            return _repositoryTx.GetByBtcAddr(btcAddr, factory);
+            return _repositoryTx.GetBySenderTxId(txid, factory);
+        }
+        public ITransactionModel GetByReceiverTxId(string txid, ITransactionDomainFactory factory)
+        {
+            return _repositoryTx.GetByReceiverTxId(txid, factory);
+        }
+        public ITransactionModel GetBySenderAddr(string senderAddr, ITransactionDomainFactory factory)
+        {
+            return _repositoryTx.GetBySenderAddr(senderAddr, factory);
         }
 
         public ITransactionModel GetById(long txId, ITransactionDomainFactory factory)
@@ -54,9 +67,9 @@ namespace NoChainSwap.Domain.Impl.Models
             return _repositoryTx.GetById(txId, factory);
         }
 
-        public IEnumerable<ITransactionModel> ListByBtcAddr(string btcAddr, ITransactionDomainFactory factory)
+        public IEnumerable<ITransactionModel> ListBySenderAddr(string senderAddr, ITransactionDomainFactory factory)
         {
-            return _repositoryTx.ListByBtcAddr(btcAddr, factory);
+            return _repositoryTx.ListBySenderAddr(senderAddr, factory);
         }
 
         public IEnumerable<ITransactionModel> ListByStatus(IList<int> status, ITransactionDomainFactory factory)

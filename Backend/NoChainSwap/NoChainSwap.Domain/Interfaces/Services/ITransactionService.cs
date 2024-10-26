@@ -1,4 +1,5 @@
 ﻿using NoChainSwap.Domain.Interfaces.Models;
+using NoChainSwap.Domain.Interfaces.Services.Coins;
 using NoChainSwap.DTO.Transaction;
 using System;
 using System.Collections.Generic;
@@ -16,8 +17,8 @@ namespace NoChainSwap.Domain.Interfaces.Services
         IEnumerable<ITransactionModel> ListByStatusActive();
         IEnumerable<ITransactionModel> ListAll();
         IEnumerable<ITransactionLogModel> ListLogById(long txid);
-        string GetTransactionEnumToString(TransactionStatusEnum status);
         Task<bool> ProcessTransaction(ITransactionModel tx);
         Task<bool> ProcessAllTransaction();
+        ICoinTxService GetCoinTxService(CoinEnum coin);
     }
 }

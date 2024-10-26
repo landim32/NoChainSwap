@@ -7,11 +7,9 @@ public partial class Transaction
 {
     public long TxId { get; set; }
 
-    public int Type { get; set; }
+    public string SenderAddress { get; set; }
 
-    public string BtcAddress { get; set; }
-
-    public string StxAddress { get; set; }
+    public string ReceiverAddress { get; set; }
 
     public DateTime CreateAt { get; set; }
 
@@ -19,17 +17,21 @@ public partial class Transaction
 
     public int Status { get; set; }
 
-    public string BtcTxid { get; set; }
+    public string SenderTxid { get; set; }
 
-    public string StxTxid { get; set; }
+    public string ReceiverTxid { get; set; }
 
-    public int? BtcFee { get; set; }
+    public int? SenderFee { get; set; }
 
-    public int? StxFee { get; set; }
+    public int? ReceiverFee { get; set; }
 
-    public long? BtcAmount { get; set; }
+    public long? SenderAmount { get; set; }
 
-    public long? StxAmount { get; set; }
+    public long? ReceiverAmount { get; set; }
+
+    public string SenderCoin { get; set; }
+
+    public string ReceiverCoin { get; set; }
 
     public virtual ICollection<TransactionLog> TransactionLogs { get; set; } = new List<TransactionLog>();
 }

@@ -36,31 +36,36 @@ public partial class NoChainSwapContext : DbContext
             entity.Property(e => e.TxId)
                 .HasDefaultValueSql("nextval('transactions_tx_nid_seq'::regclass)")
                 .HasColumnName("tx_id");
-            entity.Property(e => e.BtcAddress)
-                .IsRequired()
-                .HasMaxLength(64)
-                .HasColumnName("btc_address");
-            entity.Property(e => e.BtcAmount).HasColumnName("btc_amount");
-            entity.Property(e => e.BtcFee).HasColumnName("btc_fee");
-            entity.Property(e => e.BtcTxid)
-                .HasMaxLength(64)
-                .IsFixedLength()
-                .HasColumnName("btc_txid");
             entity.Property(e => e.CreateAt)
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("create_at");
-            entity.Property(e => e.Status).HasColumnName("status");
-            entity.Property(e => e.StxAddress)
+            entity.Property(e => e.ReceiverAddress)
                 .IsRequired()
-                .HasMaxLength(64)
-                .HasColumnName("stx_address");
-            entity.Property(e => e.StxAmount).HasColumnName("stx_amount");
-            entity.Property(e => e.StxFee).HasColumnName("stx_fee");
-            entity.Property(e => e.StxTxid)
-                .HasMaxLength(64)
+                .HasMaxLength(80)
+                .HasColumnName("receiver_address");
+            entity.Property(e => e.ReceiverAmount).HasColumnName("receiver_amount");
+            entity.Property(e => e.ReceiverCoin)
+                .HasMaxLength(3)
                 .IsFixedLength()
-                .HasColumnName("stx_txid");
-            entity.Property(e => e.Type).HasColumnName("type");
+                .HasColumnName("receiver_coin");
+            entity.Property(e => e.ReceiverFee).HasColumnName("receiver_fee");
+            entity.Property(e => e.ReceiverTxid)
+                .HasMaxLength(80)
+                .HasColumnName("receiver_txid");
+            entity.Property(e => e.SenderAddress)
+                .IsRequired()
+                .HasMaxLength(80)
+                .HasColumnName("sender_address");
+            entity.Property(e => e.SenderAmount).HasColumnName("sender_amount");
+            entity.Property(e => e.SenderCoin)
+                .HasMaxLength(3)
+                .IsFixedLength()
+                .HasColumnName("sender_coin");
+            entity.Property(e => e.SenderFee).HasColumnName("sender_fee");
+            entity.Property(e => e.SenderTxid)
+                .HasMaxLength(80)
+                .HasColumnName("sender_txid");
+            entity.Property(e => e.Status).HasColumnName("status");
             entity.Property(e => e.UpdateAt)
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("update_at");

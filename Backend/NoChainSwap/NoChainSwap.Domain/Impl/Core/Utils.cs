@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using NoChainSwap.DTO.Transaction;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.Formats.Png;
@@ -39,64 +40,34 @@ namespace NoChainSwap.Domain.Impl.Core
             }
         }
 
-        /*
-        public static void ChangeImageColor(Image<Rgba32> image, System.Drawing.Color newColor)
+        public static CoinEnum StrToCoin(string coinStr)
         {
-            for (int y = 0; y < image.Height; y++)
+            CoinEnum ret = CoinEnum.Bitcoin;
+            switch (coinStr)
             {
-                Span<Rgba32> row = image.GetPixelRowSpan(y);
-                for (int x = 0; x < row.Length; x++)
-                {
-                    if (image.GetPixelRowSpan(y)[x].A > 0)
-                    {
-                        image.GetPixelRowSpan(y)[x] = new Rgba32(newColor.R, newColor.G, newColor.B, byte.MaxValue);
-                    }
-                }
+                case "btc":
+                    ret = CoinEnum.Bitcoin;
+                    break;
+                case "stx":
+                    ret = CoinEnum.Stacks;
+                    break;
             }
+            return ret;
         }
 
-        public static Bitmap ImageSharpToBitMap(Image<Rgba32> image)
+        public static string CoinToStr(CoinEnum coin)
         {
-            try
+            string str = string.Empty;
+            switch (coin)
             {
-                Bitmap imgResize;
-                using (var memoryStream = new MemoryStream())
-                {
-                    var imageEncoder = image.GetConfiguration().ImageFormatsManager.FindEncoder(PngFormat.Instance);
-                    image.Save(memoryStream, imageEncoder);
-
-                    memoryStream.Seek(0, SeekOrigin.Begin);
-
-                    imgResize = new Bitmap(memoryStream);
-                }
-                return imgResize;
+                case CoinEnum.Bitcoin:
+                    str = "btc";
+                    break;
+                case CoinEnum.Stacks:
+                    str = "stx";
+                    break;
             }
-            catch (Exception err)
-            {
-                throw;
-            }
-
+            return str;
         }
-
-
-        public static Image<Rgba32> BitMapToImageSharp(Bitmap image)
-        {
-            try
-            {
-                byte[] imgBytes;
-                using (var memoryStream = new MemoryStream())
-                {
-                    image.Save(memoryStream, ImageFormat.Png);
-                    imgBytes = memoryStream.ToArray();
-                }
-                return Image<Rgba32>.Load(imgBytes);
-            }
-            catch (Exception err)
-            {
-                throw;
-            }
-
-        }
-        */
     }
 }
