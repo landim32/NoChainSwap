@@ -19,19 +19,27 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
     {
         private const string MNEMONIC = "aunt federal magic they culture car primary maple snack misery dumb force three erosion vendor chair just twice blade front unhappy miss inject under";
 
+        private MemPoolTxInfo _memPoolTxInfo;
+
         public BtcTxService(
             ICoinMarketCapService coinMarketCapService,
             IMempoolService mempoolService,
-            IStacksService stxService,
             ITransactionDomainFactory txFactory,
             ITransactionLogDomainFactory txLogFactory
         )
         {
             _coinMarketCapService = coinMarketCapService;
             _mempoolService = mempoolService;
-            _stxService = stxService;
             _txFactory = txFactory;
             _txLogFactory = txLogFactory;
+        }
+
+        private async Task<MemPoolTxInfo> GetCurrentTxMemPool(string txid) { 
+            if (_memPoolTxInfo == null || string.Compare(_memPoolTxInfo.TxId, txid, true) != 0)
+            {
+                _memPoolTxInfo = await _mempoolService.GetTransaction(txid);
+            }
+            return _memPoolTxInfo;
         }
 
         public override string GetSlug()
@@ -39,13 +47,23 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
             return "bitcoin";
         }
 
-        public override string GetPoolAddress()
+        public override CoinEnum GetCoin() {
+            return CoinEnum.Bitcoin;
+        }
+
+        public override async Task<string> GetPoolAddress()
         {
             Mnemonic mnemo = new Mnemonic(MNEMONIC);
             var extKey = mnemo.DeriveExtKey();
             var bitcoinSecret = extKey.PrivateKey.GetBitcoinSecret(Network.TestNet);
             var address = bitcoinSecret.GetAddress(ScriptPubKeyType.Segwit);
-            return address.ToString();
+            return await Task.FromResult(address.ToString()); 
+        }
+
+        public override async Task<long> GetPoolBalance()
+        {
+            var poolAddress = await GetPoolAddress();
+            return await _mempoolService.GetBalance(poolAddress);
         }
 
         public override string GetAddressUrl(string address)
@@ -63,25 +81,57 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
             return ((decimal)coin / 100000000M).ToString("N5") + " BTC";
         }
 
-        public override long GetSenderAmount()
+        public override async Task<long> GetSenderAmount(string txid, string senderAddr)
         {
-            return 0;
+            var mempoolTx = await GetCurrentTxMemPool(txid);
+            if (mempoolTx == null)
+            {
+                throw new Exception($"Dont find transaction on mempool ({txid})");
+            }
+            var amount = mempoolTx.VOut.Where(x => x.ScriptPubKeyAddress == senderAddr).Select(x => x.Value).Sum();
+            return await Task.FromResult(amount);
         }
+
+        public override async Task<int> GetFee(string txid)
+        {
+            var mempoolTx = await GetCurrentTxMemPool(txid);
+            if (mempoolTx == null)
+            {
+                throw new Exception($"Dont find transaction on mempool ({txid})");
+            }
+            return await Task.FromResult(mempoolTx.Fee);
+        }
+
+        public override async Task<bool> IsTransactionSuccessful(string txid)
+        {
+            var mempoolTx = await GetCurrentTxMemPool(txid);
+            if (mempoolTx == null)
+            {
+                throw new Exception($"Dont find transaction on mempool ({txid})");
+            }
+            return await Task.FromResult(mempoolTx.Status.Confirmed);
+        }
+
         public override decimal GetSenderProportion(ICoinTxService receiverService)
         {
             return 0M;
         }
 
+        public override string GetSwapDescription(decimal proportion)
+        {
+            return "";
+        }
+
         public override async Task<bool> VerifyTransaction(ITransactionModel tx)
         {
-            var mempoolTx = await _mempoolService.GetTransaction(tx.SenderTxid);
+            var mempoolTx = await GetCurrentTxMemPool(tx.SenderTxid);
             if (mempoolTx == null)
             {
                 //throw new Exception("Dont find transaction on mempool");
                 AddLog(tx.TxId, "Dont find transaction on mempool", LogTypeEnum.Warning, _txLogFactory);
                 return await Task.FromResult(false);
             }
-            var poolBtcAddr = GetPoolAddress();
+            var poolBtcAddr = await GetPoolAddress();
 
             //var addrs = new List<string>();
             var addrsSender = mempoolTx.VIn.Select(x => x.Prevout.ScriptPubKeyAddress).ToList();
@@ -112,6 +162,11 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
                 return await Task.FromResult(false);
             }
             return await Task.FromResult(false);
+        }
+
+        public async override Task<string> Transfer(string address, long amount)
+        {
+            return await Task.FromResult("");
         }
     }
 }

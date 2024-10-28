@@ -3,6 +3,7 @@ using NoChainSwap.DTO.CoinMarketCap;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using NoChainSwap.Domain.Impl.Core;
 
 namespace NoChainSwap.API.Controllers
 {
@@ -20,8 +21,8 @@ namespace NoChainSwap.API.Controllers
             _coinMarketCap = coinMarketCap;
         }
 
-        [HttpGet("getcurrentprice")]
-        public ActionResult<CoinSwapInfo> GetCurrentPrice()
+        [HttpGet("getcurrentprice/{sender}/{receiver}")]
+        public ActionResult<CoinSwapInfo> GetCurrentPrice(string sender, string receiver)
         {
             try
             {
@@ -32,7 +33,9 @@ namespace NoChainSwap.API.Controllers
                     return StatusCode(401, "Not Authorized");
                 }
                 */
-                return _coinMarketCap.GetCurrentPrice("bitcoin", "stacks");
+                var coinSender = Utils.StrToCoin(sender);
+                var coinReceiver = Utils.StrToCoin(receiver);
+                return _coinMarketCap.GetCurrentPrice(coinSender, coinReceiver);
             }
             catch (Exception ex)
             {

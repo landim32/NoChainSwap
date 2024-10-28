@@ -1,4 +1,5 @@
 ﻿using NoChainSwap.DTO.CoinMarketCap;
+using NoChainSwap.DTO.Transaction;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,6 @@ namespace NoChainSwap.Domain.Interfaces.Services
 {
     public interface ICoinMarketCapService
     {
-        CoinSwapInfo GetCurrentPrice(string slugOrig, string sligDest);
+        CoinSwapInfo GetCurrentPrice(CoinEnum senderCoin, CoinEnum receiverCoin);
     }
 }

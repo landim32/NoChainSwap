@@ -1,4 +1,5 @@
-﻿using NoChainSwap.Domain.Impl.Models;
+﻿using NoChainSwap.Domain.Impl.Core;
+using NoChainSwap.Domain.Impl.Models;
 using NoChainSwap.Domain.Interfaces.Factory;
 using NoChainSwap.Domain.Interfaces.Models;
 using NoChainSwap.Domain.Interfaces.Services;
@@ -18,17 +19,22 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
     {
         protected ICoinMarketCapService _coinMarketCapService;
         protected IMempoolService _mempoolService;
-        protected IStacksService _stxService;
         protected ITransactionDomainFactory _txFactory;
         protected ITransactionLogDomainFactory _txLogFactory;
 
-        public abstract string GetPoolAddress();
+        public abstract Task<string> GetPoolAddress();
+        public abstract Task<long> GetPoolBalance();
+        public abstract Task<string> Transfer(string address, long amount);
         public abstract string GetSlug();
+        public abstract CoinEnum GetCoin();
+        public abstract Task<bool> IsTransactionSuccessful(string txid);
         public abstract string GetAddressUrl(string address);
         public abstract string GetTransactionUrl(string txId);
         public abstract string ConvertToString(long coin);
-        public abstract long GetSenderAmount();
+        public abstract Task<int> GetFee(string txid);
+        public abstract Task<long> GetSenderAmount(string txid, string senderAddr);
         public abstract decimal GetSenderProportion(ICoinTxService receiverService);
+        public abstract string GetSwapDescription(decimal proportion);
         public abstract Task<bool> VerifyTransaction(ITransactionModel tx);
 
         public void AddLog(long txId, string msg, LogTypeEnum t, ITransactionLogDomainFactory txLogFactory)
@@ -68,9 +74,6 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
         private async Task<TransactionStepInfo> TransactionNextStep(
             ITransactionModel tx,
             ICoinTxService receiverService
-            //MemPoolTxInfo mempoolTx,
-            //string poolBtcAddr,
-            //long poolBtcAmount
         )
         {
             TransactionStepInfo ret = null;
@@ -80,16 +83,16 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
                     ret = await CalculateStep(tx, receiverService);
                     break;
                 case TransactionStatusEnum.Calculated:
-                    //ret = await SenderFirstConfirmStep(tx, mempoolTx);
+                    ret = await SenderFirstConfirmStep(tx, receiverService);
                     break;
                 case TransactionStatusEnum.SenderNotConfirmed:
-                    //ret = await SenderTryConfirmStep(tx, mempoolTx);
+                    ret = await SenderTryConfirmStep(tx, receiverService);
                     break;
                 case TransactionStatusEnum.SenderConfirmed:
-                    //ret = await ReceiverSendTxStep(tx, mempoolTx, poolBtcAmount);
+                    ret = await ReceiverSendTxStep(tx, receiverService);
                     break;
                 case TransactionStatusEnum.SenderConfirmedReiceiverNotConfirmed:
-                    ret = await ReceiverTryConfirmStep(tx);
+                    ret = await ReceiverTryConfirmStep(tx, receiverService);
                     break;
                 case TransactionStatusEnum.Finished:
                     AddLog(tx.TxId, "Transaction already completed", LogTypeEnum.Error, _txLogFactory);
@@ -115,25 +118,31 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
         private async Task<TransactionStepInfo> CalculateStep(
             ITransactionModel tx,
             ICoinTxService receiverService
-        //MemPoolTxInfo mempoolTx,
-        //long poolAmount
         )
         {
-            var senderAmount = GetSenderAmount();
+            var senderAmount = await GetSenderAmount(tx.SenderTxid, tx.SenderAddress);
             var senderProportion = GetSenderProportion(receiverService);
-            var price = _coinMarketCapService.GetCurrentPrice(GetSlug(), receiverService.GetSlug());
+            var price = _coinMarketCapService.GetCurrentPrice(GetCoin(), receiverService.GetCoin());
             var receiverAmount = Convert.ToInt64(senderAmount / senderProportion * 100000000M);
+
+            var senderSymbol = Utils.CoinToStr(GetCoin());
+            var receiverSymbol = Utils.CoinToStr(receiverService.GetCoin());
 
             tx.SenderAmount = senderAmount;
             tx.ReceiverAmount = receiverAmount;
-            tx.BtcFee = mempoolTx.Fee;
+            tx.SenderFee = await GetFee(tx.SenderTxid);
             tx.Status = TransactionStatusEnum.Calculated;
             tx.Update();
 
-            decimal btcValue = Math.Round(poolAmount / 100000000M, 5);
-            decimal stxValue = Math.Round(stxAmount / 100000000M, 5);
+            decimal senderValue = Math.Round(senderAmount / 100000000M, 5);
+            decimal receiverValue = Math.Round(receiverAmount / 100000000M, 5);
 
-            AddLog(tx.TxId, string.Format("Transaction has {0:N5} BTC, Fee {1:N0} and extimate {2:N5} STX.", btcValue, tx.BtcFee, stxValue), LogTypeEnum.Information, _txLogFactory);
+            AddLog(tx.TxId, string.Format(
+                "Transaction has {0:N5} {1}, Fee {2:N0} {3} and extimate {4:N5} {5}.", 
+                senderValue, senderSymbol, 
+                tx.SenderFee, senderSymbol, 
+                receiverValue, receiverSymbol
+            ), LogTypeEnum.Information, _txLogFactory);
 
             return await Task.FromResult(new TransactionStepInfo
             {
@@ -141,13 +150,13 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
                 DoNextStep = true
             });
         }
-        private async Task<TransactionStepInfo> SenderFirstConfirmStep(ITransactionModel tx, MemPoolTxInfo mempoolTx)
+        private async Task<TransactionStepInfo> SenderFirstConfirmStep(ITransactionModel tx, ICoinTxService receiverService)
         {
-            if (mempoolTx.Status.Confirmed)
+            if (await IsTransactionSuccessful(tx.SenderTxid))
             {
                 tx.Status = TransactionStatusEnum.SenderConfirmed;
                 tx.Update();
-                AddLog(tx.TxId, "BTC Transaction confirmed.", LogTypeEnum.Information, _txLogFactory);
+                AddLog(tx.TxId, "Sender transaction confirmed.", LogTypeEnum.Information, _txLogFactory);
                 return await Task.FromResult(new TransactionStepInfo
                 {
                     Success = true,
@@ -166,31 +175,13 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
             }
         }
 
-        private async Task<string> StartStxTransfer(ITransactionModel tx, long stxAmount)
+        private async Task<TransactionStepInfo> SenderTryConfirmStep(ITransactionModel tx, ICoinTxService receiverService)
         {
-            var txHandle = await _stxService.Transfer(new TransferParamInfo
-            {
-                recipientAddress = tx.ReceiverAddress,
-                amount = stxAmount
-            });
-            if (!string.IsNullOrEmpty(txHandle.Error))
-            {
-                throw new Exception(string.Format("{0} ({1})", txHandle.Error, txHandle.Reason));
-            }
-            if (!string.IsNullOrEmpty(txHandle.TxId))
-            {
-                return await Task.FromResult(txHandle.TxId);
-            }
-            return await Task.FromResult("");
-        }
-
-        private async Task<TransactionStepInfo> SenderTryConfirmStep(ITransactionModel tx, MemPoolTxInfo mempoolTx)
-        {
-            if (mempoolTx.Status.Confirmed)
+            if (await IsTransactionSuccessful(tx.SenderTxid))
             {
                 tx.Status = TransactionStatusEnum.SenderConfirmed;
                 tx.Update();
-                AddLog(tx.TxId, "BTC Transaction confirmed.", LogTypeEnum.Information, _txLogFactory);
+                AddLog(tx.TxId, "Sender Transaction confirmed.", LogTypeEnum.Information, _txLogFactory);
                 return await Task.FromResult(new TransactionStepInfo
                 {
                     Success = true,
@@ -207,9 +198,9 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
             }
         }
 
-        private async Task<TransactionStepInfo> ReceiverSendTxStep(ITransactionModel tx, MemPoolTxInfo mempoolTx, long poolAmount)
+        private async Task<TransactionStepInfo> ReceiverSendTxStep(ITransactionModel tx, ICoinTxService receiverService)
         {
-            if (!mempoolTx.Status.Confirmed)
+            if (await IsTransactionSuccessful(tx.SenderTxid))
             {
                 AddLog(tx.TxId, "Transaction local is confirmed, but mempool not confirm", LogTypeEnum.Error, _txLogFactory);
                 tx.Status = TransactionStatusEnum.InvalidInformation;
@@ -220,24 +211,33 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
                     DoNextStep = false
                 });
             }
-            var price2 = _coinMarketCapService.GetCurrentPrice("bitcoin", "stacks");
-            var stxAmount2 = Convert.ToInt64((poolAmount / price2.BtcProportion) * 100000000M);
+            var senderAmount = await GetSenderAmount(tx.SenderTxid, tx.SenderAddress);
+            var price = _coinMarketCapService.GetCurrentPrice(GetCoin(), receiverService.GetCoin());
+            var receiverAmount = Convert.ToInt64((senderAmount / price.SenderProportion) * 100000000M);
 
-            tx.SenderAmount = poolAmount;
-            tx.ReceiverAmount = stxAmount2;
-            tx.SenderFee = mempoolTx.Fee;
+            var senderSymbol = Utils.CoinToStr(GetCoin());
+            var receiverSymbol = Utils.CoinToStr(receiverService.GetCoin());
+
+            tx.SenderAmount = senderAmount;
+            tx.ReceiverAmount = receiverAmount;
+            tx.SenderFee = await GetFee(tx.SenderTxid);
             tx.Update();
 
-            decimal btcValue2 = Math.Round(poolAmount / 100000000M, 5);
-            decimal stxValue2 = Math.Round(stxAmount2 / 100000000M, 5);
+            decimal senderValue = Math.Round(senderAmount / 100000000M, 5);
+            decimal receiverValue = Math.Round(receiverAmount / 100000000M, 5);
 
-            AddLog(tx.TxId, string.Format("Transaction has {0:N5} BTC, Fee {1:N0} and extimate {2:N5} STX.", btcValue2, tx.SenderFee, stxValue2), LogTypeEnum.Information, _txLogFactory);
+            AddLog(tx.TxId, string.Format(
+                "Transaction has {0:N5} {1}, Fee {2:N0} {3} and extimate {4:N5} {5}.",
+                senderValue, senderSymbol,
+                tx.SenderFee, senderSymbol,
+                receiverValue, receiverSymbol
+            ), LogTypeEnum.Information, _txLogFactory);
 
-            var poolAddr = await _stxService.GetPoolAddress();
-            var poolBalance = await _stxService.GetBalance(poolAddr);
-            if (poolBalance < stxAmount2)
+            //var poolAddr = await receiverService.GetPoolAddress();
+            var poolBalance = await receiverService.GetPoolBalance();
+            if (poolBalance < receiverAmount)
             {
-                AddLog(tx.TxId, "Pool without enough STX", LogTypeEnum.Warning, _txLogFactory);
+                AddLog(tx.TxId, "Pool without enough balance", LogTypeEnum.Warning, _txLogFactory);
                 return await Task.FromResult(new TransactionStepInfo
                 {
                     Success = false,
@@ -246,7 +246,7 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
             }
             try
             {
-                var txId = await StartStxTransfer(tx, stxAmount2);
+                var txId = await receiverService.Transfer(tx.ReceiverAddress, receiverAmount);
                 if (string.IsNullOrEmpty(txId))
                 {
                     AddLog(tx.TxId, "Tansaction ID (tx_id) is empty", LogTypeEnum.Warning, _txLogFactory);
@@ -278,17 +278,18 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
             }
         }
 
-        public async Task<TransactionStepInfo> ReceiverTryConfirmStep(ITransactionModel tx)
+        public async Task<TransactionStepInfo> ReceiverTryConfirmStep(ITransactionModel tx, ICoinTxService receiverService)
         {
             if (string.IsNullOrEmpty(tx.ReceiverTxid))
             {
-                AddLog(tx.TxId, "STX Transaction ID (tx_id) is empty", LogTypeEnum.Warning, _txLogFactory);
+                AddLog(tx.TxId, "Receiver transaction ID (tx_id) is empty", LogTypeEnum.Warning, _txLogFactory);
                 return await Task.FromResult(new TransactionStepInfo
                 {
                     Success = false,
                     DoNextStep = false
                 });
             }
+            /*
             var stxTx = await _stxService.GetTransaction(tx.ReceiverTxid);
             if (stxTx == null)
             {
@@ -299,8 +300,10 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
                     DoNextStep = false
                 });
             }
-            if (string.Compare(stxTx.TxStatus, "success", true) == 0)
+            */
+            if (await receiverService.IsTransactionSuccessful(tx.ReceiverTxid))
             {
+                /*
                 int fee = 0;
                 if (!int.TryParse(stxTx.FeeRate, out fee))
                 {
@@ -311,10 +314,11 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
                         DoNextStep = false
                     });
                 }
-                tx.ReceiverFee = fee;
+                */
+                tx.ReceiverFee = await receiverService.GetFee(tx.ReceiverTxid);
                 tx.Status = TransactionStatusEnum.Finished;
                 tx.Update();
-                AddLog(tx.TxId, "STX Transaction confirmed.", LogTypeEnum.Information, _txLogFactory);
+                AddLog(tx.TxId, "Receiver transaction confirmed.", LogTypeEnum.Information, _txLogFactory);
                 return await Task.FromResult(new TransactionStepInfo
                 {
                     Success = true,

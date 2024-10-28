@@ -13,7 +13,13 @@ namespace NoChainSwap.Domain.Interfaces.Services.Coins
     public interface ICoinTxService
     {
         string GetSlug();
-        string GetPoolAddress();
+        CoinEnum GetCoin();
+        Task<bool> IsTransactionSuccessful(string txid);
+        Task<string> GetPoolAddress();
+        Task<long> GetPoolBalance();
+        Task<int> GetFee(string txid);
+        Task<string> Transfer(string address, long amount);
+        string GetSwapDescription(decimal proportion);
         string GetAddressUrl(string address);
         string GetTransactionUrl(string txId);
         string ConvertToString(long coin);

@@ -51,6 +51,8 @@ namespace NoChainSwap.Domain.Impl.Core
                 case "stx":
                     ret = CoinEnum.Stacks;
                     break;
+                default:
+                    throw new Exception($"{coinStr} is not a valid coin");
             }
             return ret;
         }

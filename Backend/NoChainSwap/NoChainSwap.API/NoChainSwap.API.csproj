@@ -20,6 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Core.Domain\Core.Domain.csproj" />
     <ProjectReference Include="..\NoChainSwap.Application\NoChainSwap.Application.csproj" />
     <ProjectReference Include="..\NoChainSwap.Domain\NoChainSwap.Domain.csproj" />
     <ProjectReference Include="..\NoChainSwap.DTO\NoChainSwap.DTO.csproj" />

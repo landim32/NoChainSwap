@@ -1,5 +1,7 @@
-﻿using NoChainSwap.Domain.Interfaces.Services;
+﻿using NBitcoin;
+using NoChainSwap.Domain.Interfaces.Services;
 using NoChainSwap.DTO.CoinMarketCap;
+using NoChainSwap.DTO.Transaction;
 using NoobsMuc.Coinmarketcap.Client;
 using System;
 using System.Collections.Generic;
@@ -13,9 +15,16 @@ namespace NoChainSwap.Domain.Impl.Services
     {
         //private const string API_KEY = "b54bcf4d-1bca-4e8e-9a24-22ff2c3d462c";
         private const string API_KEY = "7a2f3a1e-dac4-4a5a-8e38-8b535bedbe59";
-        private const decimal SPREAD = 0.05M;
-        private const string BTC_TO_STX_TEXT = "1 BTC = {0:N0} STX";
-        private const string STX_TO_BTC_TEXT = "1 STX = {0:N0} Satoshis";
+        //private const decimal SPREAD = 0.05M;
+        //private const string BTC_TO_STX_TEXT = "1 BTC = {0:N0} STX";
+        //private const string STX_TO_BTC_TEXT = "1 STX = {0:N0} Satoshis";
+
+        private readonly ITransactionService _txService;
+
+        public CoinMarketCapService(ITransactionService txService)
+        {
+            _txService = txService;
+        }
 
         private CoinInfo CurrencyToCoin(Currency data)
         {
@@ -37,28 +46,29 @@ namespace NoChainSwap.Domain.Impl.Services
             };
         }
 
-        public CoinSwapInfo GetCurrentPrice(string slugOrig, string slugDest)
+        public CoinSwapInfo GetCurrentPrice(CoinEnum senderCoin, CoinEnum receiverCoin)
         {
-            var slugs = new string[2] { slugOrig, slugDest };
+            var senderService = _txService.GetCoinTxService(senderCoin);
+            var receiverService = _txService.GetCoinTxService(receiverCoin);
+
+            var senderSymbol = Core.Utils.CoinToStr(senderCoin);
+            var receiverSymbol = Core.Utils.CoinToStr(receiverCoin);
+
+            var slugs = new string[2] { senderService.GetSlug(), receiverService.GetSlug() };
             var client = new CoinmarketcapClient(API_KEY);
             var data = client.GetCurrencyBySlugList(slugs, "USD");
-            var btcPrice = data.Where(x => x.Symbol == "BTC").First().Price;
-            var stxPrice = data.Where(x => x.Symbol == "STX").First().Price;
-            var btcProportion = (btcPrice * (1M - SPREAD)) / (stxPrice * (1M + SPREAD));
-            var stxProportion = (stxPrice * (1M - SPREAD)) / (btcPrice * (1M + SPREAD));
+            var senderPrice = data.Where(x => string.Compare(x.Symbol, senderSymbol, true) == 0).First().Price;
+            var receiverPrice = data.Where(x => string.Compare(x.Symbol, receiverSymbol, true) == 0).First().Price;
+            var senderProportion = senderPrice / receiverPrice;
+            var receiverProportion = receiverPrice / senderPrice;
             return new CoinSwapInfo
             {
-                Spread = SPREAD,
-                BtcBuyPrice = btcPrice * (1M - SPREAD),
-                BtcSellPrice = btcPrice * (1M + SPREAD),
-                StxBuyPrice = stxPrice * (1M - SPREAD),
-                StxSellPrice = stxPrice * (1M + SPREAD),
-                BtcProportion = btcProportion,
-                StxProportion = stxProportion,
-                BtcToStxText = string.Format(BTC_TO_STX_TEXT, btcProportion),
-                StxToBtcText = string.Format(STX_TO_BTC_TEXT, stxProportion * 100000000),
-                Original = CurrencyToCoin(data.First()),
-                Destiny = CurrencyToCoin(data.Last())
+                SenderPrice = senderPrice,
+                ReceiverPrice = receiverPrice,
+                SenderProportion = senderProportion,
+                ReceiverProportion = receiverProportion,
+                Sender = CurrencyToCoin(data.First()),
+                Receiver = CurrencyToCoin(data.Last())
             };
         }
     }
