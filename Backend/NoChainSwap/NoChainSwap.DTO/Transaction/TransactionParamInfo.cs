@@ -17,7 +17,7 @@ namespace NoChainSwap.DTO.Transaction
         public string SenderAddress { get; set; }
         [JsonPropertyName("receiveraddress")]
         public string ReceiverAddress { get; set; }
-        [JsonPropertyName("senderTxid")]
+        [JsonPropertyName("sendertxid")]
         public string SenderTxid { get; set; }
     }
 }

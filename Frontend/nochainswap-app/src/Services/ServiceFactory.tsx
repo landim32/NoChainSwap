@@ -3,8 +3,6 @@ import { HttpClient } from '../Infra/Impl/HttpClient';
 import IHttpClient from '../Infra/Interface/IHttpClient';
 import { IAuthService } from './Interfaces/IAuthService';
 import { AuthService } from './Impl/AuthService';
-import { IPoolService } from './Interfaces/IPoolService';
-import { PoolService } from './Impl/PoolService';
 import { IPriceService } from './Interfaces/IPriceService';
 import { PriceService } from './Impl/PriceService';
 import { ITxService } from './Interfaces/ITxService';
@@ -16,9 +14,6 @@ httpClientAuth.init(env.API_BASE_URL);
 const authServiceImpl : IAuthService = AuthService;
 authServiceImpl.init(httpClientAuth);
 
-const poolServiceImpl : IPoolService = PoolService;
-poolServiceImpl.init(httpClientAuth);
-
 const priceServiceImpl : IPriceService = PriceService;
 priceServiceImpl.init(httpClientAuth);
 
@@ -27,7 +22,6 @@ txServiceImpl.init(httpClientAuth);
 
 const ServiceFactory = {
   AuthService: authServiceImpl,
-  PoolService: poolServiceImpl,
   PriceService: priceServiceImpl,
   TxService: txServiceImpl,
   setLogoffCallback: (cb : () => void) => {

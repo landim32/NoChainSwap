@@ -4,5 +4,5 @@ import IHttpClient from "../../Infra/Interface/IHttpClient";
 
 export interface IPriceService {
     init: (httpClient : IHttpClient) => void;
-    getCurrentPrice: () => Promise<PriceResult>;
+    getCurrentPrice: (senderCoin: string, receiverCoin: string) => Promise<PriceResult>;
 }

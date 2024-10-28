@@ -1,16 +1,11 @@
 import StatusRequest from "./StatusRequest";
 
 export interface PriceResult extends StatusRequest {
-    spread: number,
-    btcBuyPrice: number,
-    btcSellPrice: number,
-    stxBuyPrice: number,
-    stxSellPrice: number,
-    btcProportion: number,
-    stxProportion: number,
-    btcToStxText: string,
-    stxToBtcText: string,
-    original: {
+    senderPrice: number,
+    senderProportion: number,
+    senderPoolAddr: string,
+    senderPoolBalance: BigInt,
+    sender: {
         id: string,
         convertCurrency: string,
         lastUpdated: string,
@@ -25,7 +20,11 @@ export interface PriceResult extends StatusRequest {
         symbol: string,
         volume24hUsd: number
     },
-    destiny: {
+    receiverPrice: number,
+    receiverProportion: number,
+    receiverPoolAddr: string,
+    receiverPoolBalance: BigInt,
+    receiver: {
         id: string,
         convertCurrency: string,
         lastUpdated: string,

@@ -1,4 +1,5 @@
 ﻿using NBitcoin;
+using NoChainSwap.Domain.Interfaces.Factory;
 using NoChainSwap.Domain.Interfaces.Services;
 using NoChainSwap.DTO.CoinMarketCap;
 using NoChainSwap.DTO.Transaction;
@@ -19,12 +20,14 @@ namespace NoChainSwap.Domain.Impl.Services
         //private const string BTC_TO_STX_TEXT = "1 BTC = {0:N0} STX";
         //private const string STX_TO_BTC_TEXT = "1 STX = {0:N0} Satoshis";
 
-        private readonly ITransactionService _txService;
+        /*
+        private readonly ICoinTxServiceFactory _coinFactory;
 
-        public CoinMarketCapService(ITransactionService txService)
+        public CoinMarketCapService(ICoinTxServiceFactory coinFactory)
         {
-            _txService = txService;
+            _coinFactory = coinFactory;
         }
+        */
 
         private CoinInfo CurrencyToCoin(Currency data)
         {
@@ -48,13 +51,16 @@ namespace NoChainSwap.Domain.Impl.Services
 
         public CoinSwapInfo GetCurrentPrice(CoinEnum senderCoin, CoinEnum receiverCoin)
         {
-            var senderService = _txService.GetCoinTxService(senderCoin);
-            var receiverService = _txService.GetCoinTxService(receiverCoin);
+            //var senderService = _coinFactory.BuildCoinTxService(senderCoin);
+            //var receiverService = _coinFactory.BuildCoinTxService(receiverCoin);
 
             var senderSymbol = Core.Utils.CoinToStr(senderCoin);
             var receiverSymbol = Core.Utils.CoinToStr(receiverCoin);
 
-            var slugs = new string[2] { senderService.GetSlug(), receiverService.GetSlug() };
+            var senderSlug = Core.Utils.CoinToSlug(senderCoin);
+            var receiverSlug = Core.Utils.CoinToSlug(receiverCoin);
+
+            var slugs = new string[2] { senderSlug, receiverSlug };
             var client = new CoinmarketcapClient(API_KEY);
             var data = client.GetCurrencyBySlugList(slugs, "USD");
             var senderPrice = data.Where(x => string.Compare(x.Symbol, senderSymbol, true) == 0).First().Price;

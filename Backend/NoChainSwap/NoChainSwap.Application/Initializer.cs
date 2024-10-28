@@ -9,9 +9,7 @@ using NoChainSwap.Domain.Impl.Factory;
 using NoChainSwap.Domain.Impl.Services;
 using NoChainSwap.Domain.Interfaces.Core;
 using NoChainSwap.Domain.Interfaces.Factory;
-using NoChainSwap.Domain.Interfaces.Factory.GLog;
 using NoChainSwap.Domain.Interfaces.Models;
-using NoChainSwap.Domain.Interfaces.Models.GLog;
 using NoChainSwap.Domain.Interfaces.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
@@ -40,8 +38,8 @@ namespace NoChainSwap.Application
             else
                 services.AddDbContextFactory<NoChainSwapContext>(x => x.UseLazyLoadingProxies().UseNpgsql(config.ConnectionString));
 
-            StacksService.WALLET_API = config.WalletStxApi;
-            StacksService.STACKS_API = config.StacksApi;
+            StxTxService.WALLET_API = config.WalletStxApi;
+            StxTxService.STACKS_API = config.StacksApi;
 
             #region Infra
             injectDependency(typeof(NoChainSwapContext), typeof(NoChainSwapContext), services, scoped);
@@ -59,17 +57,17 @@ namespace NoChainSwap.Application
             injectDependency(typeof(IUserService), typeof(UserService), services, scoped);
             injectDependency(typeof(ITransactionService), typeof(TransactionService), services, scoped);
             injectDependency(typeof(IBtcTxService), typeof(BtcTxService), services, scoped);
+            injectDependency(typeof(IStxTxService), typeof(StxTxService), services, scoped);
             injectDependency(typeof(IMempoolService), typeof(MempoolService), services, scoped);
             injectDependency(typeof(ICoinMarketCapService), typeof(CoinMarketCapService), services, scoped);
             injectDependency(typeof(IStacksService), typeof(StacksService), services, scoped);
-            injectDependency(typeof(IGLogService), typeof(GLogService), services, scoped);
             #endregion
 
             #region Factory
             injectDependency(typeof(IUserDomainFactory), typeof(UserDomainFactory), services, scoped);
             injectDependency(typeof(ITransactionDomainFactory), typeof(TransactionDomainFactory), services, scoped);
             injectDependency(typeof(ITransactionLogDomainFactory), typeof(TransactionLogDomainFactory), services, scoped);
-            injectDependency(typeof(IGLogDomainFactory), typeof(GLogDomainFactory), services, scoped);
+            injectDependency(typeof(ICoinTxServiceFactory), typeof(CoinTxServiceFactory), services, scoped);
             #endregion
 
 

@@ -17,29 +17,26 @@ namespace NoChainSwap.Domain.Impl.Services
 {
     public class TransactionService : ITransactionService
     {
-        private readonly ICoinMarketCapService _coinMarketCapService;
-        private readonly IMempoolService _mempoolService;
-        private readonly IStacksService _stxService;
-        private readonly IBtcTxService _btcTxService;
-        private readonly IStxTxService _stxTxService;
-        private readonly ITransactionDomainFactory _txFactory;
-        private readonly ITransactionLogDomainFactory _txLogFactory;
+        //protected readonly ICoinMarketCapService _coinMarketCapService;
+        //protected readonly IMempoolService _mempoolService;
+        //protected readonly IStacksService _stxService;
+        protected readonly ICoinTxServiceFactory _coinFactory;
+        protected readonly ITransactionDomainFactory _txFactory;
+        protected readonly ITransactionLogDomainFactory _txLogFactory;
 
         public TransactionService(
-            ICoinMarketCapService coinMarketCapService,
-            IMempoolService mempoolService,
-            IStacksService stxService,
-            IBtcTxService btcTxService,
-            IStxTxService stxTxService,
+            //ICoinMarketCapService coinMarketCapService,
+            //IMempoolService mempoolService,
+            //IStacksService stxService,
+            ICoinTxServiceFactory coinFactory,
             ITransactionDomainFactory txFactory,
             ITransactionLogDomainFactory txLogFactory
         )
         {
-            _coinMarketCapService = coinMarketCapService;
-            _mempoolService = mempoolService;
-            _stxService = stxService;
-            _btcTxService = btcTxService;
-            _stxTxService = stxTxService;
+            //_coinMarketCapService = coinMarketCapService;
+            //_mempoolService = mempoolService;
+            //_stxService = stxService;
+            _coinFactory = coinFactory;
             _txFactory = txFactory;
             _txLogFactory = txLogFactory;
         }
@@ -197,43 +194,23 @@ namespace NoChainSwap.Domain.Impl.Services
             {
                 throw new Exception("Transaction is null");
             }
+            var senderService = _coinFactory.BuildCoinTxService(tx.SenderCoin);
+            var receiverService = _coinFactory.BuildCoinTxService(tx.ReceiverCoin);
+            if (senderService == null || receiverService == null)
+            {
+                throw new Exception("Transaction not suported");
+            }
             try
             {
-                if (tx.SenderCoin == CoinEnum.Bitcoin && tx.ReceiverCoin == CoinEnum.Stacks)
-                {
-                    return await _btcTxService.ProcessTransaction(tx, _stxTxService);
-                }
-                else if (tx.SenderCoin == CoinEnum.Stacks && tx.ReceiverCoin == CoinEnum.Bitcoin)
-                {
-                    return await _stxTxService.ProcessTransaction(tx, _btcTxService);
-                }
-                else
-                {
-                    throw new Exception("Transaction not suported");
-                }
+                return await senderService.ProcessTransaction(tx, receiverService);
             }
             catch (Exception err)
             {
-                _btcTxService.AddLog(tx.TxId, err.Message, LogTypeEnum.Error, _txLogFactory);
+                senderService.AddLog(tx.TxId, err.Message, LogTypeEnum.Error, _txLogFactory);
                 tx.Status = TransactionStatusEnum.CriticalError;
                 tx.Update();
             }
             return await Task.FromResult(false);
-        }
-
-        public ICoinTxService GetCoinTxService(CoinEnum coin)
-        {
-            ICoinTxService coinTxService = null;
-            switch (coin)
-            {
-                case CoinEnum.Bitcoin:
-                    coinTxService = _btcTxService;
-                    break;
-                case CoinEnum.Stacks:
-                    coinTxService = _stxTxService;
-                    break;
-            }
-            return coinTxService;
         }
     }
 }

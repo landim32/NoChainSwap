@@ -18,14 +18,12 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
     public abstract class CoinTxService: ICoinTxService
     {
         protected ICoinMarketCapService _coinMarketCapService;
-        protected IMempoolService _mempoolService;
         protected ITransactionDomainFactory _txFactory;
         protected ITransactionLogDomainFactory _txLogFactory;
 
         public abstract Task<string> GetPoolAddress();
         public abstract Task<long> GetPoolBalance();
         public abstract Task<string> Transfer(string address, long amount);
-        public abstract string GetSlug();
         public abstract CoinEnum GetCoin();
         public abstract Task<bool> IsTransactionSuccessful(string txid);
         public abstract string GetAddressUrl(string address);

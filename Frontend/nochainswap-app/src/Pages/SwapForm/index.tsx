@@ -7,7 +7,6 @@ import Row from 'react-bootstrap/Row';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faRetweet } from '@fortawesome/free-solid-svg-icons/faRetweet'
 import { useContext, useEffect, useState } from 'react';
-import AuthContext from '../../Contexts/Auth/AuthContext';
 import SwapContext from '../../Contexts/Swap/SwapContext';
 import { CoinEnum } from '../../DTO/Enum/CoinEnum';
 import Modal from 'react-bootstrap/Modal';
@@ -20,7 +19,6 @@ export default function SwapForm() {
 
     const swapContext = useContext(SwapContext);
     useEffect(() => {
-        swapContext.loadPoolInfo();
         swapContext.loadCurrentPrice();
     }, []);
 
@@ -37,20 +35,12 @@ export default function SwapForm() {
                     <Modal.Title>Confirm Swap</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <p>You are about to make a conversion of <strong>{swapContext.getFormatedOrigAmount()}</strong> into <strong>{swapContext.getFormatedDestAmount()}</strong>.</p>
-                    <p><strong>{swapContext.getFormatedOrigAmount()}</strong> -&gt; <span>{
-                        (swapContext.origCoin == CoinEnum.Bitcoin) ?
-                            swapContext.btcPoolAddress :
-                            swapContext.stxPoolAddress
-                    }</span> (Pool Address)</p>
+                    <p>You are about to make a conversion of <strong>{swapContext.getFormatedSenderAmount()}</strong> into <strong>{swapContext.getFormatedReceiverAmount()}</strong>.</p>
+                    <p><strong>{swapContext.getFormatedSenderAmount()}</strong> -&gt; <span>{swapContext.senderPoolAddress}</span> (Pool Address)</p>
                     <p>As soon as the transaction reaches <strong>confirmation</strong> the transfer of
-                        <strong>{swapContext.getFormatedDestAmount()}</strong> will be initiated to the address provided by your Leather Wallet:
+                        <strong>{swapContext.getFormatedReceiverAmount()}</strong> will be initiated to the address provided by your Leather Wallet:
                     </p>
-                    <p><strong>{swapContext.getFormatedDestAmount()}</strong> -&gt; <span>{
-                        (swapContext.destCoin == CoinEnum.Bitcoin) ?
-                            swapContext.btcPoolAddress :
-                            swapContext.stxPoolAddress
-                    }</span> (Your Wallet Address)</p>
+                    <p><strong>{swapContext.getFormatedReceiverAmount()}</strong> -&gt; <span>{swapContext.receiverPoolAddress}</span> (Your Wallet Address)</p>
                     <p>A fee of <strong>230 satoshis</strong> will be charged, please confirm if you agree.</p>
                     <p>Do you confirm this transaction?</p>
                 </Modal.Body>
@@ -83,20 +73,20 @@ export default function SwapForm() {
                                 <Card.Body>
                                     <Row>
                                         <Col md="6">
-                                            <Form.Group as={Col} controlId="OrigAmount">
+                                            <Form.Group as={Col}>
                                                 <Form.Label>From</Form.Label>
-                                                <Form.Select size="lg" value={swapContext.origCoin} onChange={(e) => {
+                                                <Form.Select size="lg" value={swapContext.senderCoin} onChange={(e) => {
                                                     if (e.target.value == '1') {
-                                                        swapContext.setOrigCoin(CoinEnum.Bitcoin);
+                                                        swapContext.setSenderCoin(CoinEnum.Bitcoin);
                                                     }
                                                     else {
-                                                        swapContext.setOrigCoin(CoinEnum.Stacks);
+                                                        swapContext.setSenderCoin(CoinEnum.Stacks);
                                                     }
                                                 }}>
                                                     <option value={CoinEnum.Bitcoin}>Bitcoin</option>
                                                     <option value={CoinEnum.Stacks}>Stacks</option>
                                                 </Form.Select>
-                                                <Form.Text className='text-right' muted>Price: {swapContext.getFormatedOrigPrice()}</Form.Text>
+                                                <Form.Text className='text-right' muted>Price: {swapContext.getFormatedSenderPrice()}</Form.Text>
                                             </Form.Group>
                                         </Col>
                                         <Col md="6">
@@ -105,9 +95,9 @@ export default function SwapForm() {
                                                 <Form.Control
                                                     type="number" size="lg"
                                                     style={{ textAlign: 'right' }}
-                                                    value={swapContext.origAmount}
+                                                    value={swapContext.senderAmount}
                                                     onChange={(e) => {
-                                                        swapContext.setOrigAmount(parseFloat(e.target.value));
+                                                        swapContext.setSenderAmount(parseFloat(e.target.value));
                                                     }}></Form.Control>
                                                 {/*
                                                 <CurrencyInput
@@ -131,7 +121,7 @@ export default function SwapForm() {
                                                     }}
                                                 ></CurrencyInput>
                                                 */}
-                                                <Form.Text className='text-right' muted>Pool Balance {swapContext.getFormatedOrigBalance()}</Form.Text>
+                                                <Form.Text className='text-right' muted>Pool Balance {swapContext.getFormatedSenderBalance()}</Form.Text>
                                             </Form.Group>
                                         </Col>
                                     </Row>
@@ -141,12 +131,7 @@ export default function SwapForm() {
                                 <Col md="2" className='offset-md-5'>
                                     <view className='d-grid gap-2'>
                                         <Button size="lg" variant="warning" onClick={() => {
-                                            if (swapContext.origCoin == CoinEnum.Bitcoin) {
-                                                swapContext.setOrigCoin(CoinEnum.Stacks);
-                                            }
-                                            else {
-                                                swapContext.setOrigCoin(CoinEnum.Bitcoin);
-                                            }
+                                            swapContext.reverseCoin();
                                         }}>
                                             <FontAwesomeIcon icon={faRetweet} />
                                         </Button>
@@ -157,20 +142,20 @@ export default function SwapForm() {
                                 <Card.Body>
                                     <Row>
                                         <Col md="6">
-                                            <Form.Group as={Col} controlId="DestAmount">
+                                            <Form.Group as={Col}>
                                                 <Form.Label>To</Form.Label>
-                                                <Form.Select size="lg" value={swapContext.destCoin} onChange={(e) => {
+                                                <Form.Select size="lg" value={swapContext.receiverCoin} onChange={(e) => {
                                                     if (e.target.value == '1') {
-                                                        swapContext.setDestCoin(CoinEnum.Bitcoin);
+                                                        swapContext.setReceiverCoin(CoinEnum.Bitcoin);
                                                     }
                                                     else {
-                                                        swapContext.setDestCoin(CoinEnum.Stacks);
+                                                        swapContext.setReceiverCoin(CoinEnum.Stacks);
                                                     }
                                                 }}>
                                                     <option value={CoinEnum.Bitcoin}>Bitcoin</option>
                                                     <option value={CoinEnum.Stacks}>Stacks</option>
                                                 </Form.Select>
-                                                <Form.Text className='text-right' muted>Price: {swapContext.getFormatedDestPrice()}</Form.Text>
+                                                <Form.Text className='text-right' muted>Price: {swapContext.getFormatedReceiverPrice()}</Form.Text>
                                             </Form.Group>
                                         </Col>
                                         <Col md="6">
@@ -179,7 +164,7 @@ export default function SwapForm() {
                                                 <Form.Control
                                                     type="number" size="lg"
                                                     style={{ textAlign: 'right' }}
-                                                    value={swapContext.destAmount}>
+                                                    value={swapContext.receiverAmount}>
                                                 </Form.Control>
                                                 {/*
                                                 <CurrencyInput
@@ -195,7 +180,7 @@ export default function SwapForm() {
                                                     value={swapContext.destAmount}
                                                 ></CurrencyInput>
                                                 */}
-                                                <Form.Text className='text-right' muted>Pool Balance {swapContext.getFormatedDestBalance()}</Form.Text>
+                                                <Form.Text className='text-right' muted>Pool Balance {swapContext.getFormatedReceiverBalance()}</Form.Text>
                                             </Form.Group>
                                         </Col>
                                     </Row>
@@ -206,7 +191,7 @@ export default function SwapForm() {
                                 <Col md="4" className='offset-md-4'>
                                     <view className='d-grid gap-2'>
                                         <Button size="lg" variant="primary" onClick={() => {
-                                            if (swapContext.origAmount > 0) {
+                                            if (swapContext.senderAmount > 0) {
                                                 setShowModal(true);
                                             }
                                             else {

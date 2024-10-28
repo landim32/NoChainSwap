@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using NoChainSwap.Domain.Interfaces.Factory;
 
 namespace NoChainSwap.API.Controllers
 {
@@ -23,22 +24,25 @@ namespace NoChainSwap.API.Controllers
         private IUserService _userService;
         private ITransactionService _txService;
         private IStacksService _stacksService;
+        protected readonly ICoinTxServiceFactory _coinFactory;
 
         public TransactionController(
             IUserService userService, 
             ITransactionService txService,
-            IStacksService stacksService
+            IStacksService stacksService,
+            ICoinTxServiceFactory coinFactory
         )
         {
             _userService = userService;
             _txService = txService;
             _stacksService = stacksService;
+            _coinFactory = coinFactory;
         }
 
         private TxResult ModelToInfo(ITransactionModel md)
         {
-            var senderTx = _txService.GetCoinTxService(md.SenderCoin);
-            var receiverTx = _txService.GetCoinTxService(md.ReceiverCoin);
+            var senderTx = _coinFactory.BuildCoinTxService(md.SenderCoin);
+            var receiverTx = _coinFactory.BuildCoinTxService(md.ReceiverCoin);
             return new TxResult
             {
                 TxId = md.TxId,

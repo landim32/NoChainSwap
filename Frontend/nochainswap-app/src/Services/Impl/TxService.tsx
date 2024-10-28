@@ -1,7 +1,6 @@
 import TxInfo from "../../DTO/Domain/TxInfo";
 import TxLogInfo from "../../DTO/Domain/TxLogInfo";
 import TxParamInfo from "../../DTO/Domain/TxParamInfo";
-import { PoolResult } from "../../DTO/Services/PoolResult";
 import StatusRequest from "../../DTO/Services/StatusRequest";
 import { TxListResult } from "../../DTO/Services/TxListResult";
 import { TxLogListResult } from "../../DTO/Services/TxLogListResult";

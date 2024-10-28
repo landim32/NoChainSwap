@@ -19,6 +19,7 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
     {
         private const string MNEMONIC = "aunt federal magic they culture car primary maple snack misery dumb force three erosion vendor chair just twice blade front unhappy miss inject under";
 
+        protected IMempoolService _mempoolService;
         private MemPoolTxInfo _memPoolTxInfo;
 
         public BtcTxService(
@@ -40,11 +41,6 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
                 _memPoolTxInfo = await _mempoolService.GetTransaction(txid);
             }
             return _memPoolTxInfo;
-        }
-
-        public override string GetSlug()
-        {
-            return "bitcoin";
         }
 
         public override CoinEnum GetCoin() {
@@ -161,7 +157,7 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
                 tx.Update();
                 return await Task.FromResult(false);
             }
-            return await Task.FromResult(false);
+            return await Task.FromResult(true);
         }
 
         public async override Task<string> Transfer(string address, long amount)

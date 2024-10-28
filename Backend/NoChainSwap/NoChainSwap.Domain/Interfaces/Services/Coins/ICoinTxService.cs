@@ -12,7 +12,6 @@ namespace NoChainSwap.Domain.Interfaces.Services.Coins
 {
     public interface ICoinTxService
     {
-        string GetSlug();
         CoinEnum GetCoin();
         Task<bool> IsTransactionSuccessful(string txid);
         Task<string> GetPoolAddress();

@@ -44,7 +44,7 @@ export default function ListTxPage() {
                 keyboard={false}
             >
                 <Modal.Header closeButton>
-                    <Modal.Title>Transaction {txContext.txInfo?.txtype} #{txContext.txInfo?.txid}</Modal.Title>
+                    <Modal.Title>Transaction {/*txContext.txInfo?.txtype*/} #{txContext.txInfo?.txid}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     {
@@ -68,67 +68,43 @@ export default function ListTxPage() {
                                 }
                             }}>(Refresh)</a>
                         </dd>
-                        <dt className="col-sm-3">{txContext.txInfo?.inttype == 1 ? "BTC Address" : "STX Address"}</dt>
-                        <dd className="col-sm-9"><a href={
-                            txContext.txInfo?.inttype == 1 ?
-                                txContext.txInfo?.btcaddressurl :
-                                txContext.txInfo?.stxaddressurl
-                        } target="_blank">{
-                                txContext.txInfo?.inttype == 1 ?
-                                    txContext.txInfo?.btcaddress :
-                                    txContext.txInfo?.stxaddress
-                            }</a></dd>
                         <dt className="col-sm-3">{
-                            txContext.txInfo?.inttype == 1 ? "BTC TxID" : "STX TxID"
+                            {
+                                'btc': 'BTC Address',
+                                'stx': 'STX Address'
+                            }[txContext.txInfo?.sendercoin]
                         }</dt>
-                        <dd className="col-sm-9"><a href={
-                            txContext.txInfo?.inttype == 1 ?
-                                txContext.txInfo?.btctxidurl :
-                                txContext.txInfo?.stxtxidurl
-                        } target="_blank">{
-                                txContext.txInfo?.inttype == 1 ?
-                                    txContext.txInfo?.btctxid :
-                                    txContext.txInfo?.stxtxid
-                            }</a></dd>
-                        <dt className="col-sm-3">{txContext.txInfo?.inttype == 1 ? "STX Address" : "BTC Address"}</dt>
-                        <dd className="col-sm-9"><a href={
-                            txContext.txInfo?.inttype == 1 ?
-                                txContext.txInfo?.stxaddressurl :
-                                txContext.txInfo?.btcaddressurl
-                        } target="_blank">{
-                                txContext.txInfo?.inttype == 1 ?
-                                    txContext.txInfo?.stxaddress :
-                                    txContext.txInfo?.btcaddress
-                            }</a></dd>
+                        <dd className="col-sm-9"><a href={txContext.txInfo?.senderaddressurl} target="_blank">{txContext.txInfo?.senderaddress}</a></dd>
+                        <dt className="col-sm-3">{
+                            {
+                                'btc': 'BTC TxID',
+                                'stx': 'STX TxID'
+                            }[txContext.txInfo?.sendercoin]
+                        }</dt>
+                        <dd className="col-sm-9"><a href={txContext.txInfo?.sendertxidurl} target="_blank">{txContext.txInfo?.sendertxid}</a></dd>
+                        <dt className="col-sm-3">{
+                            {
+                                'btc': 'BTC Address',
+                                'stx': 'STX Address'
+                            }[txContext.txInfo?.receivercoin]
+                        }</dt>
+                        <dd className="col-sm-9"><a href={txContext.txInfo?.receiveraddressurl} target="_blank">{txContext.txInfo?.receiveraddress}</a></dd>
                         {
-                            (txContext.txInfo?.inttype == 1 ? txContext.txInfo?.stxtxid : txContext.txInfo?.btctxid) &&
+                            (txContext.txInfo?.receivertxid) &&
                             <>
                                 <dt className="col-sm-3">{
-                                    txContext.txInfo?.inttype == 1 ? "STX TxID" : "BTC TxID"
+                                {
+                                    'btc': 'BTC TxID',
+                                    'stx': 'STX TxID'
+                                }[txContext.txInfo?.receivercoin]
                                 }</dt>
-                                <dd className="col-sm-9"><a href={
-                                    txContext.txInfo?.inttype == 1 ?
-                                        txContext.txInfo?.stxtxidurl :
-                                        txContext.txInfo?.btctxidurl
-                                } target="_blank">{
-                                        txContext.txInfo?.inttype == 1 ?
-                                            txContext.txInfo?.stxtxid :
-                                            txContext.txInfo?.btctxid
-                                    }</a></dd>
+                                <dd className="col-sm-9"><a href={txContext.txInfo?.receivertxidurl} target="_blank">{txContext.txInfo?.receivertxid}</a></dd>
                             </>
                         }
                         <dt className="col-sm-3">Amounts</dt>
-                        <dd className="col-sm-9">{
-                            txContext.txInfo?.inttype == 1 ?
-                                txContext.txInfo?.btcamount + " -> " + txContext.txInfo?.stxamount :
-                                txContext.txInfo?.stxamount + " -> " + txContext.txInfo?.btcamount
-                        }</dd>
+                        <dd className="col-sm-9">{txContext.txInfo?.senderamount + " -> " + txContext.txInfo?.receiveramount}</dd>
                         <dt className="col-sm-3">Fees</dt>
-                        <dd className="col-sm-9">{
-                            txContext.txInfo?.inttype == 1 ?
-                                txContext.txInfo?.btcfee + " -> " + txContext.txInfo?.stxfee :
-                                txContext.txInfo?.stxfee + " -> " + txContext.txInfo?.btcfee
-                        }</dd>
+                        <dd className="col-sm-9">{txContext.txInfo?.senderfee + " + " + txContext.txInfo?.receiverfee}</dd>
                         <dt className="col-sm-3">Dates</dt>
                         <dd className="col-sm-9">{
                             "Create at " + txContext.txInfo?.createat + ", latest udpate at " + txContext.txInfo?.updateat
@@ -207,18 +183,18 @@ export default function ListTxPage() {
                                     {
                                         txContext.allTxInfo ?
                                             txContext.allTxInfo.map((item) => {
-                                                let userAddr = ((item.inttype == 1) ? item.btcaddress : item.stxaddress);
+                                                let userAddr = item.senderaddress;
                                                 let userView = userAddr.substr(0, 6) + '...' + userAddr.substr(-4);
                                                 return (
 
                                                     <tr>
-                                                        <td scope="col"><a href="#" onClick={(e) => { txClickHandler(e, item) }}>{item.txtype}</a></td>
+                                                        <td scope="col"><a href="#" onClick={(e) => { txClickHandler(e, item) }}>{
+                                                            item.sendercoin.toUpperCase() + " to " + item.receivercoin.toUpperCase()
+                                                        }</a></td>
                                                         <td scope="col"><a href="#" onClick={(e) => { txClickHandler(e, item) }}>{userView}</a></td>
                                                         <td scope="col"><a href="#" onClick={(e) => { txClickHandler(e, item) }}>{item.updateat}</a></td>
                                                         <td scope="col"><a href="#" onClick={(e) => { txClickHandler(e, item) }}>{
-                                                            ((item.inttype == 1) ? item.btcamount : item.stxamount) +
-                                                            " -> " +
-                                                            ((item.inttype == 1) ? item.stxamount : item.btcamount)
+                                                            item.senderamount + " -> " + item.receiveramount
                                                         }</a></td>
                                                         <td scope="col"><a href="#" onClick={(e) => { txClickHandler(e, item) }}>{item.status}</a></td>
                                                     </tr>

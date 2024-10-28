@@ -4,6 +4,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using NoChainSwap.Domain.Impl.Core;
+using NoChainSwap.Domain.Impl.Services;
+using NoChainSwap.DTO;
+using System.Threading.Tasks;
+using NoChainSwap.Domain.Interfaces.Factory;
 
 namespace NoChainSwap.API.Controllers
 {
@@ -12,17 +16,23 @@ namespace NoChainSwap.API.Controllers
     //[Authorize]
     public class CoinMarketCapController: Controller
     {
-        private IUserService _userService;
-        private ICoinMarketCapService _coinMarketCap;
+        protected readonly IUserService _userService;
+        protected readonly ICoinMarketCapService _coinMarketCap;
+        protected readonly ICoinTxServiceFactory _coinFactory;
 
-        public CoinMarketCapController(IUserService userService, ICoinMarketCapService coinMarketCap)
+        public CoinMarketCapController(
+            IUserService userService, 
+            ICoinMarketCapService coinMarketCap,
+            ICoinTxServiceFactory coinFactory
+        )
         {
             _userService = userService;
             _coinMarketCap = coinMarketCap;
+            _coinFactory = coinFactory;
         }
 
         [HttpGet("getcurrentprice/{sender}/{receiver}")]
-        public ActionResult<CoinSwapInfo> GetCurrentPrice(string sender, string receiver)
+        public async Task<ActionResult<CoinSwapInfo>> GetCurrentPrice(string sender, string receiver)
         {
             try
             {
@@ -35,7 +45,19 @@ namespace NoChainSwap.API.Controllers
                 */
                 var coinSender = Utils.StrToCoin(sender);
                 var coinReceiver = Utils.StrToCoin(receiver);
-                return _coinMarketCap.GetCurrentPrice(coinSender, coinReceiver);
+
+                var senderService = _coinFactory.BuildCoinTxService(coinSender);
+                var receiverService = _coinFactory.BuildCoinTxService(coinReceiver);
+
+                var price = _coinMarketCap.GetCurrentPrice(coinSender, coinReceiver);
+                if (price != null)
+                {
+                    price.SenderPoolAddr = await senderService.GetPoolAddress();
+                    price.ReceiverPoolAddr = await receiverService.GetPoolAddress();
+                    price.SenderPoolBalance = await senderService.GetPoolBalance();
+                    price.ReceiverPoolBalance = await receiverService.GetPoolBalance();
+                }
+                return price;
             }
             catch (Exception ex)
             {

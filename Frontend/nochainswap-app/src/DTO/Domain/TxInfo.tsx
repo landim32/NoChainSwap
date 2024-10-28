@@ -1,20 +1,20 @@
 export default interface TxInfo {
     txid: number;
-    inttype: number;
-    txtype: string;
-    btcaddress: string;
-    btcaddressurl: string;
-    stxaddress: string;
-    stxaddressurl: string;
+    sendercoin: string;
+    receivercoin: string;
+    senderaddress: string;
+    senderaddressurl: string;
+    receiveraddress: string;
+    receiveraddressurl: string;
     createat: string;
     updateat: string;
     status: string;
-    btctxid?: string;
-    btctxidurl?: string;
-    stxtxid?: string;
-    stxtxidurl?: string;
-    btcfee?: string;
-    stxfee?: string;
-    btcamount: string;
-    stxamount: string;
+    sendertxid?: string;
+    sendertxidurl?: string;
+    receivertxid?: string;
+    receivertxidurl?: string;
+    senderfee?: string,
+    receiverfee?: string,
+    senderamount?: string,
+    receiveramount?: string
   }

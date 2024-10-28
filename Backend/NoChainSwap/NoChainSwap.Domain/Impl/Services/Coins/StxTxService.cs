@@ -126,11 +126,6 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
             throw new NotImplementedException();
         }
 
-        public override string GetSlug()
-        {
-            return "stacks";
-        }
-
         public override string GetSwapDescription(decimal proportion)
         {
             return "";
@@ -202,7 +197,22 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
                 tx.Update();
                 return await Task.FromResult(false);
             }
-
+            long amount = 0;
+            if (!long.TryParse(stxTx.TokenTransfer.Amount, out amount))
+            {
+                AddLog(tx.TxId, $"{stxTx.TokenTransfer.Amount} is not a valid amount", LogTypeEnum.Error, _txLogFactory);
+                tx.Status = TransactionStatusEnum.InvalidInformation;
+                tx.Update();
+                return await Task.FromResult(false);
+            }
+            if (amount <= 0)
+            {
+                AddLog(tx.TxId, "Pool did not receive any value", LogTypeEnum.Error, _txLogFactory);
+                tx.Status = TransactionStatusEnum.InvalidInformation;
+                tx.Update();
+                return await Task.FromResult(false);
+            }
+            return await Task.FromResult(true);
         }
 
     }

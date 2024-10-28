@@ -19,6 +19,5 @@ namespace NoChainSwap.Domain.Interfaces.Services
         IEnumerable<ITransactionLogModel> ListLogById(long txid);
         Task<bool> ProcessTransaction(ITransactionModel tx);
         Task<bool> ProcessAllTransaction();
-        ICoinTxService GetCoinTxService(CoinEnum coin);
     }
 }

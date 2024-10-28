@@ -8,9 +8,10 @@ const PriceService : IPriceService = {
     init: function (htppClient: IHttpClient): void {
         _httpClient = htppClient;
     },
-    getCurrentPrice: async () => {
+    getCurrentPrice: async (senderCoin: string, receiverCoin: string) => {
         let ret: PriceResult;
-        let request = await _httpClient.doGet<PriceResult>("api/CoinMarketCap/getcurrentprice", {});
+        let url = "api/CoinMarketCap/getcurrentprice/" + senderCoin + "/" + receiverCoin;
+        let request = await _httpClient.doGet<PriceResult>(url, {});
         if (request.success) {
             request.data.sucesso = true;
             return request.data;

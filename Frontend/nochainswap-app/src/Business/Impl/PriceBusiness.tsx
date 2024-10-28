@@ -1,4 +1,5 @@
 import BusinessResult from "../../DTO/Business/BusinessResult";
+import { CoinEnum } from "../../DTO/Enum/CoinEnum";
 import { PriceResult } from "../../DTO/Services/PriceResult";
 import { IPriceService } from "../../Services/Interfaces/IPriceService";
 import { IPriceBusiness } from "../Interfaces/IPriceBusiness";
@@ -9,10 +10,27 @@ const PriceBusiness: IPriceBusiness = {
   init: function (priceService: IPriceService): void {
     _priceService = priceService;
   },
-  getCurrentPrice: async () => {
+  getCurrentPrice: async (senderCoin: CoinEnum, receiverCoin: CoinEnum) => {
     try {
       let ret: BusinessResult<PriceResult> = null;
-      let retPool = await _priceService.getCurrentPrice();
+      let senderStr = "", receiverStr = "";
+      switch (senderCoin) {
+        case CoinEnum.Bitcoin:
+          senderStr = "btc";
+          break;
+        case CoinEnum.Stacks:
+          senderStr = "stx";
+          break;
+      }
+      switch (receiverCoin) {
+        case CoinEnum.Bitcoin:
+          receiverStr = "btc";
+          break;
+        case CoinEnum.Stacks:
+          receiverStr = "stx";
+          break;
+      }
+      let retPool = await _priceService.getCurrentPrice(senderStr, receiverStr);
       if (retPool.sucesso) {
         return {
           ...ret,
