@@ -9,7 +9,7 @@ namespace NoChainSwap.DTO.Stacks
 {
     public class TxInfo
     {
-        [JsonProperty("txid")]
+        [JsonProperty("tx_id")]
         public string TxId {  get; set; }
         [JsonProperty("nonce")]
         public long Nonce { get; set; }
@@ -55,7 +55,7 @@ namespace NoChainSwap.DTO.Stacks
         public string TxStatus { get; set; }
         [JsonProperty("tx_result")]
         public TxResultInfo TxResult {  get; set; }
-        [JsonProperty("txid")]
+        [JsonProperty("event_count")]
         public long EventCount { get; set; }
         [JsonProperty("parent_block_hash")]
         public string ParentBlockHash { get; set; }

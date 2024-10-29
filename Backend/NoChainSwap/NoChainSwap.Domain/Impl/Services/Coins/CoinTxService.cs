@@ -31,7 +31,6 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
         public abstract string ConvertToString(long coin);
         public abstract Task<int> GetFee(string txid);
         public abstract Task<long> GetSenderAmount(string txid, string senderAddr);
-        public abstract decimal GetSenderProportion(ICoinTxService receiverService);
         public abstract string GetSwapDescription(decimal proportion);
         public abstract Task<bool> VerifyTransaction(ITransactionModel tx);
 
@@ -119,9 +118,10 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
         )
         {
             var senderAmount = await GetSenderAmount(tx.SenderTxid, tx.SenderAddress);
-            var senderProportion = GetSenderProportion(receiverService);
+            //var senderProportion = GetSenderProportion(receiverService);
             var price = _coinMarketCapService.GetCurrentPrice(GetCoin(), receiverService.GetCoin());
-            var receiverAmount = Convert.ToInt64(senderAmount / senderProportion * 100000000M);
+            decimal receiverAmountFloat = senderAmount / price.SenderProportion;
+            var receiverAmount = Convert.ToInt64(receiverAmountFloat);
 
             var senderSymbol = Utils.CoinToStr(GetCoin());
             var receiverSymbol = Utils.CoinToStr(receiverService.GetCoin());
@@ -198,9 +198,9 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
 
         private async Task<TransactionStepInfo> ReceiverSendTxStep(ITransactionModel tx, ICoinTxService receiverService)
         {
-            if (await IsTransactionSuccessful(tx.SenderTxid))
+            if (!await IsTransactionSuccessful(tx.SenderTxid))
             {
-                AddLog(tx.TxId, "Transaction local is confirmed, but mempool not confirm", LogTypeEnum.Error, _txLogFactory);
+                AddLog(tx.TxId, "Transaction local is confirmed, but not confirm on chain", LogTypeEnum.Error, _txLogFactory);
                 tx.Status = TransactionStatusEnum.InvalidInformation;
                 tx.Update();
                 return await Task.FromResult(new TransactionStepInfo
@@ -211,7 +211,7 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
             }
             var senderAmount = await GetSenderAmount(tx.SenderTxid, tx.SenderAddress);
             var price = _coinMarketCapService.GetCurrentPrice(GetCoin(), receiverService.GetCoin());
-            var receiverAmount = Convert.ToInt64((senderAmount / price.SenderProportion) * 100000000M);
+            var receiverAmount = Convert.ToInt64(senderAmount / price.SenderProportion);
 
             var senderSymbol = Utils.CoinToStr(GetCoin());
             var receiverSymbol = Utils.CoinToStr(receiverService.GetCoin());
@@ -225,7 +225,7 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
             decimal receiverValue = Math.Round(receiverAmount / 100000000M, 5);
 
             AddLog(tx.TxId, string.Format(
-                "Transaction has {0:N5} {1}, Fee {2:N0} {3} and extimate {4:N5} {5}.",
+                "Transaction has {0:N5} {1}, Fee {2:N0} {3} and {4:N5} {5}.",
                 senderValue, senderSymbol,
                 tx.SenderFee, senderSymbol,
                 receiverValue, receiverSymbol

@@ -10,15 +10,24 @@ using NoChainSwap.DTO.Stacks;
 using NoChainSwap.DTO.Transaction;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using static NBitcoin.Protocol.Behaviors.ChainBehavior;
 
 namespace NoChainSwap.Domain.Impl.Services.Coins
 {
     public class StxTxService: CoinTxService, IStxTxService
     {
+        public StxTxService(ICoinMarketCapService coinMarketCapService, ITransactionDomainFactory txFactory, ITransactionLogDomainFactory txLogFactory)
+        {
+            _coinMarketCapService = coinMarketCapService;
+            _txFactory = txFactory;
+            _txLogFactory = txLogFactory;
+        }
+
         public static string WALLET_API { get; set; }
         public static string STACKS_API { get; set; }
 
@@ -116,14 +125,19 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
             return await GetBalance(await GetPoolAddress());
         }
 
-        public override Task<long> GetSenderAmount(string txid, string senderAddr)
+        public override async Task<long> GetSenderAmount(string txid, string senderAddr)
         {
-            throw new NotImplementedException();
-        }
-
-        public override decimal GetSenderProportion(ICoinTxService receiverService)
-        {
-            throw new NotImplementedException();
+            var txInfo = await LoadTransaction(txid);
+            if (txInfo == null)
+            {
+                throw new Exception($"Dont find transaction on STX API ({txid})");
+            }
+            long amount = 0;
+            if (!long.TryParse(txInfo.TokenTransfer.Amount, out amount))
+            {
+                throw new Exception($"{txInfo.TokenTransfer.Amount} is not a valid amount");
+            }
+            return amount;
         }
 
         public override string GetSwapDescription(decimal proportion)

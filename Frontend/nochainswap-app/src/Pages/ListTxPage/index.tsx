@@ -93,10 +93,10 @@ export default function ListTxPage() {
                             (txContext.txInfo?.receivertxid) &&
                             <>
                                 <dt className="col-sm-3">{
-                                {
-                                    'btc': 'BTC TxID',
-                                    'stx': 'STX TxID'
-                                }[txContext.txInfo?.receivercoin]
+                                    {
+                                        'btc': 'BTC TxID',
+                                        'stx': 'STX TxID'
+                                    }[txContext.txInfo?.receivercoin]
                                 }</dt>
                                 <dd className="col-sm-9"><a href={txContext.txInfo?.receivertxidurl} target="_blank">{txContext.txInfo?.receivertxid}</a></dd>
                             </>
@@ -125,7 +125,7 @@ export default function ListTxPage() {
                                     txContext.txLogs.map((log) => {
                                         return (
                                             <tr>
-                                                <td scope="col">{log.date}</td>
+                                                <td scope="col" style={{whiteSpace: "nowrap"}}>{log.date}</td>
                                                 <td scope="col">{
                                                     (log.intlogtype == 1) &&
                                                     <span className="badge rounded-pill text-bg-info">Info</span>
@@ -181,36 +181,37 @@ export default function ListTxPage() {
                                 </thead>
                                 <tbody>
                                     {
-                                        txContext.allTxInfo ?
-                                            txContext.allTxInfo.map((item) => {
-                                                let userAddr = item.senderaddress;
-                                                let userView = userAddr.substr(0, 6) + '...' + userAddr.substr(-4);
-                                                return (
-
-                                                    <tr>
-                                                        <td scope="col"><a href="#" onClick={(e) => { txClickHandler(e, item) }}>{
-                                                            item.sendercoin.toUpperCase() + " to " + item.receivercoin.toUpperCase()
-                                                        }</a></td>
-                                                        <td scope="col"><a href="#" onClick={(e) => { txClickHandler(e, item) }}>{userView}</a></td>
-                                                        <td scope="col"><a href="#" onClick={(e) => { txClickHandler(e, item) }}>{item.updateat}</a></td>
-                                                        <td scope="col"><a href="#" onClick={(e) => { txClickHandler(e, item) }}>{
-                                                            item.senderamount + " -> " + item.receiveramount
-                                                        }</a></td>
-                                                        <td scope="col"><a href="#" onClick={(e) => { txClickHandler(e, item) }}>{item.status}</a></td>
-                                                    </tr>
-                                                )
-                                            })
-                                            :
-                                            txContext.loadingAllTxInfo &&
-                                            <tr>
-                                                <td colSpan={5}>
-                                                    <div className="d-flex justify-content-center">
-                                                        <div className="spinner-border" role="status">
-                                                            <span className="visually-hidden">Loading...</span>
-                                                        </div>
+                                        txContext.loadingAllTxInfo &&
+                                        <tr>
+                                            <td colSpan={5}>
+                                                <div className="d-flex justify-content-center">
+                                                    <div className="spinner-border" role="status">
+                                                        <span className="visually-hidden">Loading...</span>
                                                     </div>
-                                                </td>
-                                            </tr>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                    {
+                                        txContext.allTxInfo &&
+                                        txContext.allTxInfo.map((item) => {
+                                            let userAddr = item.senderaddress;
+                                            let userView = userAddr.substr(0, 6) + '...' + userAddr.substr(-4);
+                                            return (
+
+                                                <tr>
+                                                    <td scope="col"><a href="#" onClick={(e) => { txClickHandler(e, item) }}>{
+                                                        item.sendercoin.toUpperCase() + " to " + item.receivercoin.toUpperCase()
+                                                    }</a></td>
+                                                    <td scope="col"><a href="#" onClick={(e) => { txClickHandler(e, item) }}>{userView}</a></td>
+                                                    <td scope="col"><a href="#" onClick={(e) => { txClickHandler(e, item) }}>{item.updateat}</a></td>
+                                                    <td scope="col"><a href="#" onClick={(e) => { txClickHandler(e, item) }}>{
+                                                        item.senderamount + " -> " + item.receiveramount
+                                                    }</a></td>
+                                                    <td scope="col"><a href="#" onClick={(e) => { txClickHandler(e, item) }}>{item.status}</a></td>
+                                                </tr>
+                                            )
+                                        })
                                     }
                                 </tbody>
                             </Table>

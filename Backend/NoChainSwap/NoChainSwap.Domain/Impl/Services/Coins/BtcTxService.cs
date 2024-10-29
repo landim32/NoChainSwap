@@ -108,11 +108,6 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
             return await Task.FromResult(mempoolTx.Status.Confirmed);
         }
 
-        public override decimal GetSenderProportion(ICoinTxService receiverService)
-        {
-            return 0M;
-        }
-
         public override string GetSwapDescription(decimal proportion)
         {
             return "";

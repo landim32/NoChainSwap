@@ -46,14 +46,14 @@ namespace NoChainSwap.API.Controllers
             return new TxResult
             {
                 TxId = md.TxId,
-                SenderCoin = md.GetReceiverCoinSymbol(),
+                SenderCoin = md.GetSenderCoinSymbol(),
                 ReceiverCoin = md.GetReceiverCoinSymbol(),
                 SenderAddress = md.SenderAddress,
                 SenderAddressUrl = (md.SenderAddress != null) ? senderTx.GetAddressUrl(md.SenderAddress) : null,
                 ReceiverAddress = md.ReceiverAddress,
                 ReceiverAddressUrl = (md.ReceiverAddress != null) ? receiverTx.GetAddressUrl(md.ReceiverAddress) : null,
-                CreateAt = md.CreateAt.ToString("MM/dd/yyyy HH:mm:ss"),
-                UpdateAt = md.UpdateAt.ToString("MM/dd/yyyy HH:mm:ss"),
+                CreateAt = md.CreateAt.ToString("MM/dd HH:mm:ss"),
+                UpdateAt = md.UpdateAt.ToString("MM/dd HH:mm:ss"),
                 Status = TransactionService.GetTransactionEnumToString(md.Status),
                 SenderTxid = md.SenderTxid,
                 SenderTxidUrl = !string.IsNullOrEmpty(md.SenderTxid) ? senderTx.GetTransactionUrl(md.SenderTxid) : null,
@@ -142,7 +142,7 @@ namespace NoChainSwap.API.Controllers
                 {
                     LogType = GetLogTypeToStr(x.LogType),
                     IntLogType = (int)x.LogType,
-                    Date = x.Date.ToString("MM/dd/yyyy HH:mm:ss"),
+                    Date = x.Date.ToString("MM/dd HH:mm:ss"),
                     Message = x.Message
                 }).ToList();
                 return new ActionResult<IList<TxLogResult>>(ds);

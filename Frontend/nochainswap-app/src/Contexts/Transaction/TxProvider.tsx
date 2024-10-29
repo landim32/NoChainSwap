@@ -61,11 +61,11 @@ export default function TxProvider(props: any) {
     },
     loadListAllTx: async () => {
       let ret: Promise<ProviderResult>;
-      setLoadingTxInfo(true);
+      setLoadingAllTxInfo(true);
       try {
         let brt = await TxFactory.TxBusiness.listAllTx();
         if (brt.sucesso) {
-          setLoadingTxInfo(false);
+          setLoadingAllTxInfo(false);
           setAllTxInfo(brt.dataResult);
           return {
             ...ret,
@@ -74,7 +74,7 @@ export default function TxProvider(props: any) {
           };
         }
         else {
-          setLoadingTxInfo(false);
+          setLoadingAllTxInfo(false);
           return {
             ...ret,
             sucesso: false,
@@ -83,7 +83,7 @@ export default function TxProvider(props: any) {
         }
       }
       catch (err) {
-        setLoadingTxInfo(false);
+        setLoadingAllTxInfo(false);
         return {
           ...ret,
           sucesso: false,
@@ -93,11 +93,11 @@ export default function TxProvider(props: any) {
     },
     loadTxLogs: async (txid: number) => {
       let ret: Promise<ProviderResult>;
-      setLoadingTxInfo(true);
+      setLoadingTxLogs(true);
       try {
         let brt = await TxFactory.TxBusiness.listTxLogs(txid);
         if (brt.sucesso) {
-          setLoadingTxInfo(false);
+          setLoadingTxLogs(false);
           setTxLogs(brt.dataResult);
           return {
             ...ret,
@@ -106,7 +106,7 @@ export default function TxProvider(props: any) {
           };
         }
         else {
-          setLoadingTxInfo(false);
+          setLoadingTxLogs(false);
           return {
             ...ret,
             sucesso: false,
@@ -115,7 +115,7 @@ export default function TxProvider(props: any) {
         }
       }
       catch (err) {
-        setLoadingTxInfo(false);
+        setLoadingTxLogs(false);
         return {
           ...ret,
           sucesso: false,
