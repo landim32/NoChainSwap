@@ -1,4 +1,6 @@
 ﻿using NBitcoin;
+using NBitcoin.RPC;
+using Newtonsoft.Json;
 using NoChainSwap.Domain.Impl.Models;
 using NoChainSwap.Domain.Interfaces.Factory;
 using NoChainSwap.Domain.Interfaces.Models;
@@ -10,7 +12,9 @@ using NoChainSwap.DTO.Transaction;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace NoChainSwap.Domain.Impl.Services.Coins
@@ -47,11 +51,16 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
             return CoinEnum.Bitcoin;
         }
 
-        public override async Task<string> GetPoolAddress()
+        private BitcoinSecret GetBitcoinPrivatekey()
         {
             Mnemonic mnemo = new Mnemonic(MNEMONIC);
             var extKey = mnemo.DeriveExtKey();
-            var bitcoinSecret = extKey.PrivateKey.GetBitcoinSecret(Network.TestNet);
+            return extKey.PrivateKey.GetBitcoinSecret(Network.TestNet);
+        }
+
+        public override async Task<string> GetPoolAddress()
+        {
+            var bitcoinSecret = GetBitcoinPrivatekey();
             var address = bitcoinSecret.GetAddress(ScriptPubKeyType.Segwit);
             return await Task.FromResult(address.ToString()); 
         }
@@ -157,7 +166,39 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
 
         public async override Task<string> Transfer(string address, long amount)
         {
-            return await Task.FromResult("");
+            var txFee = await _mempoolService.GetRecommendedFee();
+            if (txFee == null) {
+                throw new Exception("Recommended fee cant be null");
+            }
+
+            var bitcoinSecret = GetBitcoinPrivatekey();
+
+            Money nAmount = Money.Satoshis(amount);
+            Money fee = Money.Satoshis(txFee.MinimumFee);
+
+            var poolAddress = bitcoinSecret.GetAddress(ScriptPubKeyType.Segwit);
+
+            BitcoinAddress receiverAddress = BitcoinAddress.Create(address, Network.TestNet);
+
+            var funding = Transaction.Create(Network.TestNet);
+            funding.Outputs.Add(new TxOut(nAmount, poolAddress));
+
+            var coins = funding.Outputs.Select((i, v) => new Coin(new OutPoint(funding.GetHash(), v), i)).ToArray();
+
+            var txBuilder = Network.TestNet.CreateTransactionBuilder();
+            var tx = txBuilder
+                .AddCoins(coins)
+                .AddKeys(bitcoinSecret.PrivateKey)
+                .Send(receiverAddress, nAmount)
+                .SendEstimatedFees(new FeeRate(fee))
+                .SetChange(poolAddress)
+                .BuildTransaction(true);
+            if (!txBuilder.Verify(tx))
+            {
+                throw new Exception("Cant verify bitcoin transaction");
+            }
+            return await _mempoolService.BroadcastTransaction(tx.ToHex());
+            
         }
     }
 }

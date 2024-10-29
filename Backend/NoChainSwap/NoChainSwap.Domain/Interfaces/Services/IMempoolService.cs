@@ -10,7 +10,8 @@ namespace NoChainSwap.Domain.Interfaces.Services
     public interface IMempoolService
     {
         Task<long> GetBalance(string address);
-        Task<RecommendedFeeInfo> GetRecommededFee();
+        Task<TxRecommendedFeeInfo> GetRecommendedFee();
         Task<MemPoolTxInfo> GetTransaction(string txid);
+        Task<string> BroadcastTransaction(string hexTx);
     }
 }

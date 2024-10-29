@@ -76,15 +76,15 @@ namespace NoChainSwap.Domain.Impl.Services
 
         public ITransactionModel CreateTx(TransactionParamInfo param)
         {
-            if (!string.IsNullOrEmpty(param.SenderAddress))
+            if (string.IsNullOrEmpty(param.SenderAddress))
             {
                 throw new Exception($"Sender Address '{param.SenderAddress}' not informed");
             }
-            if (!string.IsNullOrEmpty(param.ReceiverAddress))
+            if (string.IsNullOrEmpty(param.ReceiverAddress))
             {
                 throw new Exception($"Receiver Address '{param.SenderAddress}' not informed");
             }
-            if (!string.IsNullOrEmpty(param.SenderTxid))
+            if (string.IsNullOrEmpty(param.SenderTxid))
             {
                 var m1 = _txFactory.BuildTransactionModel().GetBySenderTxId(param.SenderTxid, _txFactory);
                 if (m1 != null)

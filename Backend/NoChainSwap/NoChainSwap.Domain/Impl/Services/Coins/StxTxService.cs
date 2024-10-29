@@ -85,7 +85,7 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
             {
                 throw new Exception($"Cant convert fee to number ({feeStr})");
             }
-            return fee;
+            return fee * 100;
         }
 
         private async Task<long> GetBalance(string stxAddress)
@@ -103,7 +103,7 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
                 {
                     throw new Exception(String.Format("Invalid balance ({0}).", balance.Balance));
                 }
-                return balanceLng;
+                return balanceLng * 100;
             }
         }
 
@@ -137,7 +137,7 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
             {
                 throw new Exception($"{txInfo.TokenTransfer.Amount} is not a valid amount");
             }
-            return amount;
+            return amount * 100;
         }
 
         public override string GetSwapDescription(decimal proportion)
@@ -168,7 +168,7 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
                 TransferParamInfo param = new TransferParamInfo
                 {
                     recipientAddress = address,
-                    amount = amount
+                    amount = amount / 100
                 };
                 var jsonContent = new StringContent(JsonConvert.SerializeObject(param), Encoding.UTF8, "application/json");
                 HttpResponseMessage response = await client.PutAsync(url, jsonContent);
@@ -184,8 +184,8 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
                 {
                     return await Task.FromResult(txHandle.TxId);
                 }
+                return await Task.FromResult(string.Empty);
             }
-            return await Task.FromResult("");
         }
 
         public override async Task<bool> VerifyTransaction(ITransactionModel tx)

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using NBitcoin;
 
 namespace NoChainSwap.Domain.Impl.Services
 {
@@ -28,7 +29,7 @@ namespace NoChainSwap.Domain.Impl.Services
             }
         }
 
-        public async Task<RecommendedFeeInfo> GetRecommededFee()
+        public async Task<TxRecommendedFeeInfo> GetRecommendedFee()
         {
             using (var client = new HttpClient())
             {
@@ -37,7 +38,7 @@ namespace NoChainSwap.Domain.Impl.Services
                 response.EnsureSuccessStatusCode();
                 var responseBody = await response.Content.ReadAsStringAsync();
 
-                return JsonConvert.DeserializeObject<RecommendedFeeInfo>(responseBody);
+                return JsonConvert.DeserializeObject<TxRecommendedFeeInfo>(responseBody);
             }
         }
 
@@ -51,6 +52,20 @@ namespace NoChainSwap.Domain.Impl.Services
                 var responseBody = await response.Content.ReadAsStringAsync();
 
                 return JsonConvert.DeserializeObject<MemPoolTxInfo>(responseBody);
+            }
+        }
+
+        public async Task<string> BroadcastTransaction(string hexTx)
+        {
+            using (var client = new HttpClient())
+            {
+                string url = "https://mempool.space/testnet/api/tx";
+                
+                HttpResponseMessage response = await client.PostAsync(url, new StringContent(hexTx));
+                response.EnsureSuccessStatusCode();
+                var responseBody = await response.Content.ReadAsStringAsync();
+
+                return responseBody;
             }
         }
     }

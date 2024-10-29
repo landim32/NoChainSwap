@@ -120,26 +120,29 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
             var senderAmount = await GetSenderAmount(tx.SenderTxid, tx.SenderAddress);
             //var senderProportion = GetSenderProportion(receiverService);
             var price = _coinMarketCapService.GetCurrentPrice(GetCoin(), receiverService.GetCoin());
-            decimal receiverAmountFloat = senderAmount / price.SenderProportion;
+            decimal receiverAmountFloat = senderAmount / price.ReceiverProportion;
             var receiverAmount = Convert.ToInt64(receiverAmountFloat);
+
+            var fee = await GetFee(tx.SenderTxid);
 
             var senderSymbol = Utils.CoinToStr(GetCoin());
             var receiverSymbol = Utils.CoinToStr(receiverService.GetCoin());
 
             tx.SenderAmount = senderAmount;
             tx.ReceiverAmount = receiverAmount;
-            tx.SenderFee = await GetFee(tx.SenderTxid);
+            tx.SenderFee = fee;
             tx.Status = TransactionStatusEnum.Calculated;
             tx.Update();
 
+            decimal feeValue = Math.Round(fee / 100000000M, 5);
             decimal senderValue = Math.Round(senderAmount / 100000000M, 5);
             decimal receiverValue = Math.Round(receiverAmount / 100000000M, 5);
 
             AddLog(tx.TxId, string.Format(
-                "Transaction has {0:N5} {1}, Fee {2:N0} {3} and extimate {4:N5} {5}.", 
-                senderValue, senderSymbol, 
-                tx.SenderFee, senderSymbol, 
-                receiverValue, receiverSymbol
+                "Transaction has {0:N5} {1}, Fee {2:N5} {3} and extimate {4:N5} {5}.",
+                senderValue, senderSymbol.ToUpper(),
+                feeValue, senderSymbol.ToUpper(),
+                receiverValue, receiverSymbol.ToUpper()
             ), LogTypeEnum.Information, _txLogFactory);
 
             return await Task.FromResult(new TransactionStepInfo
@@ -211,24 +214,27 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
             }
             var senderAmount = await GetSenderAmount(tx.SenderTxid, tx.SenderAddress);
             var price = _coinMarketCapService.GetCurrentPrice(GetCoin(), receiverService.GetCoin());
-            var receiverAmount = Convert.ToInt64(senderAmount / price.SenderProportion);
+            var receiverAmount = Convert.ToInt64(senderAmount / price.ReceiverProportion);
 
             var senderSymbol = Utils.CoinToStr(GetCoin());
             var receiverSymbol = Utils.CoinToStr(receiverService.GetCoin());
 
+            var fee = await GetFee(tx.SenderTxid);
+
             tx.SenderAmount = senderAmount;
             tx.ReceiverAmount = receiverAmount;
-            tx.SenderFee = await GetFee(tx.SenderTxid);
+            tx.SenderFee = fee;
             tx.Update();
 
+            decimal feeValue = Math.Round(fee / 100000000M, 5);
             decimal senderValue = Math.Round(senderAmount / 100000000M, 5);
             decimal receiverValue = Math.Round(receiverAmount / 100000000M, 5);
 
             AddLog(tx.TxId, string.Format(
-                "Transaction has {0:N5} {1}, Fee {2:N0} {3} and {4:N5} {5}.",
-                senderValue, senderSymbol,
-                tx.SenderFee, senderSymbol,
-                receiverValue, receiverSymbol
+                "Transaction has {0:N5} {1}, Fee {2:N5} {3} and {4:N5} {5}.",
+                senderValue, senderSymbol.ToUpper(),
+                feeValue, senderSymbol.ToUpper(),
+                receiverValue, receiverSymbol.ToUpper()
             ), LogTypeEnum.Information, _txLogFactory);
 
             //var poolAddr = await receiverService.GetPoolAddress();
@@ -254,7 +260,7 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
                         DoNextStep = false
                     });
                 }
-                tx.ReceiverAddress = txId;
+                tx.ReceiverTxid = txId;
                 tx.Status = TransactionStatusEnum.SenderConfirmedReiceiverNotConfirmed;
                 tx.Update();
                 return await Task.FromResult(new TransactionStepInfo
@@ -266,7 +272,7 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
             catch (Exception err)
             {
                 AddLog(tx.TxId, err.Message, LogTypeEnum.Error, _txLogFactory);
-                tx.Status = TransactionStatusEnum.CriticalError;
+                tx.Status = TransactionStatusEnum.SenderConfirmed;
                 tx.Update();
                 return await Task.FromResult(new TransactionStepInfo
                 {
