@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using NBitcoin;
+using System.Net;
 
 namespace NoChainSwap.Domain.Impl.Services
 {
@@ -42,6 +43,19 @@ namespace NoChainSwap.Domain.Impl.Services
             }
         }
 
+        public async Task<IList<UtxoInfo>> ListUTXO(string address)
+        {
+            using (var client = new HttpClient())
+            {
+                string url = $"https://mempool.space/testnet/api/address/{address}/utxo";
+                HttpResponseMessage response = await client.GetAsync(url);
+                response.EnsureSuccessStatusCode();
+                var responseBody = await response.Content.ReadAsStringAsync();
+
+                return JsonConvert.DeserializeObject<IList<UtxoInfo>>(responseBody);
+            }
+        }
+
         public async Task<MemPoolTxInfo> GetTransaction(string txid)
         {
             using (var client = new HttpClient())
@@ -62,6 +76,7 @@ namespace NoChainSwap.Domain.Impl.Services
                 string url = "https://mempool.space/testnet/api/tx";
                 
                 HttpResponseMessage response = await client.PostAsync(url, new StringContent(hexTx));
+                var msgErro = await response.Content.ReadAsStringAsync();
                 response.EnsureSuccessStatusCode();
                 var responseBody = await response.Content.ReadAsStringAsync();
 

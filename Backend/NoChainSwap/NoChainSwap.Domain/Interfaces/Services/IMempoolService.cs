@@ -11,6 +11,7 @@ namespace NoChainSwap.Domain.Interfaces.Services
     {
         Task<long> GetBalance(string address);
         Task<TxRecommendedFeeInfo> GetRecommendedFee();
+        Task<IList<UtxoInfo>> ListUTXO(string address);
         Task<MemPoolTxInfo> GetTransaction(string txid);
         Task<string> BroadcastTransaction(string hexTx);
     }

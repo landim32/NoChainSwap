@@ -173,17 +173,29 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
 
             var bitcoinSecret = GetBitcoinPrivatekey();
 
-            Money nAmount = Money.Satoshis(amount);
-            Money fee = Money.Satoshis(txFee.MinimumFee);
-
             var poolAddress = bitcoinSecret.GetAddress(ScriptPubKeyType.Segwit);
+
+            var poolBalance = await _mempoolService.GetBalance(poolAddress.ToString());
+
+            Money nBalance = Money.Satoshis(poolBalance);
+            Money nAmount = Money.Satoshis(amount);
+            Money fee = Money.Satoshis(txFee.HourFee);
 
             BitcoinAddress receiverAddress = BitcoinAddress.Create(address, Network.TestNet);
 
-            var funding = Transaction.Create(Network.TestNet);
-            funding.Outputs.Add(new TxOut(nAmount, poolAddress));
+            var utxos = await _mempoolService.ListUTXO(poolAddress.ToString());
+            if (utxos == null || !utxos.Any())
+            {
+                throw new Exception("No available UTXOs for the pool address.");
+            }
 
-            var coins = funding.Outputs.Select((i, v) => new Coin(new OutPoint(funding.GetHash(), v), i)).ToArray();
+            var funding = Transaction.Create(Network.TestNet);
+            //funding.Outputs.Add(new TxOut(nBalance, poolAddress));
+
+            //var coins = funding.Outputs.Select((i, v) => new Coin(new OutPoint(funding.GetHash(), v), i)).ToArray();
+            var coins = utxos.Select(utxo => 
+                new Coin(new OutPoint(uint256.Parse(utxo.Txid), utxo.Vout), new TxOut(Money.Satoshis(utxo.Value), poolAddress))
+            ).ToArray();
 
             var txBuilder = Network.TestNet.CreateTransactionBuilder();
             var tx = txBuilder
