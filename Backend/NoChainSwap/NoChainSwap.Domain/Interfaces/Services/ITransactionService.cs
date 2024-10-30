@@ -16,6 +16,7 @@ namespace NoChainSwap.Domain.Interfaces.Services
         ITransactionModel Update(TransactionInfo tx);
         IEnumerable<ITransactionModel> ListByStatusActive();
         IEnumerable<ITransactionModel> ListAll();
+        IEnumerable<ITransactionModel> ListByAddress(string senderAddr);
         IEnumerable<ITransactionLogModel> ListLogById(long txid);
         Task<bool> ProcessTransaction(ITransactionModel tx);
         Task<bool> ProcessAllTransaction();

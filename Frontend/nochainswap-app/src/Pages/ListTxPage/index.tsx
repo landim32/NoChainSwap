@@ -8,18 +8,50 @@ import TxContext from '../../Contexts/Transaction/TxContext';
 import TxInfo from '../../DTO/Domain/TxInfo';
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/esm/Button';
+import { useParams } from 'react-router-dom';
+import ProviderResult from '../../DTO/Contexts/ProviderResult';
 
-export default function ListTxPage() {
+interface IListTxParam {
+    OnlyMyTx: boolean
+};
+
+export default function ListTxPage(param: IListTxParam) {
+
+    let { txid } = useParams(); 
 
     const [showModal, setShowModal] = useState<boolean>(false);
+    const [onlyMyTx, setOnlyMyTx] = useState<boolean>(param.OnlyMyTx);
 
     const txContext = useContext(TxContext);
-    useEffect(() => {
-        txContext.loadListAllTx().then((ret) => {
-            if (!ret.sucesso) {
-                alert(ret.mensagemErro);
+
+    const listTxReturnHandler = (ret: ProviderResult) => {
+        if (ret.sucesso) {
+            if (txid) {
+                let txidNum = parseInt(txid);
+                if (txidNum > 0) {
+                    txContext.loadTx(txidNum).then(() => {
+                        txContext.loadTxLogs(txidNum).then((ret) => {
+                            if (!ret.sucesso) {
+                                alert(ret.mensagemErro);
+                            }
+                        });
+                    });
+                    setShowModal(true);
+                }
             }
-        });
+        } else {
+            alert(ret.mensagemErro);
+        }
+    };
+
+    useEffect(() => {
+        alert(onlyMyTx);
+        if (onlyMyTx) {
+            txContext.loadListMyTx().then(listTxReturnHandler);
+        }
+        else {
+            txContext.loadListAllTx().then(listTxReturnHandler);
+        }
     }, []);
 
     const txClickHandler = (e: any, item: TxInfo) => {
@@ -181,7 +213,7 @@ export default function ListTxPage() {
                                 </thead>
                                 <tbody>
                                     {
-                                        txContext.loadingAllTxInfo &&
+                                        txContext.loadingTxInfoList &&
                                         <tr>
                                             <td colSpan={5}>
                                                 <div className="d-flex justify-content-center">
@@ -193,19 +225,19 @@ export default function ListTxPage() {
                                         </tr>
                                     }
                                     {
-                                        txContext.allTxInfo &&
-                                        txContext.allTxInfo.map((item) => {
+                                        txContext.txInfoList &&
+                                        txContext.txInfoList.map((item) => {
                                             let userAddr = item.senderaddress;
                                             let userView = userAddr.substr(0, 6) + '...' + userAddr.substr(-4);
                                             return (
 
                                                 <tr>
-                                                    <td scope="col"><a href="#" onClick={(e) => { txClickHandler(e, item) }}>{
+                                                    <td scope="col" style={{whiteSpace: "nowrap"}}><a href="#" onClick={(e) => { txClickHandler(e, item) }}>{
                                                         item.sendercoin.toUpperCase() + " to " + item.receivercoin.toUpperCase()
                                                     }</a></td>
-                                                    <td scope="col"><a href="#" onClick={(e) => { txClickHandler(e, item) }}>{userView}</a></td>
-                                                    <td scope="col"><a href="#" onClick={(e) => { txClickHandler(e, item) }}>{item.updateat}</a></td>
-                                                    <td scope="col"><a href="#" onClick={(e) => { txClickHandler(e, item) }}>{
+                                                    <td scope="col" style={{whiteSpace: "nowrap"}}><a href="#" onClick={(e) => { txClickHandler(e, item) }}>{userView}</a></td>
+                                                    <td scope="col" style={{whiteSpace: "nowrap"}}><a href="#" onClick={(e) => { txClickHandler(e, item) }}>{item.updateat}</a></td>
+                                                    <td scope="col" style={{whiteSpace: "nowrap"}}><a href="#" onClick={(e) => { txClickHandler(e, item) }}>{
                                                         item.senderamount + " -> " + item.receiveramount
                                                     }</a></td>
                                                     <td scope="col"><a href="#" onClick={(e) => { txClickHandler(e, item) }}>{item.status}</a></td>

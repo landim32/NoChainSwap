@@ -76,6 +76,28 @@ const TxBusiness: ITxBusiness = {
       throw new Error("Failed to list transactions");
     }
   },
+  listMyTx: async (address: string) => {
+    try {
+      let ret: BusinessResult<TxInfo[]> = null;
+      let retServ = await _txService.listMyTx(address);
+      console.log("ret: ", retServ);
+      if (retServ.sucesso) {
+        return {
+          ...ret,
+          dataResult: retServ.transactions,
+          sucesso: true
+        };
+      } else {
+        return {
+          ...ret,
+          sucesso: false,
+          mensagem: retServ.mensagem
+        };
+      }
+    } catch {
+      throw new Error("Failed to list transactions");
+    }
+  },
   listTxLogs: async (txid: number) => {
     try {
       let ret: BusinessResult<TxLogInfo[]> = null;

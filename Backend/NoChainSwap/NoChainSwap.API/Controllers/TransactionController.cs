@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using NoChainSwap.Domain.Interfaces.Factory;
+using System.Net;
 
 namespace NoChainSwap.API.Controllers
 {
@@ -81,6 +82,27 @@ namespace NoChainSwap.API.Controllers
                 var tx = _txService.CreateTx(param);
                 
                 return new ActionResult<bool>(tx.TxId > 0);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpGet("listmytransactions/{address}")]
+        public ActionResult<IList<TxResult>> ListMyTransactions(string address)
+        {
+            try
+            {
+                /*
+                var user = _userService.GetUserInSession(HttpContext);
+                if (user == null)
+                {
+                    return StatusCode(401, "Not Authorized");
+                }
+                */
+                var ds = _txService.ListByAddress(address).Select(x => ModelToInfo(x)).ToList();
+                return new ActionResult<IList<TxResult>>(ds);
             }
             catch (Exception ex)
             {

@@ -34,7 +34,7 @@ namespace NoChainSwap.Domain.Interfaces.Models
         ITransactionModel GetById(long txId, ITransactionDomainFactory factory);
         ITransactionModel GetBySenderTxId(string txid, ITransactionDomainFactory factory);
         ITransactionModel GetByReceiverTxId(string txid, ITransactionDomainFactory factory);
-        IEnumerable<ITransactionModel> ListBySenderAddr(string senderAddr, ITransactionDomainFactory factory);
+        IEnumerable<ITransactionModel> ListByAddress(string address, ITransactionDomainFactory factory);
         IEnumerable<ITransactionModel> ListByStatus(IList<int> status, ITransactionDomainFactory factory);
         IEnumerable<ITransactionModel> ListAll(ITransactionDomainFactory factory);
     }

@@ -94,9 +94,9 @@ namespace DB.Infra.Repository
             }
         }
 
-        public IEnumerable<ITransactionModel> ListBySenderAddr(string senderAddr, ITransactionDomainFactory factory)
+        public IEnumerable<ITransactionModel> ListByAddress(string address, ITransactionDomainFactory factory)
         {
-            var rows = _ccsContext.Transactions.ToList();
+            var rows = _ccsContext.Transactions.Where(x => x.SenderAddress == address || x.ReceiverAddress == address).ToList();
             return rows.Select(x => DbToModel(factory, x));
         }
 

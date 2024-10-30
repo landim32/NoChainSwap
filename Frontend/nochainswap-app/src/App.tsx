@@ -33,8 +33,14 @@ function App() {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<SwapForm />} />
-          <Route path="my-swaps" element={<ListTxPage />} />
-          <Route path="all-swaps" element={<ListTxPage />} />
+          <Route path="my-swaps">
+            <Route index element={<ListTxPage OnlyMyTx={true} />} />
+            <Route path=":txid" element={<ListTxPage OnlyMyTx={true} />} />
+          </Route>
+          <Route path="all-swaps">
+            <Route index element={<ListTxPage OnlyMyTx={false} />} />
+            <Route path=":txid" element={<ListTxPage OnlyMyTx={false} />} />
+          </Route>
           <Route path="*" element={<Error404 />} />
         </Route>
       </Routes>

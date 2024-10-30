@@ -5,24 +5,25 @@ import TxContext from './TxContext';
 import TxInfo from '../../DTO/Domain/TxInfo';
 import TxLogInfo from '../../DTO/Domain/TxLogInfo';
 import TxFactory from '../../Business/Factory/TxFactory';
+import AuthFactory from '../../Business/Factory/AuthFactory';
 
 export default function TxProvider(props: any) {
 
   const [loadingTxInfo, setLoadingTxInfo] = useState<boolean>(false);
-  const [loadingAllTxInfo, setLoadingAllTxInfo] = useState<boolean>(false);
+  const [loadingTxInfoList, setLoadingTxInfoList] = useState<boolean>(false);
   const [loadingTxLogs, setLoadingTxLogs] = useState<boolean>(false);
   const [reloadingTx, setReloadingTx] = useState<boolean>(false);
   const [txInfo, _setTxInfo] = useState<TxInfo>(null);
-  const [allTxInfo, setAllTxInfo] = useState<TxInfo[]>(null);
+  const [txInfoList, setTxInfoList] = useState<TxInfo[]>(null);
   const [txLogs, setTxLogs] = useState<TxLogInfo[]>(null);
 
   const txProviderValue: ITxProvider = {
     loadingTxInfo: loadingTxInfo,
-    loadingAllTxInfo: loadingAllTxInfo,
+    loadingTxInfoList: loadingTxInfoList,
     loadingTxLogs: loadingTxLogs,
     reloadingTx: reloadingTx,
     txInfo: txInfo,
-    allTxInfo: allTxInfo,
+    txInfoList: txInfoList,
     txLogs: txLogs,
     setTxInfo: (txInfo: TxInfo) => {
       _setTxInfo(txInfo);
@@ -59,14 +60,24 @@ export default function TxProvider(props: any) {
         };
       }
     },
-    loadListAllTx: async () => {
+    loadListMyTx: async () => {
       let ret: Promise<ProviderResult>;
-      setLoadingAllTxInfo(true);
+      setLoadingTxInfoList(true);
       try {
-        let brt = await TxFactory.TxBusiness.listAllTx();
+        let retSession = await AuthFactory.AuthBusiness.getSession();
+        if (!retSession.sucesso) {
+            let retErro = {
+                ...ret,
+                sucesso: false,
+                mensagemErro: retSession.mensagem
+            };
+            return retErro;
+        }
+        let userSession = retSession.dataResult;
+        let brt = await TxFactory.TxBusiness.listMyTx(userSession.btcAddress);
         if (brt.sucesso) {
-          setLoadingAllTxInfo(false);
-          setAllTxInfo(brt.dataResult);
+          setLoadingTxInfoList(false);
+          setTxInfoList(brt.dataResult);
           return {
             ...ret,
             sucesso: true,
@@ -74,7 +85,7 @@ export default function TxProvider(props: any) {
           };
         }
         else {
-          setLoadingAllTxInfo(false);
+          setLoadingTxInfoList(false);
           return {
             ...ret,
             sucesso: false,
@@ -83,7 +94,39 @@ export default function TxProvider(props: any) {
         }
       }
       catch (err) {
-        setLoadingAllTxInfo(false);
+        setLoadingTxInfoList(false);
+        return {
+          ...ret,
+          sucesso: false,
+          mensagemErro: JSON.stringify(err)
+        };
+      }
+    },
+    loadListAllTx: async () => {
+      let ret: Promise<ProviderResult>;
+      setLoadingTxInfoList(true);
+      try {
+        let brt = await TxFactory.TxBusiness.listAllTx();
+        if (brt.sucesso) {
+          setLoadingTxInfoList(false);
+          setTxInfoList(brt.dataResult);
+          return {
+            ...ret,
+            sucesso: true,
+            mensagemSucesso: "Transactions load"
+          };
+        }
+        else {
+          setLoadingTxInfoList(false);
+          return {
+            ...ret,
+            sucesso: false,
+            mensagemErro: brt.mensagem
+          };
+        }
+      }
+      catch (err) {
+        setLoadingTxInfoList(false);
         return {
           ...ret,
           sucesso: false,

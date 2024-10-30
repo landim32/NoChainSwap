@@ -6,13 +6,20 @@ import Navbar from 'react-bootstrap/Navbar';
 import { Link } from 'react-router-dom';
 import AuthContext from '../Contexts/Auth/AuthContext';
 import NavDropdown from 'react-bootstrap/NavDropdown';
+import Alert from 'react-bootstrap/Alert';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faWarning } from '@fortawesome/free-solid-svg-icons/faWarning'
 
 export default function Menu() {
+
+  const [show, setShow] = useState(true);
+
   const authContext = useContext(AuthContext);
   useEffect(() => {
     authContext.loadUserSession();
   }, []);
   return (
+    <>
     <Navbar expand="lg" className="bg-body-tertiary mb-3">
       <Container>
         <Navbar.Brand href="#home">NoChain Swap</Navbar.Brand>
@@ -46,5 +53,11 @@ export default function Menu() {
         </Navbar.Collapse>
       </Container>
     </Navbar>
+    <Container>
+    <Alert key="danger" variant="danger" onClose={() => setShow(false)} dismissible>
+    <FontAwesomeIcon icon={faWarning} /> This app is using the <strong>TestNet Network</strong>. Coins have no value here!
+    </Alert>
+    </Container>
+    </>
   );
 }

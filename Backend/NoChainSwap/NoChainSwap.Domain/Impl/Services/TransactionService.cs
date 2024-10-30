@@ -174,6 +174,11 @@ namespace NoChainSwap.Domain.Impl.Services
             return _txFactory.BuildTransactionModel().ListAll(_txFactory);
         }
 
+        public IEnumerable<ITransactionModel> ListByAddress(string senderAddr)
+        {
+            return _txFactory.BuildTransactionModel().ListByAddress(senderAddr, _txFactory);
+        }
+
         public IEnumerable<ITransactionLogModel> ListLogById(long txid)
         {
             return _txLogFactory.BuildTransactionLogModel().ListById(txid, _txLogFactory);

@@ -12,7 +12,7 @@ namespace Core.Domain.Repository
         TModel GetBySenderAddr(string senderAddr, TFactory factory);
         TModel GetById(long txId, TFactory factory);
         TModel UpdateTx(TModel model);
-        IEnumerable<TModel> ListBySenderAddr(string senderAddr, TFactory factory);
+        IEnumerable<TModel> ListByAddress(string address, TFactory factory);
         TModel GetBySenderTxId(string txid, TFactory factory);
         TModel GetByReceiverTxId(string txid, TFactory factory);
         IEnumerable<TModel> ListByStatus(IList<int> status, TFactory factory);

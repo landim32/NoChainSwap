@@ -11,6 +11,7 @@ export interface ITxService {
     createTx: (param: TxParamInfo) => Promise<StatusRequest>;
     getTx: (txid: number) => Promise<TxResult>;
     listAllTx: () => Promise<TxListResult>;
+    listMyTx: (address: string) => Promise<TxListResult>;
     listTxLogs: (txid: number) => Promise<TxLogListResult>;
     proccessTx: (txid: number) => Promise<StatusRequest>;
 }

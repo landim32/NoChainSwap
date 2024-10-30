@@ -9,6 +9,7 @@ export interface ITxBusiness {
   createTx: (param: TxParamInfo) => Promise<BusinessResult<boolean>>;
   getTx: (txid: number) => Promise<BusinessResult<TxInfo>>;
   listAllTx: () => Promise<BusinessResult<TxInfo[]>>;
+  listMyTx: (address: string) => Promise<BusinessResult<TxInfo[]>>;
   listTxLogs: (txid: number) => Promise<BusinessResult<TxLogInfo[]>>;
   processTx: (txid: number) => Promise<BusinessResult<boolean>>;
 }

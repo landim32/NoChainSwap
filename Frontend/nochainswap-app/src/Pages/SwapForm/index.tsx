@@ -12,6 +12,7 @@ import { CoinEnum } from '../../DTO/Enum/CoinEnum';
 import Modal from 'react-bootstrap/Modal';
 import ProviderResult from '../../DTO/Contexts/ProviderResult';
 import CurrencyInput from 'react-currency-input-field';
+import { redirect } from 'react-router-dom';
 
 export default function SwapForm() {
 
@@ -41,7 +42,7 @@ export default function SwapForm() {
                         <strong>{swapContext.getFormatedReceiverAmount()}</strong> will be initiated to the address provided by your Leather Wallet:
                     </p>
                     <p><strong>{swapContext.getFormatedReceiverAmount()}</strong> -&gt; <span>{swapContext.receiverPoolAddress}</span> (Your Wallet Address)</p>
-                    <p>A fee of <strong>230 satoshis</strong> will be charged, please confirm if you agree.</p>
+                    {/*<p>A fee of <strong>230 satoshis</strong> will be charged, please confirm if you agree.</p>*/}
                     <p>Do you confirm this transaction?</p>
                 </Modal.Body>
                 <Modal.Footer>
@@ -52,8 +53,9 @@ export default function SwapForm() {
                         let callback = (ret: ProviderResult) => {
                             if (ret.sucesso) {
                                 console.log("txId: ", swapContext.currentTxId);
-                                alert(ret.mensagemSucesso);
+                                //alert(ret.mensagemSucesso);
                                 setShowModal(false);
+                                redirect("/my-swaps/" + swapContext.currentTxId);
                             }
                             else {
                                 alert(ret.mensagemErro);

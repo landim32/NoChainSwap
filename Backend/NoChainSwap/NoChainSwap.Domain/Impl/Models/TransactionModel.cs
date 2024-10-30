@@ -67,9 +67,9 @@ namespace NoChainSwap.Domain.Impl.Models
             return _repositoryTx.GetById(txId, factory);
         }
 
-        public IEnumerable<ITransactionModel> ListBySenderAddr(string senderAddr, ITransactionDomainFactory factory)
+        public IEnumerable<ITransactionModel> ListByAddress(string address, ITransactionDomainFactory factory)
         {
-            return _repositoryTx.ListBySenderAddr(senderAddr, factory);
+            return _repositoryTx.ListByAddress(address, factory);
         }
 
         public IEnumerable<ITransactionModel> ListByStatus(IList<int> status, ITransactionDomainFactory factory)

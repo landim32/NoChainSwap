@@ -71,6 +71,25 @@ const TxService : ITxService = {
         }
         return ret;
     },
+    listMyTx: async (address: string) => {
+        let ret: TxListResult;
+        let request = await _httpClient.doGet<TxInfo[]>("api/Transaction/listmytransactions/" + address, {});
+        if (request.success) {
+            return {
+                sucesso: true,
+                transactions: request.data,
+                ...ret
+            };
+        }
+        else {
+            ret = {
+                mensagem: request.messageError,
+                sucesso: false,
+                ...ret
+            };
+        }
+        return ret;
+    },
     listTxLogs: async (txid: number) => {
         let ret: TxLogListResult;
         let request = await _httpClient.doGet<TxLogInfo[]>("api/Transaction/listtransactionlog/" + txid, {});
