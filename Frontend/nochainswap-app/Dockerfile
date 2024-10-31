@@ -1,5 +1,5 @@
 # Stage 1: Build the React Application
-FROM node:18 as build
+FROM node:18
 
 WORKDIR /app
 
@@ -12,7 +12,7 @@ COPY . .
 RUN npm run build
 
 # Stage 2: Setup the Nginx Server to serve the React Application
-FROM nginx:1.25.0-alpine as production
+FROM nginx:1.25.0-alpine
 
 COPY --from=build /app/build /usr/share/nginx/html
 
