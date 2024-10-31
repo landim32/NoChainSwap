@@ -1,20 +1,8 @@
-# Usar a imagem Node.js
-FROM node:18
+FROM nginx:latest as prod
 
-# Definir o diretório de trabalho
-WORKDIR /app
+COPY --from=build /app/build /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/nginx.conf
 
-# Copiar arquivos package.json e package-lock.json
-COPY package*.json ./
+EXPOSE 3001/tcp
 
-# Instalar dependências
-RUN npm install
-
-# Copiar o restante da aplicação
-COPY . .
-
-# Expor a porta (caso seja necessário)
-EXPOSE 80
-
-# Comando para rodar o script Node.js
-CMD ["npm", "start"]
+CMD ["/usr/sbin/nginx", "-g", "daemon off;"]
