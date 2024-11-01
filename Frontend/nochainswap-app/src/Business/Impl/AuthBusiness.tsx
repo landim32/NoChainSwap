@@ -20,7 +20,7 @@ const AuthBusiness : IAuthBusiness = {
     showConnect({
       userSession, // `userSession` from previous step, to access storage
       appDetails: {
-        name: "Cross Chain Swap",
+        name: "No Chain Swap",
         icon: window.location.origin + '/public/logo192.png'
       },
       onFinish: () => {
