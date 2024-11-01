@@ -29,4 +29,10 @@
   <ItemGroup>
     <Compile Remove="Controllers\OriginalController.cs" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Update="nochainswap.org.pfx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>
