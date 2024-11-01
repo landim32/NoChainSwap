@@ -8,15 +8,15 @@ WORKDIR /app
 
 #RUN npm install
 
-#COPY . .
-COPY ./build /usr/share/nginx/html
+COPY . .
+#COPY ./build /usr/share/nginx/html
 
 #RUN npm run build
 
 # Stage 2: Setup the Nginx Server to serve the React Application
 #FROM nginx:alpine 
 
-#COPY --from=build /app/build /usr/share/nginx/html
+COPY --from=build /app/build /usr/share/nginx/html
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
