@@ -58,9 +58,10 @@
   "react-dotenv": {
     "whitelist": [
       "NODE_PATH",
-      "REACT_APP_RODUCTION",
+      "REACT_APP_PRODUCTION",
       "API_BASE_URL",
-      "WALLET_STX_BASE_URL"
+      "WALLET_STX_BASE_URL",
+      "PORT"
     ]
   }
 }
