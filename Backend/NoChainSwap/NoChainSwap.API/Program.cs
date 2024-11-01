@@ -1,10 +1,13 @@
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
 namespace NoChainSwap.API
@@ -20,6 +23,13 @@ namespace NoChainSwap.API
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
+                    webBuilder.UseKestrel(options =>
+                    {
+                        options.ConfigureHttpsDefaults(httpsOptions =>
+                        {
+                            httpsOptions.ServerCertificate = new X509Certificate2("nochainswap.org.pfx", "pikpro6");
+                        });
+                    });
                     webBuilder.UseStartup<Startup>();
                 });
     }

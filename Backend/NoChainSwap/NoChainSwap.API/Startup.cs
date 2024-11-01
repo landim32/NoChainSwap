@@ -16,6 +16,8 @@ using System.Linq;
 using System.Net.Mime;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Server.Kestrel.Https;
+using System.Security.Cryptography.X509Certificates;
 
 namespace NoChainSwap.API
 {
@@ -50,6 +52,10 @@ namespace NoChainSwap.API
                        .AllowAnyMethod()
                        .AllowAnyHeader();
             }));
+            services.AddHttpsRedirection(options =>
+            {
+                options.HttpsPort = 8080;
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -61,6 +67,11 @@ namespace NoChainSwap.API
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "BTCSTXSwap.API v1"));
             }
+            else
+            {
+                //app.UseHttpsRedirection();
+            }
+
 
             app.UseHealthChecks("/",
                 new HealthCheckOptions()
