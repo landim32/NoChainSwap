@@ -32,8 +32,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="nochainswap.org.pfx">
+    <EmbeddedResource Include="nochainswap.org.pfx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
+    </EmbeddedResource>
   </ItemGroup>
 </Project>

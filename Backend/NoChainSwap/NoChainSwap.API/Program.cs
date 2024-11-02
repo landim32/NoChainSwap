@@ -31,7 +31,7 @@ namespace NoChainSwap.API
                     {
                         options.ConfigureHttpsDefaults(httpsOptions =>
                         {
-                            var s = Assembly.GetExecutingAssembly().GetManifestResourceStream("nochainswap.org.pfx");
+                            var s = Assembly.GetExecutingAssembly().GetManifestResourceStream("NoChainSwap.API.nochainswap.org.pfx");
                             using (MemoryStream ms = new MemoryStream())
                             {
                                 s.CopyTo(ms);
