@@ -19,7 +19,7 @@ RUN make install
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
-#COPY ["NoChainSwap.API/nochainswap.org.pfx", "NoChainSwap.API/"]
+COPY ["NoChainSwap.API/nochainswap.org.pfx", "NoChainSwap.API/"]
 COPY ["NoChainSwap.API/NoChainSwap.API.csproj", "NoChainSwap.API/"]
 COPY ["NoChainSwap.Application/NoChainSwap.Application.csproj", "NoChainSwap.Application/"]
 COPY ["NoChainSwap.Domain/NoChainSwap.Domain.csproj", "NoChainSwap.Domain/"]
