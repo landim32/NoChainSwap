@@ -34,9 +34,6 @@ RUN dotnet build "NoChainSwap.API.csproj" -c Release -o /app/build
 FROM build AS publish
 RUN dotnet publish "NoChainSwap.API.csproj" -c Release -o /app/publish
 
-WORKDIR /src
-COPY nochainswap.org.pfx /app/publish
-
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .

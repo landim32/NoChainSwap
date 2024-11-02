@@ -12,6 +12,7 @@
     <EmbeddedResource Remove="DTOs\**" />
     <None Remove="DTOs\**" />
     <None Remove="DTO\" />
+    <None Remove="nochainswap.org.pfx" />
   </ItemGroup>
 
   <ItemGroup>
@@ -31,8 +32,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="nochainswap.org.pfx">
+    <Resource Include="nochainswap.org.pfx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    </Resource>
   </ItemGroup>
 </Project>
