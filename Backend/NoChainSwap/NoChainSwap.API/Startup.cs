@@ -52,12 +52,10 @@ namespace NoChainSwap.API
                        .AllowAnyMethod()
                        .AllowAnyHeader();
             }));
-            /*
             services.AddHttpsRedirection(options =>
             {
                 options.HttpsPort = 8080;
             });
-            */
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -71,7 +69,7 @@ namespace NoChainSwap.API
             }
             else
             {
-                //app.UseHttpsRedirection();
+                app.UseHttpsRedirection();
             }
 
 
