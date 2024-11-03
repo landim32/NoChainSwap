@@ -27,11 +27,17 @@ Before running the project, ensure you have the following installed:
 
 ### Installation
 
-1. Clone the repository:
+1. Create Docker Network
 
     ```bash
-    git clone https://github.com/your-username/cross-chain-exchange.git
-    cd cross-chain-exchange
+	docker network create docker-network
+    ```
+
+1. Install Postgres Database
+
+    ```bash
+	docker pull postgres
+	docker run --name postgres1 -e POSTGRES_PASSWORD=mysecretpassword --network docker-network -d postgres
     ```
 
 2. Build and run the application using Docker:
