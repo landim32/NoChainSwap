@@ -33,20 +33,33 @@ Before running the project, ensure you have the following installed:
 	docker network create docker-network
     ```
 
-1. Install Postgres Database
+2. Install Postgres Database
 
     ```bash
 	docker pull postgres
 	docker run --name postgres1 -e POSTGRES_PASSWORD=mysecretpassword --network docker-network -d postgres
     ```
 
-2. Build and run the application using Docker:
+3. Install .NET Core Restful API
 
     ```bash
-    docker-compose up --build
+	docker build -t nochainswap-api -f NoChainSwap.API/Dockerfile .
+	docker run --name nochainswap-api1 -p 8080:443 -e ASPNETCORE_URLS="https://+" -e ASPNETCORE_HTTPS_PORTS=8080 --network docker-network nochainswap-api &
     ```
 
-    This command will download the required Docker images, build the application, and start the containers.
+4. Install STX Wallet microservice:
+
+    ```bash
+	docker build -t stacks-wallet .
+	docker run --name wallet-stx -p 3000:3000 --network docker-network stacks-wallet
+    ```
+	
+5. Install React Frontend:
+
+    ```bash
+	docker build -t nochainswap-app .
+	docker run --name nochainswap-app1 -p 443:443 nochainswap-app
+    ```
 
 3. Once the application is up and running, you can access it in your browser at `http://localhost:5000`.
 
