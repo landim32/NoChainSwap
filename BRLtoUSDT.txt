@@ -1,0 +1,57 @@
+Sistema de Exchange descentralizada, onde o usuário pode trocar reais, usando pix, por USDT e vice versa: 
+- O usuário deve selecionar a blockchain na qual deseja fazer a troca (BNB Chain por enquanto);
+- O usuário tem a opção de conectar sua carteira web no sistema ou não. O login será feito através da carteira web, dependendo da rede usada;
+- Caso esteja conectado, o sistema já terá armazenado seu email e chave publica de sua carteira;
+- Deve selecionar se irá trocar "Real por USDT" ou "USDT por Real";
+- O sistema deverá exibir o preço do USDT em tempo real, calcular o valor que o usuário irá receber informar na tela, incluindo as taxas de uso do serviço;
+- Ao fazer o swap "Real por USDT":
+	* O sistema lançará um popup solicitando o email, endereço da carteira para deposito do USDT e avisos jurídicos;
+	* Caso o usuário esteja conectado com sua carteira e informou o email anteriormente, o email já virá preenchido;
+	* Caso o usuário esteja conectado com sua carteira, o endereço para deposito do USDT já virá preenchido, mas poderá ser alterado;
+	* Ao confirmar será gerada uma chave pix e disponibilizada na tela em formato QRCODE e texto;
+	* Assim que a chave pix for gerada, a transação é criada com o status pendente, e um email será enviado para o usuário confirmando a transação e passando a chave pix;
+	* A partir de agora estará no pool de transações com status "Pendente";
+	* Assim que o usuário pagar o pix, o sistema mudará o status da transação de "Pendente" para "Recebido" e avisará o adminstrador por email;
+- Ao fazer o swap "USDT por Real":
+	* O sistema lançará um popup solicitando o email, chave pix para deposito em Real e avisos jurídicos;
+	* Caso o usuário esteja conectado com sua carteira e informou o email anteriormente, o email já virá preenchido;
+	* Caso o usuário esteja conectado com sua carteira e informou a chave pix anteriormente, a chave pix já virá preenchida mas pode ser alterada;
+	* Ao confirmar será aberta a transação na Metamask (ou carteira Web3 que o usuário utilize) com o valor a ser transferido para um contrato;
+	* A transação só será criada caso seja gerada uma transação na blockchain, com o status "Recebido", retornando o id da transação na blockchain;
+	* O valor transacionado será extraído diretamente da blockchain;
+	* A partir de agora estará no pool de transações com status "Recebido" e o administrador será avisado por email;
+- Tela do pool de transações, acessada apenas por administradores:
+	* O administrador terá acesso a uma tela com o pool de transações, podendo filtra-las;
+	* Após um periodo parametrizável, o sistema irá cancelar as transações com status "pendente";
+	* Transações com status "Pendente" terão apenas a opção de cancelar;
+	* Nenhuma transação poderá ser excluída;
+	* Todas as transações terão log com cada mudança de status;
+	* Qualquer erro de comunicação com as API gerará um erro comuns na transação, que continuará tentando;
+	* Caso atinja um número máximo de erros comuns na transação, a mesma irá gerar um erro fatal;
+	* Qualquer erro nas mudanças de status, valores ou endereços que não batem, gerará um erro fatal na transação;
+	* Os erros fatais deverão ser resolvidos manualmente pelo administrador;
+	* Transações com status "Recebido" terão um botão de "Efetuar pagamento" para o usuário;
+	* Apenas transações "Real por USDT" com status "Concluída" porão ser estornadas. Ao clicar na transação terá um botão "Estornar";
+	* Ao clicar no botão "Estornar", o status da transação irá voltar para "Recebido" e gerará um log;
+- Efetuando pagamento ao usuário em Real:
+	* Com relação a transação recebida por USDT via metamask;
+	* O botão "Efetuar pagamento" abrirá um link para o banco ou aplicativo de pagamento e exibirá um popup com todos os dados do usuário necessários para o PIX;
+	* Essa tela também fará a pergunta "O pagamento via PIX foi feito?" com as opções "Sim" e "Não";
+	* Caso o adminstrador responsa "Sim", o sistema mudará o status da transação para "Concluída" e enviará um email para o usuário;
+	* Caso o adminstrador responda "Não", a transação permanecerá com mesmo status;
+- Efeturando pagamento ao usuário em Cripto:
+	* Com relação a transação recebida por PIX;
+	* O botão "Efetuar pagamento" abrirá a metamask com o pagamento para o contrato, com todos os dados já preenchidos;
+	* Assim que o adminstrador confirmar a transação na metamask, o sistema irá receber o id da transação na blockchain;
+	* O sistema irá validar os dados da transação diretamente na blockchain, caso os dados não esteja corretos, o sistema irá gerar o erro fatal;
+	* Caso os dados estejam ok, o sistema irá mudar o status para "Concluída" e enviar um email para o usuário;
+- A distribuição das taxas será sempre feita através do contrato USDT, tanto no recebimento como no pagamento do usuário;
+- Para a manutenção do sistema será necessário:
+	* Domíminio próprio;
+	* Servidor SSL para esse domínio, que aceite subdominios;
+	* Servidor Docker com suporte a multiplos containers;
+	* Acesso pago a API do CoinMarketCap;
+	* Acesso a API do OpenPix:
+		1. 0,8% do valor recebido, com taxa mínima de R$ 0,50 e taxa máxima de R$ 5;
+		2. ou R$ 0,85 fixo por pix recebido; 
+	* Acesso a serviço pago de mensageria;
