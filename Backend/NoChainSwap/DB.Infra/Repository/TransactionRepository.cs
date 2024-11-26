@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using NoChainSwap.Domain.Impl.Core;
+using System.Net;
 
 namespace DB.Infra.Repository
 {
@@ -92,6 +93,12 @@ namespace DB.Infra.Repository
             {
                 throw;
             }
+        }
+
+        public IEnumerable<ITransactionModel> ListByUser(long userId, ITransactionDomainFactory factory)
+        {
+            var rows = _ccsContext.Transactions.Where(x => x.UserId == userId).ToList();
+            return rows.Select(x => DbToModel(factory, x));
         }
 
         public IEnumerable<ITransactionModel> ListByAddress(string address, ITransactionDomainFactory factory)

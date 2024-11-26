@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using NoChainSwap.Domain.Impl.Models;
 
 namespace NoChainSwap.Domain
 {
@@ -42,7 +43,7 @@ namespace NoChainSwap.Domain
             if (!Request.Headers.ContainsKey("Authorization"))
                 return AuthenticateResult.Fail("Missing Authorization Header");
 
-            string btcAddress = null;
+            //string btcAddress = null;
             string stxAddress = null;
             IUserModel user = null; 
             try
@@ -51,19 +52,19 @@ namespace NoChainSwap.Domain
                 var masterKey = authHeader.Parameter;
                 if(masterKey == "masterkeydoamor")
                 {
-                    user = _userService.GetUser(BTC_ADDRESS, STX_ADDRESS);
+                    user = _userService.GetUserByAddress(ChainEnum.StackAndBitcoin, STX_ADDRESS);
                 }
                 else
                 {
                     var hashAuth = Encoding.UTF8.GetString(Convert.FromBase64String(authHeader.Parameter));
                     var hashList = hashAuth.Split("|separator|");
-                    if (hashList.Count() == 3)
+                    if (hashList.Count() == 2)
                     {
                         var signature = hashList[0];
-                        btcAddress = hashList[1];
-                        stxAddress = hashList[2];
+                        //btcAddress = hashList[1];
+                        stxAddress = hashList[1];
 
-                        user = _userService.GetUser(btcAddress, stxAddress);
+                        user = _userService.GetUserByAddress(ChainEnum.StackAndBitcoin, STX_ADDRESS);
                         if (user == null)
                             return AuthenticateResult.Fail("Invalid Session");
                         /*
@@ -89,8 +90,8 @@ namespace NoChainSwap.Domain
                 new Claim("UserInfo",  JsonConvert.SerializeObject(new UserInfo() {
                      Id = user.Id,
                      Hash = user.Hash,
-                     BtcAddress = user.BtcAddress,
-                     StxAddress = user.StxAddress
+                     Name = user.Name,
+                     Email = user.Email,
                 }))
             };
             var identity = new ClaimsIdentity(claims, Scheme.Name);

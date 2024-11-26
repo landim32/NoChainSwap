@@ -8,6 +8,7 @@ using NoChainSwap.Domain.Interfaces.Services;
 using NoChainSwap.DTO.User;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
+using NoChainSwap.Domain.Impl.Models;
 
 namespace NoChainSwap.Domain.Impl.Services
 {
@@ -25,13 +26,13 @@ namespace NoChainSwap.Domain.Impl.Services
             try
             {
                 var model = _userFactory.BuildUserModel();
-                model.BtcAddress = user.BtcAddress;
-                model.StxAddress = user.StxAddress;
+                model.Name = user.Name;
+                model.Email = user.Email;
                 model.CreateAt = DateTime.Now;
                 model.UpdateAt = DateTime.Now;
                 model.Hash = GetUniqueToken();
 
-                model.Save();
+                model.Save(_userFactory);
 
                 return model;
             }
@@ -45,11 +46,23 @@ namespace NoChainSwap.Domain.Impl.Services
         {
             try
             {
-                var model = _userFactory.BuildUserModel().GetUser(user.BtcAddress, user.StxAddress, _userFactory);
-                model.BtcAddress = user.BtcAddress;
-                model.StxAddress = user.StxAddress;
+                IUserModel model = null;
+                if (user.Id > 0)
+                {
+                    model = _userFactory.BuildUserModel().GetById(user.Id, _userFactory);
+                }
+                else if (!string.IsNullOrEmpty(user.Email))
+                {
+                    model = _userFactory.BuildUserModel().GetByEmail(user.Email, _userFactory);
+                }
+                else if (user.ChainId > 0 && !string.IsNullOrEmpty(user.Address))
+                {
+                    model = _userFactory.BuildUserModel().GetByAddress((ChainEnum) user.ChainId, user.Address, _userFactory);
+                }
+                model.Name = user.Name;
+                model.Email = user.Email;
                 model.UpdateAt = DateTime.Now;
-                model.Update();
+                model.Update(_userFactory);
                 return model;
             }
             catch (Exception)
@@ -58,11 +71,11 @@ namespace NoChainSwap.Domain.Impl.Services
             }
         }
 
-        public IUserModel GetUser(string btcAddress, string stxAddress)
+        public IUserModel GetUserByAddress(ChainEnum chain, string address)
         {
             try
             {
-                return _userFactory.BuildUserModel().GetUser(btcAddress, stxAddress, _userFactory);
+                return _userFactory.BuildUserModel().GetByAddress(chain, address, _userFactory);
             }
             catch (Exception)
             {
@@ -82,15 +95,15 @@ namespace NoChainSwap.Domain.Impl.Services
             }
         }
 
-        public IUserModel GetUserHash(string btcAddress, string stxAddress)
+        public IUserModel GetUserHash(ChainEnum chain, string address)
         {
             try
             {
-                var user = _userFactory.BuildUserModel().GetUser(btcAddress, stxAddress, _userFactory);
+                var user = _userFactory.BuildUserModel().GetByAddress(chain, address, _userFactory);
                 if (user != null)
                 {
                     user.Hash = GetUniqueToken();
-                    return user.Update();
+                    return user.Update(_userFactory);
                 } 
                 else
                 {
@@ -121,7 +134,7 @@ namespace NoChainSwap.Domain.Impl.Services
         }
         private string GetUniqueToken()
         {
-            using (RNGCryptoServiceProvider crypto = new RNGCryptoServiceProvider())
+            using (var crypto = new RNGCryptoServiceProvider())
             {
                 int length = 100;
                 string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_";
@@ -162,7 +175,7 @@ namespace NoChainSwap.Domain.Impl.Services
 
         public IEnumerable<IUserModel> GetAllUserAddress()
         {
-            return _userFactory.BuildUserModel().ListUsers(_userFactory);
+            return _userFactory.BuildUserModel().ListAllUsers(_userFactory);
         }
     }
 }

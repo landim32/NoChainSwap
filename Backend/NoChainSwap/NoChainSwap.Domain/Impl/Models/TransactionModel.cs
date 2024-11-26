@@ -24,6 +24,8 @@ namespace NoChainSwap.Domain.Impl.Models
         }
 
         public long TxId { get; set; }
+        public long UserId { get; set; }
+        public ChainEnum Chain { get; set; }
         public CoinEnum SenderCoin { get; set; }
         public CoinEnum ReceiverCoin { get; set; }
         public string SenderAddress { get; set; }

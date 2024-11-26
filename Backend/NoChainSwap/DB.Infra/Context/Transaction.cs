@@ -33,5 +33,11 @@ public partial class Transaction
 
     public string ReceiverCoin { get; set; }
 
+    public long? UserId { get; set; }
+
+    public int? ChainId { get; set; }
+
     public virtual ICollection<TransactionLog> TransactionLogs { get; set; } = new List<TransactionLog>();
+
+    public virtual User User { get; set; }
 }

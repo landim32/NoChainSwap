@@ -13,7 +13,13 @@ public partial class User
 
     public string Hash { get; set; }
 
-    public string BtcAddress { get; set; }
+    public string Email { get; set; }
 
-    public string StxAddress { get; set; }
+    public string Name { get; set; }
+
+    public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
+
+    public virtual ICollection<UserAddress> UserAddresses { get; set; } = new List<UserAddress>();
+
+    public virtual ICollection<UserRecipient> UserRecipients { get; set; } = new List<UserRecipient>();
 }

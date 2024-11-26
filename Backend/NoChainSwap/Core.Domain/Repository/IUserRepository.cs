@@ -5,11 +5,11 @@ namespace Core.Domain.Repository
 {
     public interface IUserRepository<TModel, TFactory>
     {
-        TModel SaveUser(TModel model);
-        TModel LoadUser(string btcAddress, TFactory factory);
-        TModel UpdateUser(TModel model);
+        TModel Insert(TModel model, TFactory factory);
+        TModel Update(TModel model, TFactory factory);
         IEnumerable<TModel> ListUsers(TFactory factory);
         TModel GetById(long userId, TFactory factory);
-        TModel GetOrCreateByAddress(string btcAddress, string StxAddress, TFactory factory);
+        TModel GetByEmail(string email, TFactory factory);
+        TModel GetByAddress(int chainId, string address, TFactory factory);
     }
 }

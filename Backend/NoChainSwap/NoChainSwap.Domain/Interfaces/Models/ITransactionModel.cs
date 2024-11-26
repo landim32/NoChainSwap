@@ -1,4 +1,5 @@
-﻿using NoChainSwap.Domain.Interfaces.Factory;
+﻿using NoChainSwap.Domain.Impl.Models;
+using NoChainSwap.Domain.Interfaces.Factory;
 using NoChainSwap.DTO.Transaction;
 using System;
 using System.Collections.Generic;
@@ -11,6 +12,8 @@ namespace NoChainSwap.Domain.Interfaces.Models
     public interface ITransactionModel
     {
         long TxId { get; set; }
+        long UserId { get; set; }
+        ChainEnum Chain { get; set; }
         CoinEnum SenderCoin { get; set; }
         CoinEnum ReceiverCoin { get; set; }
         string SenderAddress { get; set; }

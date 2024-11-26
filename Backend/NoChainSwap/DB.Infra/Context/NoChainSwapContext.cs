@@ -21,8 +21,13 @@ public partial class NoChainSwapContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
+    public virtual DbSet<UserAddress> UserAddresses { get; set; }
+
+    public virtual DbSet<UserRecipient> UserRecipients { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseNpgsql("Host=172.18.0.2;Port=5432;Database=crosschainswap;Username=postgres;Password=eaa69cpxy2");
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseNpgsql("Host=167.172.240.71;Port=5432;Database=crosschainswap;Username=postgres;Password=eaa69cpxy2");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -35,6 +40,7 @@ public partial class NoChainSwapContext : DbContext
             entity.Property(e => e.TxId)
                 .HasDefaultValueSql("nextval('transactions_tx_nid_seq'::regclass)")
                 .HasColumnName("tx_id");
+            entity.Property(e => e.ChainId).HasColumnName("chain_id");
             entity.Property(e => e.CreateAt)
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("create_at");
@@ -68,6 +74,11 @@ public partial class NoChainSwapContext : DbContext
             entity.Property(e => e.UpdateAt)
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("update_at");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+
+            entity.HasOne(d => d.User).WithMany(p => p.Transactions)
+                .HasForeignKey(d => d.UserId)
+                .HasConstraintName("fk_user_transaction");
         });
 
         modelBuilder.Entity<TransactionLog>(entity =>
@@ -101,19 +112,71 @@ public partial class NoChainSwapContext : DbContext
             entity.ToTable("users");
 
             entity.Property(e => e.UserId).HasColumnName("user_id");
-            entity.Property(e => e.BtcAddress)
-                .IsRequired()
-                .HasMaxLength(64)
-                .HasColumnName("btc_address");
             entity.Property(e => e.CreateAt).HasColumnName("create_at");
+            entity.Property(e => e.Email)
+                .HasMaxLength(180)
+                .HasColumnName("email");
             entity.Property(e => e.Hash)
-                .HasMaxLength(64)
+                .HasMaxLength(128)
                 .HasColumnName("hash");
-            entity.Property(e => e.StxAddress)
-                .IsRequired()
-                .HasMaxLength(64)
-                .HasColumnName("stx_address");
+            entity.Property(e => e.Name)
+                .HasMaxLength(120)
+                .HasColumnName("name");
             entity.Property(e => e.UpdateAt).HasColumnName("update_at");
+        });
+
+        modelBuilder.Entity<UserAddress>(entity =>
+        {
+            entity.HasKey(e => e.AddressId).HasName("user_addresses_pkey");
+
+            entity.ToTable("user_addresses");
+
+            entity.Property(e => e.AddressId).HasColumnName("address_id");
+            entity.Property(e => e.Address)
+                .IsRequired()
+                .HasMaxLength(120)
+                .IsFixedLength()
+                .HasColumnName("address");
+            entity.Property(e => e.ChainId).HasColumnName("chain_id");
+            entity.Property(e => e.CreateAt)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("create_at");
+            entity.Property(e => e.UpdateAt)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("update_at");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+
+            entity.HasOne(d => d.User).WithMany(p => p.UserAddresses)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_user_address");
+        });
+
+        modelBuilder.Entity<UserRecipient>(entity =>
+        {
+            entity.HasKey(e => e.RecipientId).HasName("user_recipients_pkey");
+
+            entity.ToTable("user_recipients");
+
+            entity.Property(e => e.RecipientId).HasColumnName("recipient_id");
+            entity.Property(e => e.Address)
+                .IsRequired()
+                .HasMaxLength(120)
+                .IsFixedLength()
+                .HasColumnName("address");
+            entity.Property(e => e.ChainId).HasColumnName("chain_id");
+            entity.Property(e => e.CreatedAt)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("created_at");
+            entity.Property(e => e.UpdatedAt)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("updated_at");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+
+            entity.HasOne(d => d.User).WithMany(p => p.UserRecipients)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_user_recipient");
         });
 
         OnModelCreatingPartial(modelBuilder);

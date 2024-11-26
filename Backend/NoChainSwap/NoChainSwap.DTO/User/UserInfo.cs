@@ -7,11 +7,15 @@ namespace NoChainSwap.DTO.User
     {
         [JsonPropertyName("id")]
         public long Id { get; set; }
-        [JsonPropertyName("btcAddress")]
-        public string BtcAddress { get; set; }
-        [JsonPropertyName("stxAddress")]
-        public string StxAddress { get; set; }
+        [JsonPropertyName("name")]
+        public string Name { get; set; }
+        [JsonPropertyName("email")]
+        public string Email { get; set; }
         [JsonPropertyName("hash")]
         public string Hash { get; set; }
+        [JsonPropertyName("chain_id")]
+        public int ChainId {  get; set; }
+        [JsonPropertyName("address")]
+        public string Address { get; set; }
     }
 }

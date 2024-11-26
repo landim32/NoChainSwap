@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using NoChainSwap.Domain.Interfaces.Models;
 using NoChainSwap.DTO.User;
 using Microsoft.AspNetCore.Http;
+using NoChainSwap.Domain.Impl.Models;
 
 namespace NoChainSwap.Domain.Interfaces.Services
 {
@@ -10,10 +11,10 @@ namespace NoChainSwap.Domain.Interfaces.Services
     {
         IUserModel CreateNewUser(UserInfo user);
         IUserModel UpdateUser(UserInfo user);
-        IUserModel GetUser(string btcAddress, string stxAddress);
+        IUserModel GetUserByAddress(ChainEnum chain, string address);
         IEnumerable<IUserModel> GetAllUserAddress();
         IUserModel GetUSerByID(long userId);
-        IUserModel GetUserHash(string btcAddress, string stxAddress);
+        IUserModel GetUserHash(ChainEnum chain, string address);
         UserInfo GetUserInSession(HttpContext httpContext);
 
     }

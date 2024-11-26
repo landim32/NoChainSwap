@@ -8,6 +8,7 @@ using NoChainSwap.Domain.Interfaces.Services;
 using NoChainSwap.DTO.User;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using NoChainSwap.Domain.Impl.Models;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -25,12 +26,40 @@ namespace NoChainSwap.API.Controllers
             _userService = userService;
         }
 
-        [HttpGet("{btcAddress}/{stxAddress}")]
-        public ActionResult<UserResult> Get(string btcAddress, string stxAddress)
+        [HttpGet("{chainId}/{address}")]
+        public ActionResult<UserResult> Get(int chainId, string address)
         {
             try
             {
-                var user = _userService.GetUserHash(btcAddress, stxAddress);
+                var user = _userService.GetUserByAddress((ChainEnum)chainId, address);
+                if (user == null)
+                {
+                    return new UserResult() { User = null, Sucesso = true, Mensagem = "Address Not Found" };
+                }
+                return new UserResult()
+                {
+                    User = new UserInfo()
+                    {
+                        Id = user.Id,
+                        Hash = user.Hash,
+                        ChainId = chainId,
+                        Address = address
+                    }
+                };
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpGet("checkUserRegister/{chainId}/{address}")]
+        public ActionResult<UserResult> CheckUserRegister(int chainId, string address)
+        {
+            try
+            {
+                //Console.WriteLine("Chegou aqui");
+                var user = _userService.GetUserByAddress((ChainEnum)chainId, address);
                 if (user == null)
                 {
                     return new UserResult() { User = null, Sucesso = true, Mensagem = "BTC Address Not Found" };
@@ -41,35 +70,8 @@ namespace NoChainSwap.API.Controllers
                     {
                         Id = user.Id,
                         Hash = user.Hash,
-                        BtcAddress = user.BtcAddress,
-                        StxAddress = user.StxAddress
-                    }
-                };
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
-        }
-
-        [HttpGet("checkUserRegister/{btcAddress}/{stxAddress}")]
-        public ActionResult<UserResult> CheckUserRegister(string btcAddress, string stxAddress)
-        {
-            try
-            {
-                //Console.WriteLine("Chegou aqui");
-                var user = _userService.GetUser(btcAddress, stxAddress);
-                if (user == null)
-                {
-                    return new UserResult() { User = null, Sucesso = true, Mensagem = "BTC Address Not Found" };
-                }
-                return new UserResult()
-                {
-                    User = new UserInfo()
-                    {
-                        Id = user.Id,
-                        BtcAddress = user.BtcAddress,
-                        StxAddress = user.StxAddress
+                        ChainId = chainId,
+                        Address = address
                     }
                 };
             }
@@ -84,12 +86,12 @@ namespace NoChainSwap.API.Controllers
         {
             try
             {
-                if(String.IsNullOrEmpty(param.BtcAddress))
-                    return StatusCode(400, "BTC Address is empty");
+                if(String.IsNullOrEmpty(param.Address))
+                    return StatusCode(400, "Address is empty");
 
                 var user = _userService.CreateNewUser(new UserInfo
                 {
-                    BtcAddress = param.BtcAddress
+                    Address = param.Address
                 });
                 return new UserResult()
                 {
@@ -97,8 +99,8 @@ namespace NoChainSwap.API.Controllers
                     {
                         Id = user.Id,
                         Hash = user.Hash,
-                        BtcAddress = user.BtcAddress,
-                        StxAddress = user.StxAddress
+                        ChainId = param.ChainId,
+                        Address = param.Address
                     }
                 };
             }
@@ -123,16 +125,16 @@ namespace NoChainSwap.API.Controllers
 
                 var user = _userService.UpdateUser(new UserInfo
                 {
-                    BtcAddress = userSession.BtcAddress,
-                    StxAddress = userSession.StxAddress
+                    Name = userSession.Name,
+                    Email = userSession.Email,
                 });
                 return new UserResult()
                 {
                     User = new UserInfo()
                     {
                         Id = user.Id,
-                        BtcAddress = user.BtcAddress,
-                        StxAddress = user.StxAddress
+                        Name = user.Name,
+                        Email = user.Email
                     }
                 };
             }

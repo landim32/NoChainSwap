@@ -17,5 +17,6 @@ namespace Core.Domain.Repository
         TModel GetByReceiverTxId(string txid, TFactory factory);
         IEnumerable<TModel> ListByStatus(IList<int> status, TFactory factory);
         IEnumerable<TModel> ListAll(TFactory factory);
+        IEnumerable<TModel> ListByUser(long userId, TFactory factory);
     }
 }
