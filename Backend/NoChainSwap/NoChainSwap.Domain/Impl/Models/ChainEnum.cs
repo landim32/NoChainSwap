@@ -8,7 +8,8 @@ namespace NoChainSwap.Domain.Impl.Models
 {
     public enum ChainEnum
     {
-        StackAndBitcoin = 0,
-        BNBChain = 1
+        NoChain = 0,
+        StackAndBitcoin = 1,
+        BNBChain = 2
     }
 }

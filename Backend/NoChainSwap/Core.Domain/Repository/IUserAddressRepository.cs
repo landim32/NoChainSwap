@@ -10,6 +10,7 @@ namespace Core.Domain.Repository
     {
         IEnumerable<TModel> ListByUser(long userId, TFactory factory);
         TModel GetById(long addressId, TFactory factory);
+        TModel GetByChain(long userId, int ChainId, TFactory factory);
         TModel Insert(TModel model);
         TModel Update(TModel model);
         void Delete(long id);

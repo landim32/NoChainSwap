@@ -55,6 +55,14 @@ namespace DB.Infra.Repository
             return DbToModel(factory, row);
         }
 
+        public IUserRecipientModel GetByChain(long userId, int ChainId, IUserRecipientDomainFactory factory)
+        {
+            var row = _ccsContext.UserRecipients.Where(x => x.UserId == userId && x.ChainId == ChainId).FirstOrDefault();
+            if (row == null)
+                return null;
+            return DbToModel(factory, row);
+        }
+
         public IUserRecipientModel Insert(IUserRecipientModel model)
         {
             var u = new UserRecipient();

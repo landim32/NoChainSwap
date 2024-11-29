@@ -55,6 +55,18 @@ namespace DB.Infra.Repository
             return DbToModel(factory, row);
         }
 
+        public IUserAddressModel GetByChain(long userId, int ChainId, IUserAddressDomainFactory factory)
+        {
+            var addr = _ccsContext.UserAddresses
+                .Where(x => x.UserId == userId && x.ChainId == ChainId)
+                .FirstOrDefault();
+            if (addr == null)
+            {
+                return null;
+            }
+            return DbToModel(factory, addr);
+        }
+
         public IUserAddressModel Insert(IUserAddressModel model)
         {
             var u = new UserAddress();

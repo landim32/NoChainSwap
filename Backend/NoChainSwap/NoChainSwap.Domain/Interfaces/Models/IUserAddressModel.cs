@@ -17,10 +17,13 @@ namespace NoChainSwap.Domain.Interfaces.Models
         DateTime CreateAt { get; set; }
         DateTime UpdateAt { get; set; }
         string Address {  get; set; }
-        IUserAddressModel Save();
+        IUserAddressModel Insert();
         IUserAddressModel Update();
-        IEnumerable<IUserAddressModel> ListByUser(long userId, IUserDomainFactory factory);
-        IUserAddressModel GetById(long id, UserDomainFactory factory);
+
+        void Remove(long addressId);
+        IEnumerable<IUserAddressModel> ListByUser(long userId, IUserAddressDomainFactory factory);
+        IUserAddressModel GetById(long id, IUserAddressDomainFactory factory);
+        IUserAddressModel GetByChain(long userId, ChainEnum chain, IUserAddressDomainFactory factory);
 
     }
 }

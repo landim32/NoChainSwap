@@ -112,7 +112,9 @@ public partial class NoChainSwapContext : DbContext
             entity.ToTable("users");
 
             entity.Property(e => e.UserId).HasColumnName("user_id");
-            entity.Property(e => e.CreateAt).HasColumnName("create_at");
+            entity.Property(e => e.CreateAt)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("create_at");
             entity.Property(e => e.Email)
                 .HasMaxLength(180)
                 .HasColumnName("email");
@@ -122,7 +124,9 @@ public partial class NoChainSwapContext : DbContext
             entity.Property(e => e.Name)
                 .HasMaxLength(120)
                 .HasColumnName("name");
-            entity.Property(e => e.UpdateAt).HasColumnName("update_at");
+            entity.Property(e => e.UpdateAt)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("update_at");
         });
 
         modelBuilder.Entity<UserAddress>(entity =>

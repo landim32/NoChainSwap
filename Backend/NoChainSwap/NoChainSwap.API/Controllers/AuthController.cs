@@ -9,6 +9,7 @@ using NoChainSwap.DTO.User;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NoChainSwap.Domain.Impl.Models;
+using NoChainSwap.Domain.Interfaces.Models;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -26,6 +27,30 @@ namespace NoChainSwap.API.Controllers
             _userService = userService;
         }
 
+        private UserInfo ModelToInfo(IUserModel md)
+        {
+            var user = new UserInfo { 
+                Id = md.Id,
+                Hash = md.Hash,
+                CreateAt = md.CreateAt,
+                UpdateAt = md.UpdateAt,
+                Name = md.Name,
+                Email = md.Email
+            };
+            user.Addresses = _userService
+                .ListAddressByUser(user.Id)
+                .Select(x => new UserAddressInfo
+                {
+                    Id = x.Id,
+                    ChainId = (int) x.Chain,
+                    CreateAt = x.CreateAt,
+                    UpdateAt = x.UpdateAt,
+                    Address = x.Address
+                })
+                .ToList();
+            return user;
+        }
+
         [HttpGet("{chainId}/{address}")]
         public ActionResult<UserResult> Get(int chainId, string address)
         {
@@ -36,15 +61,10 @@ namespace NoChainSwap.API.Controllers
                 {
                     return new UserResult() { User = null, Sucesso = true, Mensagem = "Address Not Found" };
                 }
+
                 return new UserResult()
                 {
-                    User = new UserInfo()
-                    {
-                        Id = user.Id,
-                        Hash = user.Hash,
-                        ChainId = chainId,
-                        Address = address
-                    }
+                    User = ModelToInfo(user)
                 };
             }
             catch (Exception ex)
@@ -52,6 +72,28 @@ namespace NoChainSwap.API.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
+
+        [HttpGet("getByEmail/{email}")]
+        public ActionResult<UserResult> GetByEmail(string email)
+        {
+            try
+            {
+                var user = _userService.GetUserByEmail(email);
+                if (user == null)
+                {
+                    return new UserResult() { User = null, Sucesso = true, Mensagem = "User with email not found" };
+                }
+                return new UserResult()
+                {
+                    User = ModelToInfo(user)
+                };
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
 
         [HttpGet("checkUserRegister/{chainId}/{address}")]
         public ActionResult<UserResult> CheckUserRegister(int chainId, string address)
@@ -66,13 +108,7 @@ namespace NoChainSwap.API.Controllers
                 }
                 return new UserResult()
                 {
-                    User = new UserInfo()
-                    {
-                        Id = user.Id,
-                        Hash = user.Hash,
-                        ChainId = chainId,
-                        Address = address
-                    }
+                    User = ModelToInfo(user)
                 };
             }
             catch (Exception ex)
@@ -81,27 +117,23 @@ namespace NoChainSwap.API.Controllers
             }
         }
 
-        [HttpPost]
-        public ActionResult<UserResult> Post(UserParam param)
+        [HttpPost("insert")]
+        public ActionResult<UserResult> Insert(UserParam param)
         {
             try
             {
-                if(String.IsNullOrEmpty(param.Address))
-                    return StatusCode(400, "Address is empty");
+                //if(String.IsNullOrEmpty(param.Address))
+                //    return StatusCode(400, "Address is empty");
 
-                var user = _userService.CreateNewUser(new UserInfo
+                var user = _userService.Insert(new UserInfo
                 {
-                    Address = param.Address
+                    Name = param.Name,
+                    Email = param.Email
                 });
+                _userService.AddOrChangeAddress(user.Id, (ChainEnum)param.ChainId, param.Address);
                 return new UserResult()
                 {
-                    User = new UserInfo()
-                    {
-                        Id = user.Id,
-                        Hash = user.Hash,
-                        ChainId = param.ChainId,
-                        Address = param.Address
-                    }
+                    User = ModelToInfo(user)
                 };
             }
             catch (Exception ex)
@@ -110,9 +142,9 @@ namespace NoChainSwap.API.Controllers
             }
         }
 
-        [HttpPut]
+        [HttpPost("update")]
         [Authorize]
-        public ActionResult<UserResult> UpdateUser(UserParam param)
+        public ActionResult<UserResult> Update(UserParam param)
         {
             try
             {
@@ -123,19 +155,16 @@ namespace NoChainSwap.API.Controllers
                     return StatusCode(401, "Not Authorized");
                 }
 
-                var user = _userService.UpdateUser(new UserInfo
+                var user = _userService.Update(new UserInfo
                 {
+                    Id = userSession.Id,
                     Name = userSession.Name,
                     Email = userSession.Email,
                 });
+                _userService.AddOrChangeAddress(user.Id, (ChainEnum)param.ChainId, param.Address);
                 return new UserResult()
                 {
-                    User = new UserInfo()
-                    {
-                        Id = user.Id,
-                        Name = user.Name,
-                        Email = user.Email
-                    }
+                    User = ModelToInfo(user)
                 };
             }
             catch (Exception ex)

@@ -27,6 +27,7 @@ namespace NoChainSwap.API
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
+                    /*
                     webBuilder.UseKestrel(options =>
                     {
                         options.ConfigureHttpsDefaults(httpsOptions =>
@@ -39,6 +40,7 @@ namespace NoChainSwap.API
                             }
                         });
                     });
+                    */
                     webBuilder.UseStartup<Startup>();
                 });
     }

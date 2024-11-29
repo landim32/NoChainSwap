@@ -9,13 +9,18 @@ namespace NoChainSwap.Domain.Interfaces.Services
 {
     public interface IUserService
     {
-        IUserModel CreateNewUser(UserInfo user);
-        IUserModel UpdateUser(UserInfo user);
+        IUserModel Insert(UserInfo user);
+        IUserModel Update(UserInfo user);
+        IUserModel GetUserByEmail(string email);
         IUserModel GetUserByAddress(ChainEnum chain, string address);
         IEnumerable<IUserModel> GetAllUserAddress();
-        IUserModel GetUSerByID(long userId);
+        IUserModel GetUserByID(long userId);
         IUserModel GetUserHash(ChainEnum chain, string address);
         UserInfo GetUserInSession(HttpContext httpContext);
 
+        IEnumerable<IUserAddressModel> ListAddressByUser(long userId);
+        IUserAddressModel GetAddressByChain(long userId, ChainEnum chain);
+        void AddOrChangeAddress(long userId, ChainEnum chain, string address);
+        void RemoveAddress(long userId, ChainEnum chain);
     }
 }

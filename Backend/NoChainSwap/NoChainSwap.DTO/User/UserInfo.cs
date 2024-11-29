@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace NoChainSwap.DTO.User
@@ -13,9 +15,11 @@ namespace NoChainSwap.DTO.User
         public string Email { get; set; }
         [JsonPropertyName("hash")]
         public string Hash { get; set; }
-        [JsonPropertyName("chain_id")]
-        public int ChainId {  get; set; }
-        [JsonPropertyName("address")]
-        public string Address { get; set; }
+        [JsonPropertyName("createAt")]
+        public DateTime CreateAt { get; set; }
+        [JsonPropertyName("updateAt")]
+        public DateTime UpdateAt { get; set; }
+        [JsonPropertyName("addresses")]
+        public IList<UserAddressInfo> Addresses { get; set; }
     }
 }

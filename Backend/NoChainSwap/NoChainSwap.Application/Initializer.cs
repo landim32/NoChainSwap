@@ -49,6 +49,7 @@ namespace NoChainSwap.Application
 
             #region Repository
             injectDependency(typeof(IUserRepository<IUserModel, IUserDomainFactory>), typeof(UserRepository), services, scoped);
+            injectDependency(typeof(IUserAddressRepository<IUserAddressModel, IUserAddressDomainFactory>), typeof(UserAddressRepository), services, scoped);
             injectDependency(typeof(ITransactionRepository<ITransactionModel, ITransactionDomainFactory>), typeof(TransactionRepository), services, scoped);
             injectDependency(typeof(ITransactionLogRepository<ITransactionLogModel, ITransactionLogDomainFactory>), typeof(TransactionLogRepository), services, scoped);
             #endregion
@@ -65,6 +66,7 @@ namespace NoChainSwap.Application
 
             #region Factory
             injectDependency(typeof(IUserDomainFactory), typeof(UserDomainFactory), services, scoped);
+            injectDependency(typeof(IUserAddressDomainFactory), typeof(UserAddressDomainFactory), services, scoped);
             injectDependency(typeof(ITransactionDomainFactory), typeof(TransactionDomainFactory), services, scoped);
             injectDependency(typeof(ITransactionLogDomainFactory), typeof(TransactionLogDomainFactory), services, scoped);
             injectDependency(typeof(ICoinTxServiceFactory), typeof(CoinTxServiceFactory), services, scoped);

@@ -15,122 +15,92 @@ namespace NoChainSwap.Domain.Impl.Services
     public class UserService : IUserService
     {
         private readonly IUserDomainFactory _userFactory;
+        private readonly IUserAddressDomainFactory _userAddressFactory;
 
-        public UserService(IUserDomainFactory userFactory)
+        public UserService(IUserDomainFactory userFactory, IUserAddressDomainFactory userAddressFactory)
         {
             _userFactory = userFactory;
+            _userAddressFactory = userAddressFactory;
         }
 
-        public IUserModel CreateNewUser(UserInfo user)
+        public IUserModel Insert(UserInfo user)
         {
-            try
+            var model = _userFactory.BuildUserModel();
+            if (!string.IsNullOrEmpty(user.Email))
             {
-                var model = _userFactory.BuildUserModel();
-                model.Name = user.Name;
-                model.Email = user.Email;
-                model.CreateAt = DateTime.Now;
-                model.UpdateAt = DateTime.Now;
-                model.Hash = GetUniqueToken();
-
-                model.Save(_userFactory);
-
-                return model;
+                var userWithEmail = model.GetByEmail(user.Email, _userFactory);
+                if (userWithEmail != null)
+                {
+                    throw new Exception("User with email already registered");
+                }
             }
-            catch(Exception)
-            {
-                throw;
-            }
+
+            model.Name = user.Name;
+            model.Email = user.Email;
+            model.CreateAt = DateTime.Now;
+            model.UpdateAt = DateTime.Now;
+            model.Hash = GetUniqueToken();
+
+            model.Save(_userFactory);
+
+            return model;
         }
 
-        public IUserModel UpdateUser(UserInfo user)
+        public IUserModel Update(UserInfo user)
         {
-            try
+            IUserModel model = null;
+            if (!(user.Id > 0))
             {
-                IUserModel model = null;
-                if (user.Id > 0)
-                {
-                    model = _userFactory.BuildUserModel().GetById(user.Id, _userFactory);
-                }
-                else if (!string.IsNullOrEmpty(user.Email))
-                {
-                    model = _userFactory.BuildUserModel().GetByEmail(user.Email, _userFactory);
-                }
-                else if (user.ChainId > 0 && !string.IsNullOrEmpty(user.Address))
-                {
-                    model = _userFactory.BuildUserModel().GetByAddress((ChainEnum) user.ChainId, user.Address, _userFactory);
-                }
-                model.Name = user.Name;
-                model.Email = user.Email;
-                model.UpdateAt = DateTime.Now;
-                model.Update(_userFactory);
-                return model;
+                throw new Exception("User not found");
             }
-            catch (Exception)
+            model = _userFactory.BuildUserModel().GetById(user.Id, _userFactory);
+            if (model == null)
             {
-                throw;
+                throw new Exception("User not exists");
             }
+            model.Name = user.Name;
+            model.Email = user.Email;
+            model.UpdateAt = DateTime.Now;
+            model.Update(_userFactory);
+            return model;
+        }
+
+        public IUserModel GetUserByEmail(string email)
+        {
+            return _userFactory.BuildUserModel().GetByEmail(email, _userFactory);
         }
 
         public IUserModel GetUserByAddress(ChainEnum chain, string address)
         {
-            try
-            {
-                return _userFactory.BuildUserModel().GetByAddress(chain, address, _userFactory);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            return _userFactory.BuildUserModel().GetByAddress(chain, address, _userFactory);
         }
 
-        public IUserModel GetUSerByID(long userId)
+        public IUserModel GetUserByID(long userId)
         {
-            try
-            {
-                return _userFactory.BuildUserModel().GetById(userId, _userFactory);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            return _userFactory.BuildUserModel().GetById(userId, _userFactory);
         }
 
         public IUserModel GetUserHash(ChainEnum chain, string address)
         {
-            try
+            var user = _userFactory.BuildUserModel().GetByAddress(chain, address, _userFactory);
+            if (user != null)
             {
-                var user = _userFactory.BuildUserModel().GetByAddress(chain, address, _userFactory);
-                if (user != null)
-                {
-                    user.Hash = GetUniqueToken();
-                    return user.Update(_userFactory);
-                } 
-                else
-                {
-                    return user;
-                }
+                user.Hash = GetUniqueToken();
+                return user.Update(_userFactory);
             }
-            catch (Exception err)
+            else
             {
-                throw err;
+                return user;
             }
         }
 
         public UserInfo GetUserInSession(HttpContext httpContext)
         {
-            try
+            if (httpContext.User.Claims.Count() > 0)
             {
-                if (httpContext.User.Claims.Count() > 0)
-                {
-                    return JsonConvert.DeserializeObject<UserInfo>(httpContext.User.Claims.First().Value);
-                }
-                return null;
+                return JsonConvert.DeserializeObject<UserInfo>(httpContext.User.Claims.First().Value);
             }
-            catch(Exception err)
-            {
-                return null;
-            }
-            
+            return null;
         }
         private string GetUniqueToken()
         {
@@ -176,6 +146,39 @@ namespace NoChainSwap.Domain.Impl.Services
         public IEnumerable<IUserModel> GetAllUserAddress()
         {
             return _userFactory.BuildUserModel().ListAllUsers(_userFactory);
+        }
+
+        public IEnumerable<IUserAddressModel> ListAddressByUser(long userId)
+        {
+            return _userAddressFactory.BuildUserAddressModel().ListByUser(userId, _userAddressFactory);
+        }
+        public IUserAddressModel GetAddressByChain(long userId, ChainEnum chain)
+        {
+            return _userAddressFactory.BuildUserAddressModel().GetByChain(userId, chain, _userAddressFactory);
+        }
+        public void AddOrChangeAddress(long userId, ChainEnum chain, string address)
+        {
+            var addr = _userAddressFactory.BuildUserAddressModel().GetByChain(userId, chain, _userAddressFactory);
+            if (addr != null)
+            {
+                addr.Address = address;
+                addr.Update();
+            }
+            else
+            {
+                addr = _userAddressFactory.BuildUserAddressModel();
+                addr.UserId = userId;
+                addr.Chain = chain;
+                addr.Address = address;
+                addr.Insert();
+            }
+        }
+        public void RemoveAddress(long userId, ChainEnum chain) {
+            var addr = _userAddressFactory.BuildUserAddressModel().GetByChain(userId, chain, _userAddressFactory);
+            if (addr != null)
+            {
+                _userAddressFactory.BuildUserAddressModel().Remove(addr.Id);
+            }
         }
     }
 }
