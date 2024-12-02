@@ -1,6 +1,6 @@
 import ServiceFactory from '../../Services/ServiceFactory';
-import { TxBusiness } from '../Impl/TxBusiness';
-import { ITxBusiness } from '../Interfaces/ITxBusiness';
+import TxBusiness from '../Impl/TxBusiness';
+import ITxBusiness from '../Interfaces/ITxBusiness';
 
 const txService = ServiceFactory.TxService;
 

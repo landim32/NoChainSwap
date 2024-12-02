@@ -1,6 +1,6 @@
 import ServiceFactory from '../../Services/ServiceFactory';
-import { PriceBusiness } from '../Impl/PriceBusiness';
-import { IPriceBusiness } from '../Interfaces/IPriceBusiness';
+import PriceBusiness from '../Impl/PriceBusiness';
+import IPriceBusiness from '../Interfaces/IPriceBusiness';
 
 const priceService = ServiceFactory.PriceService;
 

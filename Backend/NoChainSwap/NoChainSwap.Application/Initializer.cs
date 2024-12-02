@@ -56,6 +56,7 @@ namespace NoChainSwap.Application
 
             #region Service
             injectDependency(typeof(IUserService), typeof(UserService), services, scoped);
+            injectDependency(typeof(IMailerSendService), typeof(MailerSendService), services, scoped);
             injectDependency(typeof(ITransactionService), typeof(TransactionService), services, scoped);
             injectDependency(typeof(IBtcTxService), typeof(BtcTxService), services, scoped);
             injectDependency(typeof(IStxTxService), typeof(StxTxService), services, scoped);

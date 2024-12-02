@@ -1,8 +1,8 @@
 import BusinessResult from "../../DTO/Business/BusinessResult";
 import { CoinEnum } from "../../DTO/Enum/CoinEnum";
 import { PriceResult } from "../../DTO/Services/PriceResult";
-import { IPriceService } from "../../Services/Interfaces/IPriceService";
-import { IPriceBusiness } from "../Interfaces/IPriceBusiness";
+import IPriceService from "../../Services/Interfaces/IPriceService";
+import IPriceBusiness from "../Interfaces/IPriceBusiness";
 
 let _priceService: IPriceService;
 
@@ -50,4 +50,4 @@ const PriceBusiness: IPriceBusiness = {
   }
 }
 
-export { PriceBusiness };
+export default PriceBusiness;

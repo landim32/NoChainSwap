@@ -10,6 +10,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NoChainSwap.Domain.Impl.Models;
 using NoChainSwap.Domain.Interfaces.Models;
+using NoChainSwap.DTO.Domain;
+using NoChainSwap.Domain.Impl.Services;
+using System.Runtime.CompilerServices;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -37,63 +40,8 @@ namespace NoChainSwap.API.Controllers
                 Name = md.Name,
                 Email = md.Email
             };
-            user.Addresses = _userService
-                .ListAddressByUser(user.Id)
-                .Select(x => new UserAddressInfo
-                {
-                    Id = x.Id,
-                    ChainId = (int) x.Chain,
-                    CreateAt = x.CreateAt,
-                    UpdateAt = x.UpdateAt,
-                    Address = x.Address
-                })
-                .ToList();
             return user;
         }
-
-        [HttpGet("{chainId}/{address}")]
-        public ActionResult<UserResult> Get(int chainId, string address)
-        {
-            try
-            {
-                var user = _userService.GetUserByAddress((ChainEnum)chainId, address);
-                if (user == null)
-                {
-                    return new UserResult() { User = null, Sucesso = true, Mensagem = "Address Not Found" };
-                }
-
-                return new UserResult()
-                {
-                    User = ModelToInfo(user)
-                };
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
-        }
-
-        [HttpGet("getByEmail/{email}")]
-        public ActionResult<UserResult> GetByEmail(string email)
-        {
-            try
-            {
-                var user = _userService.GetUserByEmail(email);
-                if (user == null)
-                {
-                    return new UserResult() { User = null, Sucesso = true, Mensagem = "User with email not found" };
-                }
-                return new UserResult()
-                {
-                    User = ModelToInfo(user)
-                };
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
-        }
-
 
         [HttpGet("checkUserRegister/{chainId}/{address}")]
         public ActionResult<UserResult> CheckUserRegister(int chainId, string address)
@@ -106,62 +54,6 @@ namespace NoChainSwap.API.Controllers
                 {
                     return new UserResult() { User = null, Sucesso = true, Mensagem = "BTC Address Not Found" };
                 }
-                return new UserResult()
-                {
-                    User = ModelToInfo(user)
-                };
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
-        }
-
-        [HttpPost("insert")]
-        public ActionResult<UserResult> Insert(UserParam param)
-        {
-            try
-            {
-                //if(String.IsNullOrEmpty(param.Address))
-                //    return StatusCode(400, "Address is empty");
-
-                var user = _userService.Insert(new UserInfo
-                {
-                    Name = param.Name,
-                    Email = param.Email
-                });
-                _userService.AddOrChangeAddress(user.Id, (ChainEnum)param.ChainId, param.Address);
-                return new UserResult()
-                {
-                    User = ModelToInfo(user)
-                };
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
-        }
-
-        [HttpPost("update")]
-        [Authorize]
-        public ActionResult<UserResult> Update(UserParam param)
-        {
-            try
-            {
-
-                var userSession = _userService.GetUserInSession(HttpContext);
-                if (userSession == null)
-                {
-                    return StatusCode(401, "Not Authorized");
-                }
-
-                var user = _userService.Update(new UserInfo
-                {
-                    Id = userSession.Id,
-                    Name = userSession.Name,
-                    Email = userSession.Email,
-                });
-                _userService.AddOrChangeAddress(user.Id, (ChainEnum)param.ChainId, param.Address);
                 return new UserResult()
                 {
                     User = ModelToInfo(user)

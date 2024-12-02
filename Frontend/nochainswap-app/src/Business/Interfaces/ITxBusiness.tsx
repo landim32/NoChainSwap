@@ -2,9 +2,9 @@ import BusinessResult from "../../DTO/Business/BusinessResult";
 import TxInfo from "../../DTO/Domain/TxInfo";
 import TxLogInfo from "../../DTO/Domain/TxLogInfo";
 import TxParamInfo from "../../DTO/Domain/TxParamInfo";
-import { ITxService } from "../../Services/Interfaces/ITxService";
+import ITxService from "../../Services/Interfaces/ITxService";
 
-export interface ITxBusiness {
+export default interface ITxBusiness {
   init: (priceService: ITxService) => void;
   createTx: (param: TxParamInfo) => Promise<BusinessResult<boolean>>;
   getTx: (txid: number) => Promise<BusinessResult<TxInfo>>;

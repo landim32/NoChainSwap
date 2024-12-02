@@ -4,11 +4,17 @@ using NoChainSwap.Domain.Interfaces.Models;
 using NoChainSwap.DTO.User;
 using Microsoft.AspNetCore.Http;
 using NoChainSwap.Domain.Impl.Models;
+using System.Threading.Tasks;
 
 namespace NoChainSwap.Domain.Interfaces.Services
 {
     public interface IUserService
     {
+        IUserModel LoginWithEmail(string email, string password);
+        void ChangePasswordUsingHash(string recoveryHash, string newPassword);
+        void ChangePassword(long userId, string oldPassword, string newPassword);
+        Task<bool> SendRecoveryEmail(string email);
+
         IUserModel Insert(UserInfo user);
         IUserModel Update(UserInfo user);
         IUserModel GetUserByEmail(string email);

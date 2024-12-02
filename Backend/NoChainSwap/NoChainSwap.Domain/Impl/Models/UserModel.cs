@@ -26,6 +26,17 @@ namespace NoChainSwap.Domain.Impl.Models
         public DateTime CreateAt { get; set; }
         public DateTime UpdateAt { get; set; }
 
+        private string CreateMD5(string input)
+        {
+            using (System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create())
+            {
+                byte[] inputBytes = System.Text.Encoding.ASCII.GetBytes(input);
+                byte[] hashBytes = md5.ComputeHash(inputBytes);
+
+                return Convert.ToHexString(hashBytes);
+            }
+        }
+
         public IUserModel GetById(long userId, IUserDomainFactory factory)
         {
             return _repositoryUser.GetById(userId, factory);
@@ -66,9 +77,59 @@ namespace NoChainSwap.Domain.Impl.Models
             return _repositoryUser.GetByEmail(email, factory);
         }
 
+        public IUserModel GetByRecoveryHash(string recoveryHash, IUserDomainFactory factory)
+        {
+            return _repositoryUser.GetUserByRecoveryHash(recoveryHash, factory);
+        }
+
         public IEnumerable<IUserModel> ListAllUsers(IUserDomainFactory factory)
         {
             return _repositoryUser.ListUsers(factory);
+        }
+
+        public IUserModel LoginWithEmail(string email, string password, IUserDomainFactory factory)
+        {
+            var user = _repositoryUser.GetByEmail(email, factory);
+            if (user == null)
+            {
+                throw new Exception("User not found");
+            }
+            string encryptPwd = CreateMD5(user.Hash + "|" + password);
+            return _repositoryUser.LoginWithEmail(email, encryptPwd, factory);
+        }
+
+        public void ChangePassword(long userId, string password, IUserDomainFactory factory)
+        {
+            var user = _repositoryUser.GetById(userId, factory);
+            if (user == null)
+            {
+                throw new Exception("User not found");
+            }
+            string encryptPwd = CreateMD5(user.Hash + "|" + password);
+            _repositoryUser.ChangePassword(userId, encryptPwd);
+        }
+
+        public void ChangePasswordUsingHash(string recoveryHash, string password, IUserDomainFactory factory)
+        {
+            var user = _repositoryUser.GetUserByRecoveryHash(recoveryHash, factory);
+            if (user == null)
+            {
+                throw new Exception("User not found");
+            }
+            string encryptPwd = CreateMD5(user.Hash + "|" + password);
+            _repositoryUser.ChangePassword(user.Id, encryptPwd);
+        }
+
+        public string GenerateRecoveryHash(long userId, IUserDomainFactory factory)
+        {
+            var user = _repositoryUser.GetById(userId, factory);
+            if (user == null)
+            {
+                throw new Exception("User not found");
+            }
+            string recoveryHash = CreateMD5(user.Hash + "|" + Guid.NewGuid().ToString());
+            _repositoryUser.UpdateRecoveryHash(userId, recoveryHash);
+            return recoveryHash;
         }
     }
 }

@@ -1,6 +1,6 @@
 import { PriceResult } from "../../DTO/Services/PriceResult";
 import IHttpClient from "../../Infra/Interface/IHttpClient";
-import { IPriceService } from "../Interfaces/IPriceService";
+import IPriceService from "../Interfaces/IPriceService";
 
 let _httpClient : IHttpClient;
 
@@ -27,4 +27,4 @@ const PriceService : IPriceService = {
     },
 }
 
-export { PriceService }
+export default PriceService;

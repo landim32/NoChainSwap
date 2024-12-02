@@ -24,7 +24,7 @@ namespace DB.Infra.Repository
             var md = factory.BuildUserModel();
             md.Id = u.UserId;
             md.Hash = u.Hash;
-            //md.Name = u.Name;
+            md.Name = u.Name;
             md.Email = u.Email;
             md.CreateAt = u.CreateAt;
             md.UpdateAt = u.UpdateAt;
@@ -35,7 +35,7 @@ namespace DB.Infra.Repository
         {
             md.UserId = u.Id;
             md.Hash = u.Hash;
-            //md.Name = u.Name;
+            md.Name = u.Name;
             md.Email = u.Email;
             md.CreateAt = u.CreateAt;
             md.UpdateAt = u.UpdateAt;
@@ -98,6 +98,48 @@ namespace DB.Infra.Repository
                 return DbToModel(factory, row);
             }
             return null;
+        }
+
+        public IUserModel LoginWithEmail(string email, string encryptPwd, IUserDomainFactory factory)
+        {
+            var row = _ccsContext.Users
+                .Where(x => x.Email == email.ToLower() && x.Password == encryptPwd)
+                .FirstOrDefault();
+            if (row != null)
+            {
+                return DbToModel(factory, row);
+            }
+            return null;
+        }
+
+        public IUserModel GetUserByRecoveryHash(string recoveryHash, IUserDomainFactory factory)
+        {
+            var row = _ccsContext.Users
+                .Where(x => x.RecoveryHash == recoveryHash)
+                .FirstOrDefault();
+            if (row != null)
+            {
+                return DbToModel(factory, row);
+            }
+            return null;
+        }
+
+        public void UpdateRecoveryHash(long userId, string recoveryHash)
+        {
+            var row = _ccsContext.Users.Find(userId);
+            row.UpdateAt = DateTime.Now;
+            row.RecoveryHash = recoveryHash;
+            _ccsContext.Users.Update(row);
+            _ccsContext.SaveChanges();
+        }
+
+        public void ChangePassword(long userId, string encryptPwd)
+        {
+            var row = _ccsContext.Users.Find(userId);
+            row.UpdateAt = DateTime.Now;
+            row.Password = encryptPwd;
+            _ccsContext.Users.Update(row);
+            _ccsContext.SaveChanges();
         }
     }
 }

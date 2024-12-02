@@ -6,7 +6,7 @@ import { TxListResult } from "../../DTO/Services/TxListResult";
 import { TxLogListResult } from "../../DTO/Services/TxLogListResult";
 import { TxResult } from "../../DTO/Services/TxResult";
 import IHttpClient from "../../Infra/Interface/IHttpClient";
-import { ITxService } from "../Interfaces/ITxService";
+import ITxService from "../Interfaces/ITxService";
 
 let _httpClient : IHttpClient;
 
@@ -130,4 +130,4 @@ const TxService : ITxService = {
     }
 }
 
-export { TxService }
+export default TxService;

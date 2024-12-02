@@ -9,6 +9,8 @@ using NoChainSwap.DTO.User;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using NoChainSwap.Domain.Impl.Models;
+using NoChainSwap.DTO.MailerSend;
+using System.Threading.Tasks;
 
 namespace NoChainSwap.Domain.Impl.Services
 {
@@ -16,11 +18,115 @@ namespace NoChainSwap.Domain.Impl.Services
     {
         private readonly IUserDomainFactory _userFactory;
         private readonly IUserAddressDomainFactory _userAddressFactory;
+        private readonly IMailerSendService _mailerSendService;
 
-        public UserService(IUserDomainFactory userFactory, IUserAddressDomainFactory userAddressFactory)
+        public UserService(IUserDomainFactory userFactory, IUserAddressDomainFactory userAddressFactory, IMailerSendService mailerSendService)
         {
             _userFactory = userFactory;
             _userAddressFactory = userAddressFactory;
+            _mailerSendService = mailerSendService;
+        }
+
+        public IUserModel LoginWithEmail(string email, string password)
+        {
+            return _userFactory.BuildUserModel().LoginWithEmail(email, password, _userFactory);
+        }
+
+        public void ChangePasswordUsingHash(string recoveryHash, string newPassword)
+        {
+            if (string.IsNullOrEmpty(recoveryHash))
+            {
+                throw new Exception("Recovery hash cant be empty");
+            }
+            if (string.IsNullOrEmpty(newPassword))
+            {
+                throw new Exception("Password cant be empty");
+            }
+            var md = _userFactory.BuildUserModel();
+            var user = md.GetByRecoveryHash(recoveryHash, _userFactory);
+            if (user == null)
+            {
+                throw new Exception("User not found");
+            }
+            md.ChangePassword(user.Id, newPassword, _userFactory);
+        }
+
+        public void ChangePassword(long userId, string oldPassword, string newPassword)
+        {
+            if (string.IsNullOrEmpty(oldPassword))
+            {
+                throw new Exception("Old password cant be empty");
+            }
+            if (string.IsNullOrEmpty(newPassword))
+            {
+                throw new Exception("New password cant be empty");
+            }
+            if (oldPassword != newPassword)
+            {
+                throw new Exception("Old password and new are diferent");
+            }
+            var md = _userFactory.BuildUserModel();
+            var user = md.GetById(userId, _userFactory);
+            if (user == null)
+            {
+                throw new Exception("User not found");
+            }
+            md.ChangePassword(user.Id, newPassword, _userFactory);
+        }
+
+        public async Task<bool> SendRecoveryEmail(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+            {
+                throw new Exception("Email cant be empty");
+            }
+            var md = _userFactory.BuildUserModel();
+            var user = md.GetByEmail(email, _userFactory);
+            if (user == null)
+            {
+                throw new Exception("User not found");
+            }
+            var recoveryHash = md.GenerateRecoveryHash(user.Id, _userFactory);
+            var recoveryUrl = $"https://nochainswap.org/recoverypassword/{recoveryHash}";
+
+            var textMessage = 
+                $"Hi {user.Name},\r\n\r\n" +
+                "We received a request to reset your password. If you made this request, " + 
+                "please click the link below to reset your password:\r\n\r\n" +
+                recoveryUrl + "\r\n\r\n" +
+                "If you didn’t request a password reset, please ignore this email or contact " + 
+                "our support team if you have any concerns.\r\n\r\n" +
+                "Best regards,\r\n" +
+                "NoChainSwap Team";
+            var htmlMessage =
+                $"Hi <b>{user.Name}</b>,<br />\r\n<br />\r\n" +
+                "We received a request to reset your password. If you made this request, " + 
+                "please click the link below to reset your password:<br />\r\n<br />\r\n" +
+                $"<a href=\"{recoveryUrl}\">{recoveryUrl}</a><br />\r\n<br />\r\n" +
+                "If you didn’t request a password reset, please ignore this email or contact " + 
+                "our support team if you have any concerns.<br />\r\n<br />\r\n" +
+                "Best regards,<br />\r\n" +
+                "<b>NoChainSwap Team</b>";
+
+            var mail = new MailerInfo
+            {
+                From = new MailerRecipientInfo
+                {
+                    Email = "contact@nochainswap.org",
+                    Name = "NoChainSwap Mailmaster"
+                },
+                To = new List<MailerRecipientInfo> {
+                    new MailerRecipientInfo {
+                        Email = user.Email,
+                        Name = user.Name ?? user.Email
+                    }
+                },
+                Subject = "[NoChainSwap] Password Recovery Email",
+                Text = textMessage,
+                Html = htmlMessage
+            };
+            await _mailerSendService.Sendmail(mail);
+            return await Task.FromResult(true);
         }
 
         public IUserModel Insert(UserInfo user)

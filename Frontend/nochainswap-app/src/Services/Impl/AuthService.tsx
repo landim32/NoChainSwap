@@ -1,7 +1,5 @@
-import { AuthSession } from "../../DTO/Domain/AuthSession";
-import { AuthResult } from "../../DTO/Services/AuthResult";
 import IHttpClient from "../../Infra/Interface/IHttpClient";
-import { IAuthService } from "../Interfaces/IAuthService"; 
+import IAuthService from "../Interfaces/IAuthService"; 
 
 let _httpClient : IHttpClient;
 
@@ -9,6 +7,7 @@ const AuthService : IAuthService = {
     init: function (htppClient: IHttpClient): void {
         _httpClient = htppClient;
     },
+    /*
     getAuthHash: async (publicAdddress: string) => {
         let ret: AuthResult;
         console.log(publicAdddress);
@@ -61,6 +60,7 @@ const AuthService : IAuthService = {
         }
         return ret;
     }
+    */
 }
 
-export { AuthService }
+export default AuthService;

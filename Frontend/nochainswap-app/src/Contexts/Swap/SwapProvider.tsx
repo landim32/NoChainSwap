@@ -239,12 +239,12 @@ export default function SwapProvider(props: any) {
                     let param: TxParamInfo = {
                         sendercoin: "btc",
                         receivercoin: "stx",
-                        senderaddress: userSession.btcAddress,
-                        receiveraddress: userSession.stxAddress,
+                        senderaddress: "", //userSession.btcAddress,
+                        receiveraddress: "", //userSession.stxAddress,
                         sendertxid: txid
                     }
-                    TxFactory.TxBusiness.createTx(param).then((ret) => {
-                        if (ret.sucesso) {
+                    TxFactory.TxBusiness.createTx(param).then((retTx: any) => {
+                        if (retTx.sucesso) {
                             let retSuccess = {
                                 ...ret,
                                 sucesso: true,
@@ -257,7 +257,7 @@ export default function SwapProvider(props: any) {
                             let retErro = {
                                 ...ret,
                                 sucesso: false,
-                                mensagemErro: ret.mensagem
+                                mensagemErro: retTx.mensagem
                             };
                             setLoadingExecute(false);
                             callback(retErro);
@@ -282,12 +282,12 @@ export default function SwapProvider(props: any) {
                       let param: TxParamInfo = {
                         sendercoin: "btc",
                         receivercoin: "stx",
-                        senderaddress: userSession.stxAddress,
-                        receiveraddress: userSession.btcAddress,
+                        senderaddress: "", //userSession.stxAddress,
+                        receiveraddress: "", //userSession.btcAddress,
                         sendertxid: response.txid
                     }
-                      TxFactory.TxBusiness.createTx(param).then((ret) => {
-                          if (ret.sucesso) {
+                      TxFactory.TxBusiness.createTx(param).then((retTx: any) => {
+                          if (retTx.sucesso) {
                               let retSuccess = {
                                   ...ret,
                                   sucesso: true,
@@ -300,7 +300,7 @@ export default function SwapProvider(props: any) {
                               let retErro = {
                                   ...ret,
                                   sucesso: false,
-                                  mensagemErro: ret.mensagem
+                                  mensagemErro: retTx.mensagem
                               };
                               setLoadingExecute(false);
                               callback(retErro);

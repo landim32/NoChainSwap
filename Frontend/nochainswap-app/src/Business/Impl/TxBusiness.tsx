@@ -2,8 +2,8 @@ import BusinessResult from "../../DTO/Business/BusinessResult";
 import TxInfo from "../../DTO/Domain/TxInfo";
 import TxLogInfo from "../../DTO/Domain/TxLogInfo";
 import TxParamInfo from "../../DTO/Domain/TxParamInfo";
-import { ITxService } from "../../Services/Interfaces/ITxService";
-import { ITxBusiness } from "../Interfaces/ITxBusiness";
+import ITxService from "../../Services/Interfaces/ITxService";
+import ITxBusiness from "../Interfaces/ITxBusiness";
 
 let _txService: ITxService;
 
@@ -142,4 +142,4 @@ const TxBusiness: ITxBusiness = {
   }
 }
 
-export { TxBusiness };
+export default TxBusiness;

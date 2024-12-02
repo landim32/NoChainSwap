@@ -4,7 +4,7 @@ import ProviderResult from "./ProviderResult";
 
 interface IAuthProvider {
     //bindMetaMaskWallet: (name: string, email: string, fromReferralCode: string) => Promise<ProviderResult>;
-    checkUserRegister: () => Promise<ProviderResult>;
+    //checkUserRegister: () => Promise<ProviderResult>;
     login: (callback?: any) => void;
     logout: () => ProviderResult;
     loadUserSession: () => void;

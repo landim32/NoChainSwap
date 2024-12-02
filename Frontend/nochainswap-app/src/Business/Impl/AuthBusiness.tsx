@@ -1,9 +1,11 @@
 import BusinessResult from "../../DTO/Business/BusinessResult";
 import { AuthSession } from "../../DTO/Domain/AuthSession";
-import { IAuthService } from "../../Services/Interfaces/IAuthService";
-import { IAuthBusiness } from "../Interfaces/IAuthBusiness";
+import IAuthService from "../../Services/Interfaces/IAuthService";
+import IAuthBusiness from "../Interfaces/IAuthBusiness";
 import Web3 from 'web3';
 import { AppConfig, getUserData, UserData, UserSession, showConnect, disconnect } from '@stacks/connect';
+import UserInfo from "../../DTO/Domain/UserInfo";
+import { ChainEnum } from "../../DTO/Enum/ChainEnum";
 
 const LS_KEY = 'login-with-metamask:auth';
 
@@ -62,6 +64,7 @@ const AuthBusiness : IAuthBusiness = {
       dataResult: null,
     };
   },
+  /*
   checkUserRegister: async () => {
     var ret: BusinessResult<boolean>;
 
@@ -91,6 +94,7 @@ const AuthBusiness : IAuthBusiness = {
       }
     }
     let chainId = await web3.eth.net.getId();
+    */
     /*
     if(chainId != parseInt(env.REACT_APP_NETWORK)) {
       return {
@@ -101,6 +105,7 @@ const AuthBusiness : IAuthBusiness = {
       };
     }
     */
+   /*
     const publicAddress = await web3.eth.getCoinbase();
     if (!publicAddress) {
       return {
@@ -136,6 +141,7 @@ const AuthBusiness : IAuthBusiness = {
       dataResult: true
     };
   }
+  */
 }
 
-export {AuthBusiness};
+export default AuthBusiness;

@@ -31,9 +31,8 @@ export default function AuthProvider(props : any) {
           mensagemSucesso: ""
         };
       }
-
-
     },
+    /*
     checkUserRegister: async () => {
       setLoading(true);
       let bindResult = await AuthFactory.AuthBusiness.checkUserRegister();
@@ -44,6 +43,7 @@ export default function AuthProvider(props : any) {
         mensagemSucesso: bindResult.mensagem
       };
     },
+    */
     loadUserSession: async () => {
       let session = await AuthFactory.AuthBusiness.getSession();
       if (session.sucesso) {

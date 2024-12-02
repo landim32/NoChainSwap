@@ -6,7 +6,7 @@ import { TxResult } from "../../DTO/Services/TxResult";
 import IHttpClient from "../../Infra/Interface/IHttpClient";
 
 
-export interface ITxService {
+export default interface ITxService {
     init: (httpClient : IHttpClient) => void;
     createTx: (param: TxParamInfo) => Promise<StatusRequest>;
     getTx: (txid: number) => Promise<TxResult>;

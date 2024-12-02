@@ -1,6 +1,6 @@
 import ServiceFactory from '../../Services/ServiceFactory';
-import { AuthBusiness } from '../Impl/AuthBusiness';
-import { IAuthBusiness } from '../Interfaces/IAuthBusiness';
+import AuthBusiness from '../Impl/AuthBusiness';
+import IAuthBusiness from '../Interfaces/IAuthBusiness';
 
 const authService = ServiceFactory.AuthService;
 

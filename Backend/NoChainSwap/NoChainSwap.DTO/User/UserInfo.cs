@@ -19,7 +19,5 @@ namespace NoChainSwap.DTO.User
         public DateTime CreateAt { get; set; }
         [JsonPropertyName("updateAt")]
         public DateTime UpdateAt { get; set; }
-        [JsonPropertyName("addresses")]
-        public IList<UserAddressInfo> Addresses { get; set; }
     }
 }

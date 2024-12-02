@@ -1,7 +1,8 @@
 export interface AuthSession {
-    name: string;
-    publicAddress: string;
-    btcAddress : string;
-    stxAddress: string;
-    hash: string;
-  }
+  id: number;
+  email: string;
+  name: string;
+  hash: string;
+  createAt: string;
+  updateAt: string;
+}

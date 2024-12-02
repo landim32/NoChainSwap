@@ -7,6 +7,11 @@ import AuthProvider from './Contexts/Auth/AuthProvider';
 import SwapProvider from './Contexts/Swap/SwapProvider';
 import ListTxPage from './Pages/ListTxPage';
 import TxProvider from './Contexts/Transaction/TxProvider';
+import UserPage from './Pages/UserPage';
+import PasswordPage from './Pages/PasswordPage';
+import LoginPage from './Pages/LoginPage';
+import RecoveryPage from './Pages/RecoveryPage';
+import UserProvider from './Contexts/User/UserProvider';
 
 function Error404() {
   return (
@@ -26,7 +31,7 @@ function Layout() {
 }
 
 function App() {
-  const ContextContainer = ContextBuilder([AuthProvider, SwapProvider, TxProvider]);
+  const ContextContainer = ContextBuilder([AuthProvider, UserProvider, SwapProvider, TxProvider]);
 
   return (
     <ContextContainer>
@@ -41,6 +46,11 @@ function App() {
             <Route index element={<ListTxPage OnlyMyTx={false} />} />
             <Route path=":txid" element={<ListTxPage OnlyMyTx={false} />} />
           </Route>
+          <Route path="login" element={<LoginPage />} />
+          <Route path="edit-account" element={<UserPage />} />
+          <Route path="new-account" element={<UserPage />} />
+          <Route path="recovery-password" element={<RecoveryPage />} />
+          <Route path="change-password" element={<PasswordPage />} />
           <Route path="*" element={<Error404 />} />
         </Route>
       </Routes>

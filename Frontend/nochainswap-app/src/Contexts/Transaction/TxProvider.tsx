@@ -74,6 +74,7 @@ export default function TxProvider(props: any) {
             return retErro;
         }
         let userSession = retSession.dataResult;
+        /*
         let brt = await TxFactory.TxBusiness.listMyTx(userSession.btcAddress);
         if (brt.sucesso) {
           setLoadingTxInfoList(false);
@@ -92,6 +93,7 @@ export default function TxProvider(props: any) {
             mensagemErro: brt.mensagem
           };
         }
+        */
       }
       catch (err) {
         setLoadingTxInfoList(false);
