@@ -51,6 +51,12 @@ namespace NoChainSwap.Domain.Impl.Core
                 case "stx":
                     ret = CoinEnum.Stacks;
                     break;
+                case "usdt":
+                    ret = CoinEnum.USDT;
+                    break;
+                case "brl":
+                    ret = CoinEnum.BRL;
+                    break;
                 default:
                     throw new Exception($"{coinStr} is not a valid coin");
             }
@@ -68,6 +74,12 @@ namespace NoChainSwap.Domain.Impl.Core
                 case CoinEnum.Stacks:
                     str = "stx";
                     break;
+                case CoinEnum.USDT:
+                    str = "usdt";
+                    break;
+                case CoinEnum.BRL:
+                    str = "brl";
+                    break;
             }
             return str;
         }
@@ -83,8 +95,46 @@ namespace NoChainSwap.Domain.Impl.Core
                 case CoinEnum.Stacks:
                     str = "stacks";
                     break;
+                case CoinEnum.USDT:
+                    str = "tether";
+                    break;
+                case CoinEnum.BRL:
+                    str = "brl";
+                    break;
             }
             return str;
+        }
+
+        public static string CurrencyToStr(CurrencyEnum currency)
+        {
+            string str = string.Empty;
+            switch (currency)
+            {
+                case CurrencyEnum.USD:
+                    str = "USD";
+                    break;
+                case CurrencyEnum.BRL:
+                    str = "BRL";
+                    break;
+            }
+            return str;
+        }
+
+        public static CurrencyEnum StrToCurrency(string currencyStr)
+        {
+            var ret = CurrencyEnum.USD;
+            switch (currencyStr)
+            {
+                case "USD":
+                    ret = CurrencyEnum.USD;
+                    break;
+                case "BRL":
+                    ret = CurrencyEnum.BRL;
+                    break;
+                default:
+                    throw new Exception($"{currencyStr} is not a valid currency");
+            }
+            return ret;
         }
     }
 }

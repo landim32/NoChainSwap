@@ -10,6 +10,7 @@ namespace NoChainSwap.Domain.Interfaces.Services
 {
     public interface ICoinMarketCapService
     {
-        CoinSwapInfo GetCurrentPrice(CoinEnum senderCoin, CoinEnum receiverCoin);
+        CoinSwapInfo GetCurrentPrice(CoinEnum senderCoin, CoinEnum receiverCoin, CurrencyEnum currency);
+        decimal GetDollarPrice();
     }
 }

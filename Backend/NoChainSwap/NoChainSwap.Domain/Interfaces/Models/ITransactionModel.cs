@@ -16,8 +16,11 @@ namespace NoChainSwap.Domain.Interfaces.Models
         ChainEnum Chain { get; set; }
         CoinEnum SenderCoin { get; set; }
         CoinEnum ReceiverCoin { get; set; }
+        string RecipientAddress { get; set; }
         string SenderAddress { get; set; }
         string ReceiverAddress { get; set; }
+        long? SenderTax { get; set; }
+        long? ReceiverTax { get; set; }
         DateTime CreateAt { get; set; }
         DateTime UpdateAt { get; set; }
         TransactionStatusEnum Status { get; set; }

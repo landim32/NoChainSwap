@@ -45,30 +45,31 @@ public partial class NoChainSwapContext : DbContext
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("create_at");
             entity.Property(e => e.ReceiverAddress)
-                .IsRequired()
-                .HasMaxLength(80)
+                .HasMaxLength(256)
                 .HasColumnName("receiver_address");
             entity.Property(e => e.ReceiverAmount).HasColumnName("receiver_amount");
             entity.Property(e => e.ReceiverCoin)
-                .HasMaxLength(3)
-                .IsFixedLength()
+                .HasMaxLength(6)
                 .HasColumnName("receiver_coin");
             entity.Property(e => e.ReceiverFee).HasColumnName("receiver_fee");
+            entity.Property(e => e.ReceiverTax).HasColumnName("receiver_tax");
             entity.Property(e => e.ReceiverTxid)
-                .HasMaxLength(80)
+                .HasMaxLength(256)
                 .HasColumnName("receiver_txid");
+            entity.Property(e => e.RecipientAddress)
+                .HasMaxLength(256)
+                .HasColumnName("recipient_address");
             entity.Property(e => e.SenderAddress)
-                .IsRequired()
-                .HasMaxLength(80)
+                .HasMaxLength(256)
                 .HasColumnName("sender_address");
             entity.Property(e => e.SenderAmount).HasColumnName("sender_amount");
             entity.Property(e => e.SenderCoin)
-                .HasMaxLength(3)
-                .IsFixedLength()
+                .HasMaxLength(6)
                 .HasColumnName("sender_coin");
             entity.Property(e => e.SenderFee).HasColumnName("sender_fee");
+            entity.Property(e => e.SenderTax).HasColumnName("sender_tax");
             entity.Property(e => e.SenderTxid)
-                .HasMaxLength(80)
+                .HasMaxLength(256)
                 .HasColumnName("sender_txid");
             entity.Property(e => e.Status).HasColumnName("status");
             entity.Property(e => e.UpdateAt)

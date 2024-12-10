@@ -6,9 +6,11 @@ import ProviderResult from "./ProviderResult";
 
 interface IUserProvider {
     loading: boolean;
+    loadingPassword: boolean;
     loadingUpdate: boolean;
     loadingUserAddr: boolean;
     loadingUpdateAddr: boolean;
+    userHasPassword: boolean;
     user: UserInfo;
     userAddresses: UserAddressInfo[]
 
@@ -19,6 +21,8 @@ interface IUserProvider {
     insert: (user: UserInfo) => Promise<ProviderResult>;
     update: (user: UserInfo) => Promise<ProviderResult>;
     loginWithEmail: (email: string, password: string) => Promise<ProviderResult>;
+
+    hasPassword: (userId: number) => Promise<ProviderResult>;
     changePassword: (userId: number, oldPassword: string, newPassword: string) => Promise<ProviderResult>;
     sendRecoveryEmail: (email: string) => Promise<ProviderResult>;
     changePasswordUsingHash: (recoveryHash: string, newPassword: string) => Promise<ProviderResult>; 

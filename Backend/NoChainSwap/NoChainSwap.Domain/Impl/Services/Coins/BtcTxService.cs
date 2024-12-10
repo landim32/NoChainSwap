@@ -1,5 +1,6 @@
 ﻿using NBitcoin;
 using NBitcoin.RPC;
+using Nethereum.HdWallet;
 using Newtonsoft.Json;
 using NoChainSwap.Domain.Impl.Models;
 using NoChainSwap.Domain.Interfaces.Factory;
@@ -58,6 +59,18 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
             return extKey.PrivateKey.GetBitcoinSecret(Network.TestNet);
         }
 
+        public override Task<string> GetNewAddress(int index)
+        {
+            Mnemonic mnemo = new Mnemonic(MNEMONIC);
+            var extKey = mnemo.DeriveExtKey();
+            var addr = extKey
+                .Derive(0)
+                .Derive(Convert.ToUInt32(index))
+                .GetPublicKey()
+                .GetAddress(ScriptPubKeyType.Segwit, Network.TestNet);
+            return Task.FromResult(addr.ToString());
+        }
+
         public override async Task<string> GetPoolAddress()
         {
             var bitcoinSecret = GetBitcoinPrivatekey();
@@ -81,9 +94,9 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
             return $"https://mempool.space/testnet/tx/{txId}";
         }
 
-        public override string ConvertToString(long coin)
+        public override string ConvertToString(decimal coin)
         {
-            return ((decimal)coin / 100000000M).ToString("N5") + " BTC";
+            return (coin / 100000000M).ToString("N5") + " BTC";
         }
 
         public override async Task<long> GetSenderAmount(string txid, string senderAddr)

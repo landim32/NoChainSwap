@@ -85,12 +85,16 @@ namespace NoChainSwap.API.Controllers
         }
 
         [HttpPost("addorchangeaddress")]
-        public ActionResult<bool> AddOrChangeAddress([FromBody] UserAddressParam param)
+        public ActionResult<StatusResult> AddOrChangeAddress([FromBody] UserAddressParam param)
         {
             try
             {
                 _userService.AddOrChangeAddress(param.UserId, (ChainEnum)param.ChainId, param.Address);
-                return new ActionResult<bool>(true);
+                return new StatusResult
+                {
+                    Sucesso = true,
+                    Mensagem = "Address add successfully"
+                };
             }
             catch (Exception ex)
             {
@@ -99,12 +103,16 @@ namespace NoChainSwap.API.Controllers
         }
 
         [HttpGet("removeaddress/{userId}/{chainId}")]
-        public ActionResult<bool> RemoveAddress(long userId, int chainId)
+        public ActionResult<StatusResult> RemoveAddress(long userId, int chainId)
         {
             try
             {
                 _userService.RemoveAddress(userId, (ChainEnum)chainId);
-                return new ActionResult<bool>(true);
+                return new StatusResult
+                {
+                    Sucesso = true,
+                    Mensagem = "Address remove successfully"
+                };
             }
             catch (Exception ex)
             {

@@ -4,9 +4,9 @@ import { ChainEnum } from "../../DTO/Enum/ChainEnum";
 import IUserService from "../../Services/Interfaces/IUserService";
 import IUserBusiness from "../Interfaces/IUserBusiness";
 
-let _userService : IUserService;
+let _userService: IUserService;
 
-const UserBusiness : IUserBusiness = {
+const UserBusiness: IUserBusiness = {
   init: function (userService: IUserService): void {
     _userService = userService;
   },
@@ -136,14 +136,14 @@ const UserBusiness : IUserBusiness = {
       throw new Error("Failed to login with email");
     }
   },
-  changePassword: async (userId: number, oldPassword: string, newPassword: string) => {
+  hasPassword: async (userId: number) => {
     try {
       let ret: BusinessResult<boolean>;
-      let retServ = await _userService.changePassword(userId, oldPassword, newPassword);
+      let retServ = await _userService.hasPassword(userId);
       if (retServ.sucesso) {
         return {
           ...ret,
-          dataResult: ret.sucesso,
+          dataResult: true,
           sucesso: true
         };
       } else {
@@ -155,6 +155,24 @@ const UserBusiness : IUserBusiness = {
       }
     } catch {
       throw new Error("Failed to change password");
+    }
+  },
+  changePassword: async (userId: number, oldPassword: string, newPassword: string) => {
+    let ret: BusinessResult<boolean>;
+    let retServ = await _userService.changePassword(userId, oldPassword, newPassword);
+    if (retServ.sucesso) {
+      return {
+        ...ret,
+        dataResult: true,
+        sucesso: true,
+        mensagem: retServ.mensagem
+      };
+    } else {
+      return {
+        ...ret,
+        sucesso: false,
+        mensagem: retServ.mensagem
+      };
     }
   },
   sendRecoveryEmail: async (email: string) => {

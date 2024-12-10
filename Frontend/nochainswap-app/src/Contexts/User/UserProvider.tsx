@@ -11,17 +11,23 @@ import UserAddressFactory from "../../Business/Factory/UserAddressFactory";
 export default function UserProvider(props: any) {
 
     const [loading, setLoading] = useState<boolean>(false);
+    const [loadingPassword, setLoadingPassword] = useState<boolean>(false);
     const [loadingUpdate, setLoadingUpdate] = useState<boolean>(false);
     const [loadingUserAddr, setLoadingUserAddr] = useState<boolean>(false);
     const [loadingUpdateAddr, setLoadingUpdateAddr] = useState<boolean>(false);
+
+    const [userHasPassword, setUserHasPassword] = useState<boolean>(false);
+
     const [user, _setUser] = useState<UserInfo>(null);
     const [userAddresses, setUserAddresses] = useState<UserAddressInfo[]>([]);
 
     const userProviderValue: IUserProvider = {
         loading: loading,
+        loadingPassword: loadingPassword,
         loadingUpdate: loadingUpdate,
         loadingUserAddr: loadingUserAddr,
         loadingUpdateAddr: loadingUpdateAddr,
+        userHasPassword: userHasPassword,
         user: user,
         userAddresses: userAddresses,
         setUser: (user: UserInfo) => {
@@ -219,17 +225,52 @@ export default function UserProvider(props: any) {
                 };
             }
         },
+        hasPassword: async (userId: number) => {
+            let ret: Promise<ProviderResult>;
+            setLoadingPassword(true);
+            setUserHasPassword(false);
+            try {
+                let brt = await UserFactory.UserBusiness.hasPassword(userId);
+                //console.log("hashPassword: ", brt.sucesso);
+                if (brt.sucesso) {
+                    setUserHasPassword(true);
+                    setLoadingPassword(false);
+                    return {
+                        ...ret,
+                        sucesso: true,
+                        mensagemSucesso: "Password changed"
+                    };
+                }
+                else {
+                    setLoadingPassword(false);
+                    return {
+                        ...ret,
+                        sucesso: false,
+                        mensagemErro: brt.mensagem
+                    };
+                }
+            }
+            catch (err) {
+                setLoadingPassword(false);
+                return {
+                    ...ret,
+                    sucesso: false,
+                    mensagemErro: JSON.stringify(err)
+                };
+            }
+        },
         changePassword: async (userId: number, oldPassword: string, newPassword: string) => {
             let ret: Promise<ProviderResult>;
             setLoadingUpdate(true);
             try {
                 let brt = await UserFactory.UserBusiness.changePassword(userId, oldPassword, newPassword);
+                console.log("changePassword: ", JSON.stringify(brt));
                 if (brt.sucesso) {
                     setLoadingUpdate(false);
                     return {
                         ...ret,
                         sucesso: true,
-                        mensagemSucesso: "Password changed"
+                        mensagemSucesso: brt.mensagem
                     };
                 }
                 else {
@@ -243,6 +284,7 @@ export default function UserProvider(props: any) {
             }
             catch (err) {
                 setLoadingUpdate(false);
+                console.log("Error change password: ", err);
                 return {
                     ...ret,
                     sucesso: false,

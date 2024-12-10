@@ -12,6 +12,7 @@ const PriceService : IPriceService = {
         let ret: PriceResult;
         let url = "api/CoinMarketCap/getcurrentprice/" + senderCoin + "/" + receiverCoin;
         let request = await _httpClient.doGet<PriceResult>(url, {});
+        console.log("getCurrentPrice: ", url, JSON.stringify(request));
         if (request.success) {
             request.data.sucesso = true;
             return request.data;

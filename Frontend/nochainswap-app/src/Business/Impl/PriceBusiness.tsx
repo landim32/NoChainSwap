@@ -6,6 +6,25 @@ import IPriceBusiness from "../Interfaces/IPriceBusiness";
 
 let _priceService: IPriceService;
 
+const CoinToStr = (coin: CoinEnum) => {
+  let str: string = "";
+  switch (coin) {
+    case CoinEnum.Bitcoin:
+      str = "btc";
+      break;
+    case CoinEnum.Stacks:
+      str = "stx";
+      break;
+    case CoinEnum.USDT:
+      str = "usdt";
+      break;
+    case CoinEnum.BRL:
+      str = "brl";
+      break;
+  }
+  return str;
+};
+
 const PriceBusiness: IPriceBusiness = {
   init: function (priceService: IPriceService): void {
     _priceService = priceService;
@@ -13,24 +32,8 @@ const PriceBusiness: IPriceBusiness = {
   getCurrentPrice: async (senderCoin: CoinEnum, receiverCoin: CoinEnum) => {
     try {
       let ret: BusinessResult<PriceResult> = null;
-      let senderStr = "", receiverStr = "";
-      switch (senderCoin) {
-        case CoinEnum.Bitcoin:
-          senderStr = "btc";
-          break;
-        case CoinEnum.Stacks:
-          senderStr = "stx";
-          break;
-      }
-      switch (receiverCoin) {
-        case CoinEnum.Bitcoin:
-          receiverStr = "btc";
-          break;
-        case CoinEnum.Stacks:
-          receiverStr = "stx";
-          break;
-      }
-      let retPool = await _priceService.getCurrentPrice(senderStr, receiverStr);
+      let retPool = await _priceService.getCurrentPrice(CoinToStr(senderCoin), CoinToStr(receiverCoin));
+      //console.log("Price: ", JSON.stringify(retPool));
       if (retPool.sucesso) {
         return {
           ...ret,

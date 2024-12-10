@@ -60,6 +60,8 @@ namespace NoChainSwap.Application
             injectDependency(typeof(ITransactionService), typeof(TransactionService), services, scoped);
             injectDependency(typeof(IBtcTxService), typeof(BtcTxService), services, scoped);
             injectDependency(typeof(IStxTxService), typeof(StxTxService), services, scoped);
+            injectDependency(typeof(IBRLTxService), typeof(BRLTxService), services, scoped);
+            injectDependency(typeof(IUSDTTxService), typeof(USDTTxService), services, scoped);
             injectDependency(typeof(IMempoolService), typeof(MempoolService), services, scoped);
             injectDependency(typeof(ICoinMarketCapService), typeof(CoinMarketCapService), services, scoped);
             injectDependency(typeof(IStacksService), typeof(StacksService), services, scoped);

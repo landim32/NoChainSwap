@@ -9,6 +9,8 @@ namespace NoChainSwap.DTO.Transaction
     public enum CoinEnum
     {
         Bitcoin = 0,
-        Stacks = 1
+        Stacks = 1,
+        USDT = 2,
+        BRL = 3
     }
 }

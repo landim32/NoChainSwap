@@ -11,6 +11,7 @@ export default interface IUserBusiness {
   insert: (user: UserInfo) => Promise<BusinessResult<UserInfo>>;
   update: (user: UserInfo) => Promise<BusinessResult<UserInfo>>;
   loginWithEmail: (email: string, password: string) => Promise<BusinessResult<UserInfo>>;
+  hasPassword: (userId: number) => Promise<BusinessResult<boolean>>;
   changePassword: (userId: number, oldPassword: string, newPassword: string) => Promise<BusinessResult<boolean>>;
   sendRecoveryEmail: (email: string) => Promise<BusinessResult<boolean>>;
   changePasswordUsingHash: (recoveryHash: string, newPassword: string) => Promise<BusinessResult<boolean>>; 

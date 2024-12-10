@@ -14,6 +14,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using NoChainSwap.Domain.Interfaces.Factory;
 using System.Net;
+using Newtonsoft.Json.Linq;
 
 namespace NoChainSwap.API.Controllers
 {
@@ -49,6 +50,7 @@ namespace NoChainSwap.API.Controllers
                 TxId = md.TxId,
                 SenderCoin = md.GetSenderCoinSymbol(),
                 ReceiverCoin = md.GetReceiverCoinSymbol(),
+                RecipientAddress = md.RecipientAddress,
                 SenderAddress = md.SenderAddress,
                 SenderAddressUrl = (md.SenderAddress != null) ? senderTx.GetAddressUrl(md.SenderAddress) : null,
                 ReceiverAddress = md.ReceiverAddress,
@@ -68,7 +70,7 @@ namespace NoChainSwap.API.Controllers
         }
 
         [HttpPost("createTx")]
-        public ActionResult<bool> CreateTx([FromBody] TransactionParamInfo param)
+        public async Task<ActionResult<long>> CreateTx([FromBody] TransactionParamInfo param)
         {
             try
             {
@@ -79,9 +81,9 @@ namespace NoChainSwap.API.Controllers
                     return StatusCode(401, "Not Authorized");
                 }
                 */
-                var tx = _txService.CreateTx(param);
+                var tx = await _txService.CreateTx(param);
                 
-                return new ActionResult<bool>(tx.TxId > 0);
+                return new ActionResult<long>(tx.TxId);
             }
             catch (Exception ex)
             {

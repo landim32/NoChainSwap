@@ -51,7 +51,7 @@ namespace NoChainSwap.API.Controllers
                 var user = _userService.GetUserByID(userId);
                 if (user == null)
                 {
-                    return new UserResult() { User = null, Sucesso = true, Mensagem = "User Not Found" };
+                    return new UserResult() { User = null, Sucesso = false, Mensagem = "User Not Found" };
                 }
 
                 return new UserResult()
@@ -73,7 +73,7 @@ namespace NoChainSwap.API.Controllers
                 var user = _userService.GetUserByAddress((ChainEnum)chainId, address);
                 if (user == null)
                 {
-                    return new UserResult() { User = null, Sucesso = true, Mensagem = "Address Not Found" };
+                    return new UserResult() { User = null, Sucesso = false, Mensagem = "Address Not Found" };
                 }
 
                 return new UserResult()
@@ -95,7 +95,7 @@ namespace NoChainSwap.API.Controllers
                 var user = _userService.GetUserByEmail(email);
                 if (user == null)
                 {
-                    return new UserResult() { User = null, Sucesso = true, Mensagem = "User with email not found" };
+                    return new UserResult() { User = null, Sucesso = false, Mensagem = "User with email not found" };
                 }
                 return new UserResult()
                 {
@@ -117,7 +117,7 @@ namespace NoChainSwap.API.Controllers
                 //    return StatusCode(400, "Address is empty");
                 if (param == null)
                 {
-                    return new UserResult() { User = null, Sucesso = true, Mensagem = "User is empty" };
+                    return new UserResult() { User = null, Sucesso = false, Mensagem = "User is empty" };
                 }
                 var user = _userService.Insert(new UserInfo
                 {
@@ -146,7 +146,7 @@ namespace NoChainSwap.API.Controllers
                 if (param == null)
                 {
                     //return StatusCode(401, "Not Authorized");
-                    return new UserResult() { User = null, Sucesso = true, Mensagem = "User is empty" };
+                    return new UserResult() { User = null, Sucesso = false, Mensagem = "User is empty" };
                 }
 
                 var user = _userService.Update(new UserInfo
@@ -167,14 +167,14 @@ namespace NoChainSwap.API.Controllers
         }
 
         [HttpPost("loginwithemail")]
-        public ActionResult<UserResult> LoginWithEmail(string email, string password)
+        public ActionResult<UserResult> LoginWithEmail([FromBody]LoginParam param)
         {
             try
             {
-                var user = _userService.LoginWithEmail(email, password);
+                var user = _userService.LoginWithEmail(param.Email, param.Password);
                 if (user == null)
                 {
-                    return new UserResult() { User = null, Sucesso = true, Mensagem = "Email or password is wrong" };
+                    return new UserResult() { User = null, Sucesso = false, Mensagem = "Email or password is wrong" };
                 }
                 return new UserResult()
                 {
@@ -187,17 +187,34 @@ namespace NoChainSwap.API.Controllers
             }
         }
 
-        [HttpPost("changepassword")]
-        public ActionResult<StatusResult> ChangePassword(long userId, string oldPassword, string newPassword)
+        [HttpGet("haspassword/{userId}")]
+        public ActionResult<StatusResult> HasPassword(long userId)
         {
             try
             {
-                var user = _userService.GetUserByID(userId);
+                return new StatusResult
+                {
+                    Sucesso = _userService.HasPassword(userId),
+                    Mensagem = "Password verify successfully"
+                };
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPost("changepassword")]
+        public ActionResult<StatusResult> ChangePassword([FromBody]ChangePasswordParam param)
+        {
+            try
+            {
+                var user = _userService.GetUserByID(param.UserId);
                 if (user == null)
                 {
-                    return new UserResult() { User = null, Sucesso = true, Mensagem = "Email or password is wrong" };
+                    return new UserResult() { User = null, Sucesso = false, Mensagem = "Email or password is wrong" };
                 }
-                _userService.ChangePassword(userId, oldPassword, newPassword);
+                _userService.ChangePassword(param.UserId, param.OldPassword, param.NewPassword);
                 return new StatusResult
                 {
                     Sucesso = true,
@@ -210,7 +227,7 @@ namespace NoChainSwap.API.Controllers
             }
         }
 
-        [HttpPost("sendrecoverymail")]
+        [HttpGet("sendrecoverymail/{email}")]
         public async Task<ActionResult<StatusResult>> SendRecoveryMail(string email)
         {
             try
@@ -238,11 +255,11 @@ namespace NoChainSwap.API.Controllers
         }
 
         [HttpPost("changepasswordusinghash")]
-        public ActionResult<StatusResult> ChangePasswordUsingHash(string recoveryHash, string newPassword)
+        public ActionResult<StatusResult> ChangePasswordUsingHash([FromBody] ChangePasswordUsingHashParam param)
         {
             try
             {
-                _userService.ChangePasswordUsingHash(recoveryHash, newPassword);
+                _userService.ChangePasswordUsingHash(param.RecoveryHash, param.NewPassword);
                 return new StatusResult
                 {
                     Sucesso = true,

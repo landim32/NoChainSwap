@@ -98,6 +98,11 @@ namespace NoChainSwap.Domain.Impl.Models
             return _repositoryUser.LoginWithEmail(email, encryptPwd, factory);
         }
 
+        public bool HasPassword(long userId, IUserDomainFactory factory)
+        {
+            return _repositoryUser.HasPassword(userId, factory);
+        }
+
         public void ChangePassword(long userId, string password, IUserDomainFactory factory)
         {
             var user = _repositoryUser.GetById(userId, factory);

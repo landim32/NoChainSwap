@@ -1,4 +1,5 @@
 ﻿using NBitcoin;
+using Nethereum.HdWallet;
 using Newtonsoft.Json;
 using NoChainSwap.Domain.Impl.Models;
 using NoChainSwap.Domain.Interfaces.Factory;
@@ -57,9 +58,9 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
             return _txInfo;
         }
 
-        public override string ConvertToString(long coin)
+        public override string ConvertToString(decimal coin)
         {
-            return ((decimal)coin / 100000000M).ToString("N5") + " STX";
+            return (coin / 100000000M).ToString("N5") + " STX";
         }
 
         public override string GetAddressUrl(string address)
@@ -104,6 +105,19 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
                     throw new Exception(String.Format("Invalid balance ({0}).", balance.Balance));
                 }
                 return balanceLng * 100;
+            }
+        }
+
+        public override async Task<string> GetNewAddress(int index)
+        {
+            using (var client = new HttpClient())
+            {
+                string url = $"{WALLET_API}/new-address/{index}";
+                HttpResponseMessage response = await client.GetAsync(url);
+                response.EnsureSuccessStatusCode();
+                var responseBody = await response.Content.ReadAsStringAsync();
+
+                return JsonConvert.DeserializeObject<string>(responseBody);
             }
         }
 

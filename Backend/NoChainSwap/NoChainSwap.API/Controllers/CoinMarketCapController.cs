@@ -8,6 +8,7 @@ using NoChainSwap.Domain.Impl.Services;
 using NoChainSwap.DTO;
 using System.Threading.Tasks;
 using NoChainSwap.Domain.Interfaces.Factory;
+using NoChainSwap.DTO.Transaction;
 
 namespace NoChainSwap.API.Controllers
 {
@@ -16,6 +17,8 @@ namespace NoChainSwap.API.Controllers
     //[Authorize]
     public class CoinMarketCapController: Controller
     {
+        private const bool SHOW_POOL_BALANCE = false;
+
         protected readonly IUserService _userService;
         protected readonly ICoinMarketCapService _coinMarketCap;
         protected readonly ICoinTxServiceFactory _coinFactory;
@@ -43,14 +46,15 @@ namespace NoChainSwap.API.Controllers
                     return StatusCode(401, "Not Authorized");
                 }
                 */
-                var coinSender = Utils.StrToCoin(sender);
-                var coinReceiver = Utils.StrToCoin(receiver);
+                var coinSender = Utils.StrToCoin(sender.ToLower());
+                var coinReceiver = Utils.StrToCoin(receiver.ToLower());
+                //var currencyValue = Utils.StrToCurrency(currency.ToUpper());
 
                 var senderService = _coinFactory.BuildCoinTxService(coinSender);
                 var receiverService = _coinFactory.BuildCoinTxService(coinReceiver);
 
-                var price = _coinMarketCap.GetCurrentPrice(coinSender, coinReceiver);
-                if (price != null)
+                var price = _coinMarketCap.GetCurrentPrice(coinSender, coinReceiver, CurrencyEnum.USD);
+                if (price != null && SHOW_POOL_BALANCE)
                 {
                     price.SenderPoolAddr = await senderService.GetPoolAddress();
                     price.ReceiverPoolAddr = await receiverService.GetPoolAddress();

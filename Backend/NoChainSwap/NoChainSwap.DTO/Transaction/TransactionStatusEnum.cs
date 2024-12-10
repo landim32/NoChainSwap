@@ -10,19 +10,12 @@ namespace NoChainSwap.DTO.Transaction
     {
         Initialized = 1,
         Calculated = 2,
-        //BtcNotConfirmed = 3,
-        //StxNotConfirmed = 4,
-        SenderNotConfirmed = 3,
-        //BtcConfirmed = 5,
-        //StxConfirmed = 6,
+        WaitingSenderPayment = 3,
+        SenderNotConfirmed = 4,
         SenderConfirmed = 5,
-        //BtcConfirmedStxNotConfirmed = 7,
-        //StxConfirmedBtcNotConfirmed = 8,
-        SenderConfirmedReiceiverNotConfirmed = 7,
-        //BtcConfirmedStxConfirmed = 9,
-        //StxConfirmedBtcConfirmed = 10,
-        Finished = 9,
-        InvalidInformation = 11,
-        CriticalError = 12
+        SenderConfirmedReiceiverNotConfirmed = 6,
+        Finished = 7,
+        InvalidInformation = 8,
+        CriticalError = 9
     }
 }

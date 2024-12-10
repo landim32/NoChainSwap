@@ -1,4 +1,5 @@
 ﻿using NBitcoin;
+using NBitcoin.Logging;
 using NoChainSwap.Domain.Interfaces.Factory;
 using NoChainSwap.Domain.Interfaces.Services;
 using NoChainSwap.DTO.CoinMarketCap;
@@ -9,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace NoChainSwap.Domain.Impl.Services
 {
@@ -49,33 +51,87 @@ namespace NoChainSwap.Domain.Impl.Services
             };
         }
 
-        public CoinSwapInfo GetCurrentPrice(CoinEnum senderCoin, CoinEnum receiverCoin)
+        public CoinSwapInfo GetCurrentPrice(CoinEnum senderCoin, CoinEnum receiverCoin, CurrencyEnum currency)
         {
             //var senderService = _coinFactory.BuildCoinTxService(senderCoin);
             //var receiverService = _coinFactory.BuildCoinTxService(receiverCoin);
+
+            var client = new CoinmarketcapClient(API_KEY);
 
             var senderSymbol = Core.Utils.CoinToStr(senderCoin);
             var receiverSymbol = Core.Utils.CoinToStr(receiverCoin);
 
             var senderSlug = Core.Utils.CoinToSlug(senderCoin);
             var receiverSlug = Core.Utils.CoinToSlug(receiverCoin);
-
-            var slugs = new string[2] { senderSlug, receiverSlug };
-            var client = new CoinmarketcapClient(API_KEY);
-            var data = client.GetCurrencyBySlugList(slugs, "USD");
-            var senderPrice = data.Where(x => string.Compare(x.Symbol, senderSymbol, true) == 0).First().Price;
-            var receiverPrice = data.Where(x => string.Compare(x.Symbol, receiverSymbol, true) == 0).First().Price;
-            var senderProportion = senderPrice / receiverPrice;
-            var receiverProportion = receiverPrice / senderPrice;
-            return new CoinSwapInfo
+            var currencySlug = Core.Utils.CurrencyToStr(currency);
+            if (senderCoin == CoinEnum.BRL)
             {
-                SenderPrice = senderPrice,
-                ReceiverPrice = receiverPrice,
-                SenderProportion = senderProportion,
-                ReceiverProportion = receiverProportion,
-                Sender = CurrencyToCoin(data.First()),
-                Receiver = CurrencyToCoin(data.Last())
-            };
+                var senderData = client.GetCurrencyBySlugList(new string[1] { Core.Utils.CoinToSlug(CoinEnum.USDT) }, "BRL");
+                var senderPrice = senderData.First().Price;
+
+                var receiverData = client.GetCurrencyBySlugList(new string[1] { receiverSlug }, currencySlug);
+                var receiverPrice = receiverData.First().Price;
+
+                //var senderProportion = senderPrice / receiverPrice;
+                //var receiverProportion = receiverPrice / senderPrice;
+                var senderProportion = receiverPrice / senderPrice;
+                var receiverProportion = senderPrice / receiverPrice;
+                return new CoinSwapInfo
+                {
+                    SenderPrice = senderPrice,
+                    ReceiverPrice = receiverPrice,
+                    SenderProportion = senderProportion,
+                    ReceiverProportion = receiverProportion,
+                    Sender = CurrencyToCoin(senderData.First()),
+                    Receiver = CurrencyToCoin(receiverData.First())
+                };
+            }
+            else if (receiverCoin == CoinEnum.BRL)
+            {
+                var senderData = client.GetCurrencyBySlugList(new string[1] { senderSlug }, currencySlug);
+                var senderPrice = senderData.First().Price;
+
+                var receiverData = client.GetCurrencyBySlugList(new string[1] { Core.Utils.CoinToSlug(CoinEnum.USDT) }, "BRL");
+                var receiverPrice = receiverData.First().Price;
+
+                //var senderProportion = senderPrice / receiverPrice;
+                //var receiverProportion = receiverPrice / senderPrice;
+                var senderProportion = receiverPrice / senderPrice;
+                var receiverProportion = senderPrice / receiverPrice;
+                return new CoinSwapInfo
+                {
+                    SenderPrice = senderPrice,
+                    ReceiverPrice = receiverPrice,
+                    SenderProportion = senderProportion,
+                    ReceiverProportion = receiverProportion,
+                    Sender = CurrencyToCoin(senderData.First()),
+                    Receiver = CurrencyToCoin(receiverData.First())
+                };
+            }
+            else
+            {
+                var slugs = new string[2] { senderSlug, receiverSlug };
+                var data = client.GetCurrencyBySlugList(slugs, currencySlug);
+                var senderPrice = data.First().Price;
+                var receiverPrice = data.Last().Price;
+                var senderProportion = senderPrice / receiverPrice;
+                var receiverProportion = receiverPrice / senderPrice;
+                return new CoinSwapInfo
+                {
+                    SenderPrice = senderPrice,
+                    ReceiverPrice = receiverPrice,
+                    SenderProportion = senderProportion,
+                    ReceiverProportion = receiverProportion,
+                    Sender = CurrencyToCoin(data.First()),
+                    Receiver = CurrencyToCoin(data.Last())
+                };
+            }
+        }
+
+        public decimal GetDollarPrice() {
+            var client = new CoinmarketcapClient(API_KEY);
+            var data = client.GetCurrencyBySlugList(new string[1] { "tether" }, "BRL");
+            return data.First().Price;
         }
     }
 }

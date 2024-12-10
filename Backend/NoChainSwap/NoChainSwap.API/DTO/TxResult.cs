@@ -10,6 +10,8 @@ namespace NoChainSwap.API.DTO
         public string SenderCoin { get; set; }
         [JsonPropertyName("receivercoin")]
         public string ReceiverCoin { get; set; }
+        [JsonPropertyName("recipientaddress")]
+        public string RecipientAddress { get; set; }
         [JsonPropertyName("senderaddress")]
         public string SenderAddress { get; set; }
         [JsonPropertyName("senderaddressurl")]

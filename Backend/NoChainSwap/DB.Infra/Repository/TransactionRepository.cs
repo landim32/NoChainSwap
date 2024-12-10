@@ -29,6 +29,7 @@ namespace DB.Infra.Repository
             md.TxId = u.TxId;
             md.SenderCoin = Utils.StrToCoin(u.SenderCoin);
             md.ReceiverCoin = Utils.StrToCoin(u.ReceiverCoin);
+            md.RecipientAddress = u.RecipientAddress;
             md.SenderAddress = u.SenderAddress;
             md.ReceiverAddress = u.ReceiverAddress;
             md.CreateAt = u.CreateAt;
@@ -48,6 +49,7 @@ namespace DB.Infra.Repository
             md.TxId = u.TxId;
             md.SenderCoin = Utils.CoinToStr(u.SenderCoin);
             md.ReceiverCoin = Utils.CoinToStr(u.ReceiverCoin);
+            md.RecipientAddress = u.RecipientAddress;
             md.SenderAddress = u.SenderAddress;
             md.ReceiverAddress = u.ReceiverAddress;
             md.CreateAt = u.CreateAt;

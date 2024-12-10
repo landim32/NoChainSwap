@@ -6,6 +6,7 @@ import TxInfo from '../../DTO/Domain/TxInfo';
 import TxLogInfo from '../../DTO/Domain/TxLogInfo';
 import TxFactory from '../../Business/Factory/TxFactory';
 import AuthFactory from '../../Business/Factory/AuthFactory';
+import { CoinEnum } from '../../DTO/Enum/CoinEnum';
 
 export default function TxProvider(props: any) {
 
@@ -17,6 +18,66 @@ export default function TxProvider(props: any) {
   const [txInfoList, setTxInfoList] = useState<TxInfo[]>(null);
   const [txLogs, setTxLogs] = useState<TxLogInfo[]>(null);
 
+  const CoinToText = (coin: string) => {
+    let str: string = "";
+    switch (coin) {
+      case "btc":
+        str = "Bitcoin";
+        break;
+      case "stx":
+        str = "Stacks";
+        break;
+      case "usdt":
+        str = "USDT";
+        break;
+      case "brl":
+        str = "Real (PIX)";
+        break;
+    }
+    return str;
+  };
+
+  const StrToCoin = (str: string) => {
+    let coin: CoinEnum;
+    switch (str) {
+      case "btc":
+        coin = CoinEnum.Bitcoin;
+        break;
+      case "stx":
+        coin = CoinEnum.Stacks;
+        break;
+      case "usdt":
+        coin = CoinEnum.USDT;
+        break;
+      case "brl":
+        coin = CoinEnum.BRL;
+        break;
+    }
+    return coin;
+  };
+
+  const getFormatedAmount = (coin: CoinEnum, amount: number) => {
+    if (amount) {
+      let retorno: string;
+      switch (coin) {
+        case CoinEnum.Bitcoin:
+          retorno = (amount / 100000000).toFixed(5).toString() + " BTC";
+          break;
+        case CoinEnum.Stacks:
+          retorno = (amount / 100000000).toFixed(5).toString() + " STX";
+          break;
+        case CoinEnum.USDT:
+          retorno = (amount / 100000000).toFixed(5).toString() + " USDT";
+          break;
+        case CoinEnum.BRL:
+          retorno = (amount / 100000000).toFixed(2).toString();
+          break;
+      }
+      return retorno;
+    }
+    return "~";
+  };
+
   const txProviderValue: ITxProvider = {
     loadingTxInfo: loadingTxInfo,
     loadingTxInfoList: loadingTxInfoList,
@@ -25,6 +86,25 @@ export default function TxProvider(props: any) {
     txInfo: txInfo,
     txInfoList: txInfoList,
     txLogs: txLogs,
+    getTitle: () => {
+      if (txInfo) {
+        return CoinToText(txInfo.sendercoin) + " x " + CoinToText(txInfo.receivercoin);
+      }
+      return "";
+    },
+    getFormatedSenderAmount: () => {
+      if (txInfo) {
+        console.log("coin: ", StrToCoin(txInfo.sendercoin), txInfo.senderamount);
+        return getFormatedAmount(StrToCoin(txInfo.sendercoin), txInfo.senderamount);
+      }
+      return "";
+    },
+    getFormatedReceiverAmount: () => {
+      if (txInfo) {
+        return getFormatedAmount(StrToCoin(txInfo.receivercoin), txInfo.receiveramount);
+      }
+      return "";
+    },
     setTxInfo: (txInfo: TxInfo) => {
       _setTxInfo(txInfo);
     },
@@ -64,16 +144,16 @@ export default function TxProvider(props: any) {
       let ret: Promise<ProviderResult>;
       setLoadingTxInfoList(true);
       try {
-        let retSession = await AuthFactory.AuthBusiness.getSession();
-        if (!retSession.sucesso) {
-            let retErro = {
-                ...ret,
-                sucesso: false,
-                mensagemErro: retSession.mensagem
-            };
-            return retErro;
+        let session = await AuthFactory.AuthBusiness.getSession();
+        if (!session) {
+          let retErro = {
+            ...ret,
+            sucesso: false,
+            mensagemErro: "Not logged"
+          };
+          return retErro;
         }
-        let userSession = retSession.dataResult;
+        let userSession = session;
         /*
         let brt = await TxFactory.TxBusiness.listMyTx(userSession.btcAddress);
         if (brt.sucesso) {

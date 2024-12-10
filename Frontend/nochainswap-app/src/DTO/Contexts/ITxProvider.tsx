@@ -11,6 +11,9 @@ interface ITxProvider {
     txInfo?: TxInfo;
     txInfoList?: TxInfo[];
     txLogs?: TxLogInfo[];
+    getTitle: () => string;
+    getFormatedSenderAmount: () => string;
+    getFormatedReceiverAmount: () => string;
     setTxInfo: (txInfo: TxInfo) => void;
     loadTx: (txid: number) => Promise<ProviderResult>;
     loadListAllTx: () => Promise<ProviderResult>;

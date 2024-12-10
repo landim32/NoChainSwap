@@ -20,6 +20,7 @@ namespace NoChainSwap.Domain.Impl.Services
         //protected readonly ICoinMarketCapService _coinMarketCapService;
         //protected readonly IMempoolService _mempoolService;
         //protected readonly IStacksService _stxService;
+        protected readonly IUserService _userService;
         protected readonly ICoinTxServiceFactory _coinFactory;
         protected readonly ITransactionDomainFactory _txFactory;
         protected readonly ITransactionLogDomainFactory _txLogFactory;
@@ -28,6 +29,7 @@ namespace NoChainSwap.Domain.Impl.Services
             //ICoinMarketCapService coinMarketCapService,
             //IMempoolService mempoolService,
             //IStacksService stxService,
+            IUserService userService,
             ICoinTxServiceFactory coinFactory,
             ITransactionDomainFactory txFactory,
             ITransactionLogDomainFactory txLogFactory
@@ -36,6 +38,7 @@ namespace NoChainSwap.Domain.Impl.Services
             //_coinMarketCapService = coinMarketCapService;
             //_mempoolService = mempoolService;
             //_stxService = stxService;
+            _userService = userService;
             _coinFactory = coinFactory;
             _txFactory = txFactory;
             _txLogFactory = txLogFactory;
@@ -74,8 +77,9 @@ namespace NoChainSwap.Domain.Impl.Services
             return str;
         }
 
-        public ITransactionModel CreateTx(TransactionParamInfo param)
+        public async Task<ITransactionModel> CreateTx(TransactionParamInfo param)
         {
+            /*
             if (string.IsNullOrEmpty(param.SenderAddress))
             {
                 throw new Exception($"Sender Address '{param.SenderAddress}' not informed");
@@ -84,7 +88,19 @@ namespace NoChainSwap.Domain.Impl.Services
             {
                 throw new Exception($"Receiver Address '{param.SenderAddress}' not informed");
             }
-            if (string.IsNullOrEmpty(param.SenderTxid))
+            */
+            if (param.UserId > 0)
+            {
+                var user = _userService.GetUserByID(param.UserId);
+                if (user == null) {
+                    throw new Exception("User not found");
+                }
+            }
+            else
+            {
+                throw new Exception("User not found");
+            }
+            if (!string.IsNullOrEmpty(param.SenderTxid))
             {
                 var m1 = _txFactory.BuildTransactionModel().GetBySenderTxId(param.SenderTxid, _txFactory);
                 if (m1 != null)
@@ -95,22 +111,48 @@ namespace NoChainSwap.Domain.Impl.Services
             try
             {
                 var model = _txFactory.BuildTransactionModel();
+                model.UserId = param.UserId;
                 //model.Type = param.BtcToStx ? TransactionEnum.BtcToStx : TransactionEnum.StxToBtc;
                 model.SenderCoin = Core.Utils.StrToCoin(param.SenderCoin);
                 model.ReceiverCoin = Core.Utils.StrToCoin(param.ReceiverCoin);
+                //model.RecipientAddress = param.RecipientAddress;
                 model.SenderAddress = param.SenderAddress;
                 model.ReceiverAddress = param.ReceiverAddress;
                 model.CreateAt = DateTime.Now;
                 model.UpdateAt = DateTime.Now;
                 model.Status = TransactionStatusEnum.Initialized;
-                model.SenderAmount = 0;
-                model.ReceiverAmount = 0;
+                model.SenderAmount = param.SenderAmount;
+                model.ReceiverAmount = param.ReceiverAmount;
                 model.SenderTxid = param.SenderTxid;
                 model.ReceiverTxid = null;
                 model.SenderFee = null;
                 model.ReceiverFee = null;
 
+                if (model.SenderCoin == CoinEnum.BRL)
+                {
+                    double tax = Convert.ToDouble(model.SenderAmount) * 0.03;
+                    model.SenderTax = Convert.ToInt64(Math.Truncate(tax));
+                    model.ReceiverTax = 0;
+                }
+                else if (model.ReceiverCoin == CoinEnum.BRL)
+                {
+                    double tax = Convert.ToDouble(model.ReceiverAmount) * 0.03;
+                    model.SenderTax = 0;
+                    model.ReceiverTax = Convert.ToInt64(Math.Truncate(tax));
+                }
+                else
+                {
+                    double tax = Convert.ToDouble(model.SenderAmount) * 0.03;
+                    model.SenderTax = Convert.ToInt64(Math.Truncate(tax));
+                    model.ReceiverTax = 0;
+                }
+
                 model.Save();
+
+                var senderService = _coinFactory.BuildCoinTxService(model.SenderCoin);
+                var addr = await senderService.GetNewAddress(Convert.ToInt32(model.TxId));
+                model.RecipientAddress = addr;
+                model.Update();
 
                 return model;
             }
@@ -141,6 +183,8 @@ namespace NoChainSwap.Domain.Impl.Services
                 {
                     throw new Exception("Transaction not found.");
                 }
+                model.SenderAddress = tx.SenderAddress;
+                model.ReceiverAddress = tx.ReceiverAddress;
                 model.UpdateAt = DateTime.Now;
                 model.Status = tx.Status;
                 model.SenderAmount = tx.SenderAmount;
@@ -162,6 +206,7 @@ namespace NoChainSwap.Domain.Impl.Services
             var status = new List<int>() {
                 (int) TransactionStatusEnum.Initialized,
                 (int) TransactionStatusEnum.Calculated,
+                (int) TransactionStatusEnum.WaitingSenderPayment,
                 (int) TransactionStatusEnum.SenderNotConfirmed,
                 (int) TransactionStatusEnum.SenderConfirmed,
                 (int) TransactionStatusEnum.SenderConfirmedReiceiverNotConfirmed

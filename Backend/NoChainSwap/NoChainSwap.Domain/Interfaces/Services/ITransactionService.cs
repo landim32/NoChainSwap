@@ -12,7 +12,7 @@ namespace NoChainSwap.Domain.Interfaces.Services
     public interface ITransactionService
     {
         ITransactionModel GetTx(long txId);
-        ITransactionModel CreateTx(TransactionParamInfo param);
+        Task<ITransactionModel> CreateTx(TransactionParamInfo param);
         ITransactionModel Update(TransactionInfo tx);
         IEnumerable<ITransactionModel> ListByStatusActive();
         IEnumerable<ITransactionModel> ListAll();

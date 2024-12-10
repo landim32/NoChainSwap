@@ -1,8 +1,11 @@
+import { ChainEnum } from "../Enum/ChainEnum";
 import { CoinEnum } from "../Enum/CoinEnum";
 import ProviderResult from "./ProviderResult";
+import { TxProvideResult } from "./TxProviderResult";
 
 interface ISwapProvider {
     loadingPrice: boolean;
+    loadingExecute: boolean;
     senderCoin: CoinEnum;
     receiverCoin: CoinEnum;
     senderPrice: number;
@@ -11,27 +14,29 @@ interface ISwapProvider {
     receiverAmount: number;
     senderProportion: number;
     receiverProportion: number;
-    //btcToStxText: string;
-    //stxToBtcText: string;
     senderPoolAddress: string;
     receiverPoolAddress: string;
     senderPoolBalance: BigInt;
     receiverPoolBalance: BigInt;
     currentTxId: string;
+    senderFee: number;
+    receiverFee: number;
     getFormatedSenderAmount: () => string;
     getFormatedReceiverAmount: () => string;
     getFormatedSenderPrice: () => string;
     getFormatedReceiverPrice: () => string;
     getFormatedSenderBalance: () => string;
     getFormatedReceiverBalance: () => string;
-    setSenderCoin: (value: CoinEnum) => void;
-    setReceiverCoin: (value: CoinEnum) => void;
+    getFormatedSenderFee: () => string;
+    getFormatedReceiverFee: () => string;
+    setSenderCoin: (value: CoinEnum) => Promise<ProviderResult>;
+    setReceiverCoin: (value: CoinEnum) => Promise<ProviderResult>;
     setSenderAmount: (value: number) => void;
     getCoinText: () => string;
-    loadCurrentPrice: () => Promise<ProviderResult>;
-    reverseAllWithoutCoin: () => void;
+    loadCurrentPrice: (sender: CoinEnum, receiver: CoinEnum) => Promise<ProviderResult>;
     reverseCoin: () => void;
-    execute: (callback: any) => void;
+    createTx: (chain: ChainEnum, email?: string, receiverAddr?: string) => Promise<TxProvideResult>;
+    payWithWallet: (callback: any) => void;
 }
 
 export default ISwapProvider;

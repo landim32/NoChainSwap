@@ -11,6 +11,7 @@ namespace NoChainSwap.DTO.Transaction
         public long TxId { get; set; }
         public CoinEnum SenderCoin { get; set; }
         public CoinEnum ReceiverCoin { get; set; }
+        public string RecipientAddress { get; set; }
         public string SenderAddress { get; set; }
         public string ReceiverAddress { get; set; }
         public DateTime CreateAt { get; set; }

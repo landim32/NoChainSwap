@@ -37,6 +37,12 @@ public partial class Transaction
 
     public int? ChainId { get; set; }
 
+    public string RecipientAddress { get; set; }
+
+    public long? SenderTax { get; set; }
+
+    public long? ReceiverTax { get; set; }
+
     public virtual ICollection<TransactionLog> TransactionLogs { get; set; } = new List<TransactionLog>();
 
     public virtual User User { get; set; }

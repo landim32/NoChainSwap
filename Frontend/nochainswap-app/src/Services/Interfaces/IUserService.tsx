@@ -1,6 +1,7 @@
 import UserInfo from "../../DTO/Domain/UserInfo";
 import { ChainEnum } from "../../DTO/Enum/ChainEnum";
 import AuthResult from "../../DTO/Services/AuthResult";
+import StatusRequest from "../../DTO/Services/StatusRequest";
 import UserResult from "../../DTO/Services/UserResult";
 import IHttpClient from "../../Infra/Interface/IHttpClient";
 
@@ -13,7 +14,8 @@ export default interface IUserService {
     insert: (user: UserInfo) => Promise<UserResult>;
     update: (user: UserInfo) => Promise<UserResult>;
     loginWithEmail: (email: string, password: string) => Promise<UserResult>;
-    changePassword: (userId: number, oldPassword: string, newPassword: string) => Promise<AuthResult>;
-    sendRecoveryEmail: (email: string) => Promise<AuthResult>;
-    changePasswordUsingHash: (recoveryHash: string, newPassword: string) => Promise<AuthResult>; 
+    hasPassword: (userId: number) => Promise<StatusRequest>;
+    changePassword: (userId: number, oldPassword: string, newPassword: string) => Promise<StatusRequest>;
+    sendRecoveryEmail: (email: string) => Promise<StatusRequest>;
+    changePasswordUsingHash: (recoveryHash: string, newPassword: string) => Promise<StatusRequest>; 
 }

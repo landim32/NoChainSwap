@@ -2,35 +2,51 @@ import BusinessResult from "../../DTO/Business/BusinessResult";
 import TxInfo from "../../DTO/Domain/TxInfo";
 import TxLogInfo from "../../DTO/Domain/TxLogInfo";
 import TxParamInfo from "../../DTO/Domain/TxParamInfo";
+import { CoinEnum } from "../../DTO/Enum/CoinEnum";
 import ITxService from "../../Services/Interfaces/ITxService";
 import ITxBusiness from "../Interfaces/ITxBusiness";
 
 let _txService: ITxService;
+
+const CoinToStr = (coin: CoinEnum) => {
+  let str: string = "";
+  switch (coin) {
+    case CoinEnum.Bitcoin:
+      str = "btc";
+      break;
+    case CoinEnum.Stacks:
+      str = "stx";
+      break;
+    case CoinEnum.USDT:
+      str = "usdt";
+      break;
+    case CoinEnum.BRL:
+      str = "brl";
+      break;
+  }
+  return str;
+};
 
 const TxBusiness: ITxBusiness = {
   init: function (txService: ITxService): void {
     _txService = txService;
   },
   createTx: async (param: TxParamInfo) => {
-    try {
-      let ret: BusinessResult<boolean> = null;
-      let retServ = await _txService.createTx(param);
-      
-      if (retServ.sucesso) {
-        return {
-          ...ret,
-          dataResult: retServ.sucesso,
-          sucesso: true
-        };
-      } else {
-        return {
-          ...ret,
-          sucesso: false,
-          mensagem: retServ.mensagem
-        };
-      }
-    } catch {
-      throw new Error("Failed to create transaction");
+    let ret: BusinessResult<number> = null;
+    let retServ = await _txService.createTx(param);
+
+    if (retServ.sucesso) {
+      return {
+        ...ret,
+        dataResult: retServ.txId,
+        sucesso: true
+      };
+    } else {
+      return {
+        ...ret,
+        sucesso: false,
+        mensagem: retServ.mensagem
+      };
     }
   },
   getTx: async (txid: number) => {

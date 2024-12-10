@@ -34,7 +34,7 @@ const UserAddressBusiness : IUserAddressBusiness = {
         throw new Error("Failed to get user by address");
       }
   },
-  getAddressByChain: async (userId: number, chainId: number) => {
+  getAddressByChain: async (userId: number, chainId: ChainEnum) => {
     try {
         let ret: BusinessResult<UserAddressInfo>;
         let retServ = await _userAddrService.getAddressByChain(userId, chainId);
@@ -55,7 +55,7 @@ const UserAddressBusiness : IUserAddressBusiness = {
         throw new Error("Failed to get user by address");
       }
   },
-  addOrChangeAddress: async (userId: number, chainId: number, address: string) => {
+  addOrChangeAddress: async (userId: number, chainId: ChainEnum, address: string) => {
     try {
         let ret: BusinessResult<boolean>;
         let retServ = await _userAddrService.addOrChangeAddress(userId, chainId, address);
@@ -76,7 +76,7 @@ const UserAddressBusiness : IUserAddressBusiness = {
         throw new Error("Failed to get user by address");
       }
   },
-  removeAddress: async (userId: number, chainId: number) =>  {
+  removeAddress: async (userId: number, chainId: ChainEnum) =>  {
     try {
         let ret: BusinessResult<boolean>;
         let retServ = await _userAddrService.removeAddress(userId, chainId);

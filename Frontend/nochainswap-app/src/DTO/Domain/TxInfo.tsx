@@ -2,6 +2,7 @@ export default interface TxInfo {
     txid: number;
     sendercoin: string;
     receivercoin: string;
+    recipientaddress: string;
     senderaddress: string;
     senderaddressurl: string;
     receiveraddress: string;
@@ -13,8 +14,8 @@ export default interface TxInfo {
     sendertxidurl?: string;
     receivertxid?: string;
     receivertxidurl?: string;
-    senderfee?: string,
-    receiverfee?: string,
-    senderamount?: string,
-    receiveramount?: string
+    senderfee?: number,
+    receiverfee?: number,
+    senderamount?: number,
+    receiveramount?: number
   }

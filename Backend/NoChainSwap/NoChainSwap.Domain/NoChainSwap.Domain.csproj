@@ -8,6 +8,8 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.1" />
     <PackageReference Include="NBitcoin" Version="7.0.40" />
+    <PackageReference Include="Nethereum.HdWallet" Version="4.26.0" />
+    <PackageReference Include="Nethereum.Web3" Version="4.26.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="NoobsMuc.Coinmarketcap.Client" Version="3.1.1" />
     <PackageReference Include="System.Drawing.Common" Version="8.0.10" />

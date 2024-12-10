@@ -32,6 +32,11 @@ namespace NoChainSwap.Domain.Impl.Services
             return _userFactory.BuildUserModel().LoginWithEmail(email, password, _userFactory);
         }
 
+        public bool HasPassword(long userId)
+        {
+            return _userFactory.BuildUserModel().HasPassword(userId, _userFactory);
+        }
+
         public void ChangePasswordUsingHash(string recoveryHash, string newPassword)
         {
             if (string.IsNullOrEmpty(recoveryHash))
@@ -53,7 +58,8 @@ namespace NoChainSwap.Domain.Impl.Services
 
         public void ChangePassword(long userId, string oldPassword, string newPassword)
         {
-            if (string.IsNullOrEmpty(oldPassword))
+            bool hasPassword = HasPassword(userId);
+            if (hasPassword && string.IsNullOrEmpty(oldPassword))
             {
                 throw new Exception("Old password cant be empty");
             }
@@ -61,15 +67,23 @@ namespace NoChainSwap.Domain.Impl.Services
             {
                 throw new Exception("New password cant be empty");
             }
-            if (oldPassword != newPassword)
-            {
-                throw new Exception("Old password and new are diferent");
-            }
             var md = _userFactory.BuildUserModel();
             var user = md.GetById(userId, _userFactory);
             if (user == null)
             {
                 throw new Exception("User not found");
+            }
+            if (string.IsNullOrEmpty(user.Email))
+            {
+                throw new Exception("To change password you need a email");
+            }
+            if (hasPassword)
+            {
+                var mdUser = md.LoginWithEmail(user.Email, oldPassword, _userFactory);
+                if (mdUser == null)
+                {
+                    throw new Exception("Email or password is wrong");
+                }
             }
             md.ChangePassword(user.Id, newPassword, _userFactory);
         }

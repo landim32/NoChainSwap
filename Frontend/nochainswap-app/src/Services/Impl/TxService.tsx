@@ -2,6 +2,7 @@ import TxInfo from "../../DTO/Domain/TxInfo";
 import TxLogInfo from "../../DTO/Domain/TxLogInfo";
 import TxParamInfo from "../../DTO/Domain/TxParamInfo";
 import StatusRequest from "../../DTO/Services/StatusRequest";
+import { TxIdResult } from "../../DTO/Services/TxIdResult";
 import { TxListResult } from "../../DTO/Services/TxListResult";
 import { TxLogListResult } from "../../DTO/Services/TxLogListResult";
 import { TxResult } from "../../DTO/Services/TxResult";
@@ -15,12 +16,14 @@ const TxService : ITxService = {
         _httpClient = htppClient;
     },
     createTx: async (param: TxParamInfo) => {
-        let ret: StatusRequest;
-        let request = await _httpClient.doPost<boolean>("api/Transaction/createTx", param);
+        let ret: TxIdResult;
+        console.log("createTx: ", JSON.stringify(param));
+        let request = await _httpClient.doPost<number>("api/Transaction/createTx", param);
         if (request.success) {
-            return {
-                mensagem: request.data ? "Transaction created" : "Transaction not created" ,
-                sucesso: request.data,
+            ret = {
+                mensagem: "Transaction created",
+                txId: request.data,
+                sucesso: true,
                 ...ret
             };
         }

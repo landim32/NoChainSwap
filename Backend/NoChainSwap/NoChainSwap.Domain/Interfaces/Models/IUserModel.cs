@@ -22,6 +22,7 @@ namespace NoChainSwap.Domain.Interfaces.Models
         IUserModel GetByRecoveryHash(string recoveryHash, IUserDomainFactory factory);
         IEnumerable<IUserModel> ListAllUsers(IUserDomainFactory factory);
         IUserModel LoginWithEmail(string email, string password, IUserDomainFactory factory);
+        bool HasPassword(long userId, IUserDomainFactory factory);
         void ChangePassword(long userId, string password, IUserDomainFactory factory);
         string GenerateRecoveryHash(long userId, IUserDomainFactory factory);
     }

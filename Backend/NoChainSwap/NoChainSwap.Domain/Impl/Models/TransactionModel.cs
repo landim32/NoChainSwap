@@ -28,8 +28,11 @@ namespace NoChainSwap.Domain.Impl.Models
         public ChainEnum Chain { get; set; }
         public CoinEnum SenderCoin { get; set; }
         public CoinEnum ReceiverCoin { get; set; }
+        public string RecipientAddress { get; set; }
         public string SenderAddress { get; set; }
         public string ReceiverAddress { get; set; }
+        public long? SenderTax { get; set; }
+        public long? ReceiverTax { get; set; }
         public DateTime CreateAt { get; set; }
         public DateTime UpdateAt { get; set; }
         public TransactionStatusEnum Status { get; set; }

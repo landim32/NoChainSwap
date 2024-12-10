@@ -15,5 +15,6 @@ namespace Core.Domain.Repository
         TModel GetUserByRecoveryHash(string recoveryHash, TFactory factory);
         void UpdateRecoveryHash(long userId, string recoveryHash);
         void ChangePassword(long userId, string encryptPwd);
+        bool HasPassword(long userId, TFactory factory);
     }
 }

@@ -14,11 +14,20 @@ namespace NoChainSwap.Domain.Impl.Factory
     {
         protected readonly IBtcTxService _btcTxService;
         protected readonly IStxTxService _stxTxService;
+        protected readonly IUSDTTxService _usdtTxService;
+        protected readonly IBRLTxService _brlTxService;
 
-        public CoinTxServiceFactory(IBtcTxService btcTxService, IStxTxService stxTxService)
+        public CoinTxServiceFactory(
+            IBtcTxService btcTxService, 
+            IStxTxService stxTxService,
+            IUSDTTxService ustdTxService,
+            IBRLTxService brlTxService
+        )
         {
             _btcTxService = btcTxService;
             _stxTxService = stxTxService;
+            _usdtTxService = ustdTxService;
+            _brlTxService = brlTxService;
         }
 
         public ICoinTxService BuildCoinTxService(CoinEnum coin)
@@ -31,6 +40,12 @@ namespace NoChainSwap.Domain.Impl.Factory
                     break;
                 case CoinEnum.Stacks:
                     coinTxService = _stxTxService;
+                    break;
+                case CoinEnum.USDT:
+                    coinTxService = _usdtTxService;
+                    break;
+                case CoinEnum.BRL:
+                    coinTxService = _brlTxService;
                     break;
             }
             return coinTxService;

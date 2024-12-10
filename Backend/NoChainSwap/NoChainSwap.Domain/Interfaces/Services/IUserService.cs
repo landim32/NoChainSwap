@@ -11,6 +11,7 @@ namespace NoChainSwap.Domain.Interfaces.Services
     public interface IUserService
     {
         IUserModel LoginWithEmail(string email, string password);
+        bool HasPassword(long userId);
         void ChangePasswordUsingHash(string recoveryHash, string newPassword);
         void ChangePassword(long userId, string oldPassword, string newPassword);
         Task<bool> SendRecoveryEmail(string email);

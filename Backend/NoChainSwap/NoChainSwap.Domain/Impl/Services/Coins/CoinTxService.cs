@@ -21,6 +21,7 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
         protected ITransactionDomainFactory _txFactory;
         protected ITransactionLogDomainFactory _txLogFactory;
 
+        public abstract Task<string> GetNewAddress(int index);
         public abstract Task<string> GetPoolAddress();
         public abstract Task<long> GetPoolBalance();
         public abstract Task<string> Transfer(string address, long amount);
@@ -28,7 +29,7 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
         public abstract Task<bool> IsTransactionSuccessful(string txid);
         public abstract string GetAddressUrl(string address);
         public abstract string GetTransactionUrl(string txId);
-        public abstract string ConvertToString(long coin);
+        public abstract string ConvertToString(decimal coin);
         public abstract Task<int> GetFee(string txid);
         public abstract Task<long> GetSenderAmount(string txid, string senderAddr);
         public abstract string GetSwapDescription(decimal proportion);
@@ -82,6 +83,9 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
                 case TransactionStatusEnum.Calculated:
                     ret = await SenderFirstConfirmStep(tx, receiverService);
                     break;
+                case TransactionStatusEnum.WaitingSenderPayment:
+                    ret = await SenderFirstConfirmStep(tx, receiverService);
+                    break;
                 case TransactionStatusEnum.SenderNotConfirmed:
                     ret = await SenderTryConfirmStep(tx, receiverService);
                     break;
@@ -119,7 +123,7 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
         {
             var senderAmount = await GetSenderAmount(tx.SenderTxid, tx.SenderAddress);
             //var senderProportion = GetSenderProportion(receiverService);
-            var price = _coinMarketCapService.GetCurrentPrice(GetCoin(), receiverService.GetCoin());
+            var price = _coinMarketCapService.GetCurrentPrice(GetCoin(), receiverService.GetCoin(), CurrencyEnum.USD);
             decimal receiverAmountFloat = senderAmount / price.ReceiverProportion;
             var receiverAmount = Convert.ToInt64(receiverAmountFloat);
 
@@ -213,7 +217,7 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
                 });
             }
             var senderAmount = await GetSenderAmount(tx.SenderTxid, tx.SenderAddress);
-            var price = _coinMarketCapService.GetCurrentPrice(GetCoin(), receiverService.GetCoin());
+            var price = _coinMarketCapService.GetCurrentPrice(GetCoin(), receiverService.GetCoin(), CurrencyEnum.USD);
             var receiverAmount = Convert.ToInt64(senderAmount / price.ReceiverProportion);
 
             var senderSymbol = Utils.CoinToStr(GetCoin());

@@ -31,14 +31,14 @@ namespace DB.Infra.Repository
             return md;
         }
 
-        private void ModelToDb(IUserModel u, User md)
+        private void ModelToDb(IUserModel md, User row)
         {
-            md.UserId = u.Id;
-            md.Hash = u.Hash;
-            md.Name = u.Name;
-            md.Email = u.Email;
-            md.CreateAt = u.CreateAt;
-            md.UpdateAt = u.UpdateAt;
+            row.UserId = md.Id;
+            row.Hash = md.Hash;
+            row.Name = md.Name;
+            row.Email = md.Email;
+            row.CreateAt = md.CreateAt;
+            row.UpdateAt = md.UpdateAt;
         }
 
         public IUserModel GetById(long userId, IUserDomainFactory factory)
@@ -110,6 +110,12 @@ namespace DB.Infra.Repository
                 return DbToModel(factory, row);
             }
             return null;
+        }
+
+        public bool HasPassword(long userId, IUserDomainFactory factory)
+        {
+            var row = _ccsContext.Users.Find(userId);
+            return row != null && !string.IsNullOrEmpty(row.Password);
         }
 
         public IUserModel GetUserByRecoveryHash(string recoveryHash, IUserDomainFactory factory)

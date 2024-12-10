@@ -9,6 +9,8 @@ namespace NoChainSwap.DTO.Transaction
 {
     public class TransactionParamInfo
     {
+        [JsonPropertyName("userid")]
+        public long UserId { get; set; }
         [JsonPropertyName("sendercoin")]
         public string SenderCoin { get; set; }
         [JsonPropertyName("receivercoin")]
@@ -19,5 +21,13 @@ namespace NoChainSwap.DTO.Transaction
         public string ReceiverAddress { get; set; }
         [JsonPropertyName("sendertxid")]
         public string SenderTxid { get; set; }
+        [JsonPropertyName("senderamount")]
+        public long? SenderAmount { get; set; }
+        [JsonPropertyName("receiveramount")]
+        public long? ReceiverAmount { get; set; }
+        [JsonPropertyName("senderfee")]
+        public long? SenderFee { get; set; }
+        [JsonPropertyName("receiverfee")]
+        public long? ReceiverFee { get; set; }
     }
 }

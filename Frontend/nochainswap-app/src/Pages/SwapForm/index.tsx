@@ -12,19 +12,81 @@ import { CoinEnum } from '../../DTO/Enum/CoinEnum';
 import Modal from 'react-bootstrap/Modal';
 import ProviderResult from '../../DTO/Contexts/ProviderResult';
 import CurrencyInput from 'react-currency-input-field';
-import { redirect } from 'react-router-dom';
+import { redirect, useNavigate } from 'react-router-dom';
+import MessageToast from '../../Components/MessageToast';
+import { MessageToastEnum } from '../../DTO/Enum/MessageToastEnum';
+import { faEnvelope, faLock, faRightLeft } from '@fortawesome/free-solid-svg-icons';
+import InputGroup from 'react-bootstrap/InputGroup';
+import AuthContext from '../../Contexts/Auth/AuthContext';
 
 export default function SwapForm() {
 
     const [showModal, setShowModal] = useState<boolean>(false);
 
+    const [dialog, setDialog] = useState<MessageToastEnum>(MessageToastEnum.Error);
+    const [showMessage, setShowMessage] = useState<boolean>(false);
+    const [messageText, setMessageText] = useState<string>("");
+
+    const [address, setAddress] = useState<string>("");
+    const [email, setEmail] = useState<string>("");
+
+    const authContext = useContext(AuthContext);
     const swapContext = useContext(SwapContext);
+
+    const throwError = (message: string) => {
+        setDialog(MessageToastEnum.Error)
+        setMessageText(message);
+        setShowMessage(true);
+    };
+    const showSuccessMessage = (message: string) => {
+        setDialog(MessageToastEnum.Success)
+        setMessageText(message);
+        setShowMessage(true);
+    };
+
+    const addressPlaceHolderHandle = () => {
+        switch (swapContext.receiverCoin) {
+            case CoinEnum.Bitcoin:
+                return "Your Bitcoin Address";
+                break;
+            case CoinEnum.Stacks:
+                return "Your Stacks Address";
+                break;
+            case CoinEnum.USDT:
+                return "Your BNB Address";
+                break;
+            case CoinEnum.BRL:
+                return "Sua chave PIX";
+                break;
+        }
+    };
+
+    const btnSwapTextHandle = () => {
+        if (swapContext.loadingPrice) {
+            return "Loading Price...";
+        }
+        else if (swapContext.loadingExecute) {
+            return "Loading...";
+        }
+        else {
+            return "Swap";
+        }
+    };
+
+    let navigate = useNavigate();
+
     useEffect(() => {
-        swapContext.loadCurrentPrice();
+        swapContext.loadCurrentPrice(swapContext.senderCoin, swapContext.receiverCoin);
     }, []);
 
     return (
-        <Container>
+        <>
+            <MessageToast
+                dialog={dialog}
+                showMessage={showMessage}
+                messageText={messageText}
+                onClose={() => setShowMessage(false)}
+            ></MessageToast>
             <Modal
                 show={showModal}
                 size="lg"
@@ -62,46 +124,54 @@ export default function SwapForm() {
                                 setShowModal(false);
                             }
                         };
-                        swapContext.execute(callback);
+                        swapContext.payWithWallet(callback);
                     }}>Confirm Swap</Button>
                 </Modal.Footer>
             </Modal>
-            <Row>
-                <Col md="6" className='offset-md-3'>
-                    <Card>
-                        <Card.Body>
-                            <h1 className="text-center">BTC to STX</h1>
-                            <Card className="mb-3">
-                                <Card.Body>
-                                    <Row>
-                                        <Col md="6">
-                                            <Form.Group as={Col}>
-                                                <Form.Label>From</Form.Label>
-                                                <Form.Select size="lg" value={swapContext.senderCoin} onChange={(e) => {
-                                                    if (e.target.value == '1') {
-                                                        swapContext.setSenderCoin(CoinEnum.Bitcoin);
+            <Container>
+                <Row>
+                    <Col md="6" className='offset-md-3'>
+                        <Card className='shadow'>
+                            <Card.Body style={{ position: "relative" }}>
+                                <h4 className="text-center">No Chain Swap</h4>
+                                <Card className='mb-3'>
+                                    <Card.Body>
+                                        <Row>
+                                            <Col md="6">
+                                                <Form.Group as={Col}>
+                                                    <Form.Label>From</Form.Label>
+                                                    <Form.Select size="lg" value={swapContext.senderCoin} onChange={async (e) => {
+                                                        let senderCoin: CoinEnum = parseInt(e.target.value);
+                                                        let ret = await swapContext.setSenderCoin(senderCoin);
+                                                        //console.log("loadCurrentPrice: ", JSON.stringify(ret));
+                                                        if (!ret.sucesso) {
+                                                            throwError(ret.mensagemErro);
+                                                        }
+                                                        //swapContext.setReceiverCoin(senderCoin);
+                                                    }}>
+                                                        <option value={CoinEnum.Bitcoin}>Bitcoin</option>
+                                                        <option value={CoinEnum.Stacks}>Stacks</option>
+                                                        <option value={CoinEnum.USDT}>USDT (BNB)</option>
+                                                        <option value={CoinEnum.BRL}>Real (Pix)</option>
+                                                    </Form.Select>
+                                                    <Form.Text className='text-right' muted>Price: {swapContext.getFormatedSenderPrice()}</Form.Text>
+                                                </Form.Group>
+                                            </Col>
+                                            <Col md="6">
+                                                <Form.Label htmlFor="origAmount">Amount
+                                                    {Number(swapContext.senderPoolBalance) > 0 &&
+                                                        <>(Pool Balance: {swapContext.getFormatedSenderBalance()})</>
                                                     }
-                                                    else {
-                                                        swapContext.setSenderCoin(CoinEnum.Stacks);
-                                                    }
-                                                }}>
-                                                    <option value={CoinEnum.Bitcoin}>Bitcoin</option>
-                                                    <option value={CoinEnum.Stacks}>Stacks</option>
-                                                </Form.Select>
-                                                <Form.Text className='text-right' muted>Price: {swapContext.getFormatedSenderPrice()}</Form.Text>
-                                            </Form.Group>
-                                        </Col>
-                                        <Col md="6">
-                                            <Form.Label htmlFor="origAmount">Amount:</Form.Label>
-                                            <Form.Group as={Col}>
-                                                <Form.Control
-                                                    type="number" size="lg"
-                                                    style={{ textAlign: 'right' }}
-                                                    value={swapContext.senderAmount}
-                                                    onChange={(e) => {
-                                                        swapContext.setSenderAmount(parseFloat(e.target.value));
-                                                    }}></Form.Control>
-                                                {/*
+                                                    :</Form.Label>
+                                                <Form.Group as={Col} style={{ textAlign: "right" }}>
+                                                    <Form.Control
+                                                        type="number" size="lg"
+                                                        style={{ textAlign: 'right' }}
+                                                        value={swapContext.senderAmount}
+                                                        onChange={(e) => {
+                                                            swapContext.setSenderAmount(parseFloat(e.target.value));
+                                                        }}></Form.Control>
+                                                    {/*
                                                 <CurrencyInput
                                                     className='form-control form-control-lg'
                                                     decimalSeparator="."
@@ -123,52 +193,61 @@ export default function SwapForm() {
                                                     }}
                                                 ></CurrencyInput>
                                                 */}
-                                                <Form.Text className='text-right' muted>Pool Balance {swapContext.getFormatedSenderBalance()}</Form.Text>
-                                            </Form.Group>
-                                        </Col>
-                                    </Row>
-                                </Card.Body>
-                            </Card>
-                            <Row className="mb-3">
-                                <Col md="2" className='offset-md-5'>
-                                    <view className='d-grid gap-2'>
-                                        <Button size="lg" variant="warning" onClick={() => {
+                                                    <Form.Text className='text-end' muted>
+                                                        {swapContext.senderFee > 0 &&
+                                                            <>
+                                                                Fee (3%): {swapContext.getFormatedSenderFee()}
+                                                            </>
+                                                        }
+                                                    </Form.Text>
+                                                </Form.Group>
+                                            </Col>
+                                        </Row>
+                                    </Card.Body>
+                                </Card>
+                                <div style={{ position: "absolute", zIndex: 9999, marginTop: -32, marginLeft: -26, left: "50%" }}>
+                                    <Button className='btn-circle btn-lg' size="lg" variant="warning"
+
+                                        onClick={() => {
                                             swapContext.reverseCoin();
                                         }}>
-                                            <FontAwesomeIcon icon={faRetweet} />
-                                        </Button>
-                                    </view>
-                                </Col>
-                            </Row>
-                            <Card className="mb-3">
-                                <Card.Body>
-                                    <Row>
-                                        <Col md="6">
-                                            <Form.Group as={Col}>
-                                                <Form.Label>To</Form.Label>
-                                                <Form.Select size="lg" value={swapContext.receiverCoin} onChange={(e) => {
-                                                    if (e.target.value == '1') {
-                                                        swapContext.setReceiverCoin(CoinEnum.Bitcoin);
+                                        <FontAwesomeIcon icon={faRightLeft} style={{ transform: "rotate(90deg)" }} />
+                                    </Button>
+                                </div>
+                                <Card className="mb-3">
+                                    <Card.Body>
+                                        <Row>
+                                            <Col md="6">
+                                                <Form.Group as={Col}>
+                                                    <Form.Label>To</Form.Label>
+                                                    <Form.Select size="lg" value={swapContext.receiverCoin} onChange={async (e) => {
+                                                        let receiverCoin: CoinEnum = parseInt(e.target.value);
+                                                        let ret = await swapContext.setReceiverCoin(receiverCoin);
+                                                        if (!ret.sucesso) {
+                                                            throwError(ret.mensagemErro);
+                                                        }
+                                                    }}>
+                                                        <option value={CoinEnum.Bitcoin}>Bitcoin</option>
+                                                        <option value={CoinEnum.Stacks}>Stacks</option>
+                                                        <option value={CoinEnum.USDT}>USDT (BNB)</option>
+                                                        <option value={CoinEnum.BRL}>Real (Pix)</option>
+                                                    </Form.Select>
+                                                    <Form.Text className='text-right' muted>Price: {swapContext.getFormatedReceiverPrice()}</Form.Text>
+                                                </Form.Group>
+                                            </Col>
+                                            <Col md="6">
+                                                <Form.Label htmlFor="destAmount">Amount
+                                                    {Number(swapContext.receiverPoolBalance) > 0 &&
+                                                        <>(Pool Balance: {swapContext.getFormatedReceiverBalance()})</>
                                                     }
-                                                    else {
-                                                        swapContext.setReceiverCoin(CoinEnum.Stacks);
-                                                    }
-                                                }}>
-                                                    <option value={CoinEnum.Bitcoin}>Bitcoin</option>
-                                                    <option value={CoinEnum.Stacks}>Stacks</option>
-                                                </Form.Select>
-                                                <Form.Text className='text-right' muted>Price: {swapContext.getFormatedReceiverPrice()}</Form.Text>
-                                            </Form.Group>
-                                        </Col>
-                                        <Col md="6">
-                                            <Form.Label htmlFor="destAmount">Amount:</Form.Label>
-                                            <Form.Group as={Col}>
-                                                <Form.Control
-                                                    type="number" size="lg"
-                                                    style={{ textAlign: 'right' }}
-                                                    value={swapContext.receiverAmount}>
-                                                </Form.Control>
-                                                {/*
+                                                    :</Form.Label>
+                                                <Form.Group as={Col} style={{ textAlign: "right" }}>
+                                                    <Form.Control
+                                                        type="number" size="lg"
+                                                        style={{ textAlign: 'right' }}
+                                                        value={swapContext.receiverAmount}>
+                                                    </Form.Control>
+                                                    {/*
                                                 <CurrencyInput
                                                     className='form-control form-control-lg'
                                                     decimalSeparator="."
@@ -182,33 +261,80 @@ export default function SwapForm() {
                                                     value={swapContext.destAmount}
                                                 ></CurrencyInput>
                                                 */}
-                                                <Form.Text className='text-right' muted>Pool Balance {swapContext.getFormatedReceiverBalance()}</Form.Text>
+                                                    <Form.Text muted>
+                                                        {swapContext.receiverFee > 0 &&
+                                                            <>
+                                                                Fee (3%): {swapContext.getFormatedReceiverFee()}
+                                                            </>
+                                                        }
+                                                    </Form.Text>
+                                                </Form.Group>
+                                            </Col>
+                                        </Row>
+                                        <hr />
+                                        <Row>
+                                            <Form.Group as={Col} className="mb-3">
+                                                <InputGroup>
+                                                    <InputGroup.Text><FontAwesomeIcon icon={faLock} fixedWidth /></InputGroup.Text>
+                                                    <Form.Control
+                                                        type="text" size="sm"
+                                                        value={address}
+                                                        placeholder={addressPlaceHolderHandle()}
+                                                        onChange={(e) => {
+                                                            setAddress(e.target.value);
+                                                        }} />
+                                                </InputGroup>
                                             </Form.Group>
-                                        </Col>
-                                    </Row>
-                                </Card.Body>
-                            </Card>
-                            <p className="mb-3" style={{ textAlign: 'center' }}>{swapContext.getCoinText()}</p>
-                            <Row>
-                                <Col md="4" className='offset-md-4'>
-                                    <view className='d-grid gap-2'>
-                                        <Button size="lg" variant="primary" onClick={() => {
-                                            if (swapContext.senderAmount > 0) {
-                                                setShowModal(true);
-                                            }
-                                            else {
-                                                alert("Amount is empty!");
-                                            }
-                                        }}>
-                                            Swap
-                                        </Button>
-                                    </view>
-                                </Col>
-                            </Row>
-                        </Card.Body>
-                    </Card>
-                </Col>
-            </Row>
-        </Container>
+                                        </Row>
+                                        <Row>
+                                            <Form.Group as={Col}>
+                                                <InputGroup>
+                                                    <InputGroup.Text><FontAwesomeIcon icon={faEnvelope} fixedWidth /></InputGroup.Text>
+                                                    <Form.Control
+                                                        type="text" size="sm"
+                                                        value={email}
+                                                        placeholder="Email to receive updates (optional)"
+                                                        onChange={(e) => {
+                                                            setEmail(e.target.value);
+                                                        }} />
+                                                </InputGroup>
+                                            </Form.Group>
+                                        </Row>
+                                    </Card.Body>
+                                </Card>
+                                <p className="mb-3" style={{ textAlign: 'center' }}>{swapContext.getCoinText()}</p>
+                                <Row>
+                                    <Col md="4" className='offset-md-4'>
+                                        <view className='d-grid gap-2'>
+                                            <Button
+                                                size="lg"
+                                                variant="primary"
+                                                disabled={swapContext.loadingPrice || swapContext.loadingExecute || address == ""}
+                                                onClick={async () => {
+                                                    if (swapContext.senderAmount > 0) {
+                                                        let ret = await swapContext.createTx(authContext.chain, email, address);
+                                                        if (ret.sucesso) {
+                                                            navigate("/tx/" + ret.txId);
+                                                            //alert("/tx/" + ret.txId);
+                                                        }
+                                                        else {
+                                                            throwError(ret.mensagemErro);
+                                                        }
+                                                    }
+                                                    else {
+                                                        throwError("Amount is empty!");
+                                                    }
+                                                }}>
+                                                {btnSwapTextHandle()}
+                                            </Button>
+                                        </view>
+                                    </Col>
+                                </Row>
+                            </Card.Body>
+                        </Card>
+                    </Col>
+                </Row>
+            </Container>
+        </>
     );
 }

@@ -7,14 +7,16 @@ import AuthContext from "../../Contexts/Auth/AuthContext";
 import Button from "react-bootstrap/esm/Button";
 import Card from 'react-bootstrap/Card';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBitcoinSign, faCalendar, faCalendarAlt, faCancel, faClose, faEnvelope, faEthernet, faLock, faSave, faTrash, faUser } from '@fortawesome/free-solid-svg-icons';
+import { faBitcoinSign, faCalendar, faCalendarAlt, faCancel, faClose, faEnvelope, faEthernet, faLock, faSave, faSignInAlt, faTrash, faUser } from '@fortawesome/free-solid-svg-icons';
 import Table from "react-bootstrap/esm/Table";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import InputGroup from 'react-bootstrap/InputGroup';
 import UserContext from "../../Contexts/User/UserContext";
-import ErrorToast from "../../Components/ErrorToast";
+import MessageToast from "../../Components/MessageToast";
 import { ChainEnum } from "../../DTO/Enum/ChainEnum";
 import UserAddressInfo from "../../DTO/Domain/UserAddressInfo";
+import Moment from 'moment';
+import { MessageToastEnum } from "../../DTO/Enum/MessageToastEnum";
 
 export default function UserPage() {
 
@@ -22,12 +24,23 @@ export default function UserPage() {
     const userContext = useContext(UserContext);
 
     const [insertMode, setInsertMode] = useState<boolean>(false);
-    const [showError, setShowError] = useState<boolean>(false);
-    const [messageError, setMessageError] = useState<string>("");
+
+    const [dialog, setDialog] = useState<MessageToastEnum>(MessageToastEnum.Error);
+    const [showMessage, setShowMessage] = useState<boolean>(false);
+    const [messageText, setMessageText] = useState<string>("");
+
+    let navigate = useNavigate();
+    Moment.locale('en');
 
     const throwError = (message: string) => {
-        setMessageError(message);
-        setShowError(true);
+        setDialog(MessageToastEnum.Error)
+        setMessageText(message);
+        setShowMessage(true);
+    };
+    const showSuccessMessage = (message: string) => {
+        setDialog(MessageToastEnum.Success)
+        setMessageText(message);
+        setShowMessage(true);
     };
 
     const chainToStr = (chain: ChainEnum) => {
@@ -60,11 +73,16 @@ export default function UserPage() {
         if (authContext.sessionInfo) {
             if (authContext.sessionInfo?.id > 0) {
                 userContext.getUserById(authContext.sessionInfo.id).then((ret) => {
-                    if (!ret.sucesso) {
+                    if (ret.sucesso) {
                         setInsertMode(false);
+                        userContext.listAddressByUser(authContext.sessionInfo.id).then((retAddr) => {
+                            if (!retAddr.sucesso) {
+                                throwError(retAddr.mensagemErro);
+                            }
+                        });
                     }
                     else {
-                        throwError(ret.mensagemErro);
+                        setInsertMode(true);
                     }
                 });
             }
@@ -79,11 +97,12 @@ export default function UserPage() {
 
     return (
         <>
-            <ErrorToast
-                showError={showError}
-                messageError={messageError}
-                onClose={() => setShowError(false)}
-            ></ErrorToast>
+            <MessageToast
+                dialog={dialog}
+                showMessage={showMessage}
+                messageText={messageText}
+                onClose={() => setShowMessage(false)}
+            ></MessageToast>
             <Container>
                 <Row>
                     <Col md="8" className='offset-md-2'>
@@ -115,12 +134,15 @@ export default function UserPage() {
                                         <Col sm="10">
                                             <InputGroup>
                                                 <InputGroup.Text><FontAwesomeIcon icon={faUser} fixedWidth /></InputGroup.Text>
-                                                <Form.Control type="text" size="lg" value={userContext.user?.name} onChange={(e) => {
-                                                    userContext.setUser({
-                                                        ...userContext.user,
-                                                        name: e.target.value
-                                                    });
-                                                }} />
+                                                <Form.Control type="text" size="lg"
+                                                    placeholder="Your name"
+                                                    value={userContext.user?.name}
+                                                    onChange={(e) => {
+                                                        userContext.setUser({
+                                                            ...userContext.user,
+                                                            name: e.target.value
+                                                        });
+                                                    }} />
                                             </InputGroup>
                                         </Col>
                                     </Form.Group>
@@ -129,12 +151,15 @@ export default function UserPage() {
                                         <Col sm="10">
                                             <InputGroup>
                                                 <InputGroup.Text><FontAwesomeIcon icon={faEnvelope} fixedWidth /></InputGroup.Text>
-                                                <Form.Control type="text" size="lg" value={userContext.user?.email} onChange={(e) => {
-                                                    userContext.setUser({
-                                                        ...userContext.user,
-                                                        email: e.target.value
-                                                    });
-                                                }} />
+                                                <Form.Control type="text" size="lg"
+                                                    placeholder="Your email"
+                                                    value={userContext.user?.email}
+                                                    onChange={(e) => {
+                                                        userContext.setUser({
+                                                            ...userContext.user,
+                                                            email: e.target.value
+                                                        });
+                                                    }} />
                                             </InputGroup>
                                         </Col>
                                     </Form.Group>
@@ -145,7 +170,7 @@ export default function UserPage() {
                                                 <InputGroup>
                                                     <InputGroup.Text><FontAwesomeIcon icon={faCalendarAlt} fixedWidth /></InputGroup.Text>
                                                     <Form.Control type="text" size="lg" disabled={true} readOnly={true}
-                                                        value={userContext.user?.createAt} />
+                                                        value={Moment(userContext.user?.createAt).format("MMM DD YYYY")} />
                                                 </InputGroup>
                                             </Col>
                                             <Form.Label column sm="2">Update At:</Form.Label>
@@ -153,7 +178,7 @@ export default function UserPage() {
                                                 <InputGroup>
                                                     <InputGroup.Text><FontAwesomeIcon icon={faCalendarAlt} fixedWidth /></InputGroup.Text>
                                                     <Form.Control type="text" size="lg" disabled={true} readOnly={true}
-                                                        value={userContext.user?.updateAt} />
+                                                        value={Moment(userContext.user?.updateAt).format("MMM DD YYYY")} />
                                                 </InputGroup>
                                             </Col>
                                         </Form.Group>
@@ -205,19 +230,33 @@ export default function UserPage() {
                                         </>
                                     }
                                     <div className="d-grid gap-2 d-md-flex justify-content-md-end">
+                                        <Button variant="danger" size="lg" onClick={() => {
+                                            navigate("/login");
+                                        }}><FontAwesomeIcon icon={faSignInAlt} fixedWidth /> Sign In</Button>
                                         <Button variant="success" size="lg" onClick={async (e) => {
                                             if (insertMode) {
                                                 let ret = await userContext.insert(userContext.user);
                                                 if (ret.sucesso) {
-                                                    alert(userContext.user?.id);
+                                                    showSuccessMessage(ret.mensagemSucesso);
+                                                    //alert(userContext.user?.id);
                                                 }
                                                 else {
                                                     throwError(ret.mensagemErro);
                                                 }
                                             }
-                                            }}
+                                            else {
+                                                let ret = await userContext.update(userContext.user);
+                                                if (ret.sucesso) {
+                                                    //alert(userContext.user?.id);
+                                                    showSuccessMessage(ret.mensagemSucesso);
+                                                }
+                                                else {
+                                                    throwError(ret.mensagemErro);
+                                                }
+                                            }
+                                        }}
                                             disabled={userContext.loadingUpdate}
-                                        ><FontAwesomeIcon icon={faSave} fixedWidth /> 
+                                        ><FontAwesomeIcon icon={faSave} fixedWidth />
                                             {userContext.loadingUpdate ? "Loading..." : "Save"}
                                         </Button>
                                     </div>

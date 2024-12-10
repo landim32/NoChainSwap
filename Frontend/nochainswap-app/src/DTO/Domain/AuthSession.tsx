@@ -1,8 +1,12 @@
-export interface AuthSession {
+import { ChainEnum } from "../Enum/ChainEnum";
+import { SignInEnum } from "../Enum/SignInEnum";
+
+export default interface AuthSession {
   id: number;
   email: string;
   name: string;
   hash: string;
-  createAt: string;
-  updateAt: string;
+  loginWith: SignInEnum;
+  chain: ChainEnum;
+  address: string;
 }
