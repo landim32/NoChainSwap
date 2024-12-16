@@ -27,8 +27,8 @@ export default function SwapProvider(props: any) {
 
     const [loadingPrice, setLoadingPrice] = useState<boolean>(false);
     const [loadingExecute, setLoadingExecute] = useState<boolean>(false);
-    const [senderCoin, _setSenderCoin] = useState<CoinEnum>(CoinEnum.Bitcoin);
-    const [receiverCoin, _setReceiverCoin] = useState<CoinEnum>(CoinEnum.Stacks);
+    const [senderCoin, _setSenderCoin] = useState<CoinEnum>(CoinEnum.BRL);
+    const [receiverCoin, _setReceiverCoin] = useState<CoinEnum>(CoinEnum.USDT);
     const [senderPrice, setSenderPrice] = useState<number>(0);
     const [receiverPrice, setReceiverPrice] = useState<number>(0);
     const [senderAmount, _setSenderAmount] = useState<number>(0);
@@ -233,8 +233,9 @@ export default function SwapProvider(props: any) {
         if (authSession && authSession.id) {
             let userRet = await UserFactory.UserBusiness.getUserById(authSession.id);
             if (userRet.sucesso) {
-                if (email && !userRet.dataResult.email) {
-                    let user: UserInfo = userRet.dataResult;
+                user = userRet.dataResult;
+                if (email && !user.email) {
+                    //let user: UserInfo = userRet.dataResult;
                     user.email = email;
                     let updateRet = await UserFactory.UserBusiness.update(user);
                     if (!updateRet.sucesso) {
@@ -284,6 +285,13 @@ export default function SwapProvider(props: any) {
                     };
                 }
             }
+        }
+        if (!user) {
+            return {
+                ...ret,
+                success: false,
+                message: "User not found and cant be created"
+            };
         }
         if (receiverAddr) {
             let addrRet = await UserAddressFactory.UserAddressBusiness.addOrChangeAddress(user.id, chain, receiverAddr);
@@ -418,9 +426,9 @@ export default function SwapProvider(props: any) {
                 userid: addOrChangeRet.user.id,
                 sendercoin: CoinToStr(senderCoin),
                 receivercoin: CoinToStr(receiverCoin),
-                senderaddress: "",
-                receiveraddress: "",
-                sendertxid: "",
+                senderaddress: null,
+                receiveraddress: receiverAddr,
+                sendertxid: null,
                 senderamount: parseInt((senderAmount * 100000000).toFixed(0)),
                 receiveramount: parseInt((receiverAmount * 100000000).toFixed(0)),
                 senderfee: parseInt((senderFee * 100000000).toFixed(0)),
@@ -432,7 +440,7 @@ export default function SwapProvider(props: any) {
                 return {
                     ...ret,
                     sucesso: true,
-                    txId: txRet.dataResult,
+                    hash: txRet.dataResult,
                     mensagemSucesso: "Transaction successyful created!"
                 };
             }

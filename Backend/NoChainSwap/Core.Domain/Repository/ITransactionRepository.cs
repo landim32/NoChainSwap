@@ -11,6 +11,7 @@ namespace Core.Domain.Repository
         TModel SaveTx(TModel model);
         TModel GetBySenderAddr(string senderAddr, TFactory factory);
         TModel GetById(long txId, TFactory factory);
+        TModel GetByHash(string hash, TFactory factory);
         TModel UpdateTx(TModel model);
         IEnumerable<TModel> ListByAddress(string address, TFactory factory);
         TModel GetBySenderTxId(string txid, TFactory factory);

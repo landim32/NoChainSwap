@@ -13,6 +13,7 @@ namespace NoChainSwap.Domain.Interfaces.Models
     {
         long TxId { get; set; }
         long UserId { get; set; }
+        string Hash { get; set; }
         ChainEnum Chain { get; set; }
         CoinEnum SenderCoin { get; set; }
         CoinEnum ReceiverCoin { get; set; }
@@ -28,16 +29,18 @@ namespace NoChainSwap.Domain.Interfaces.Models
         string ReceiverTxid { get; set; }
         int? SenderFee { get; set; }
         int? ReceiverFee { get; set; }
-        long? SenderAmount { get; set; }
-        long? ReceiverAmount { get; set; }
+        long SenderAmount { get; set; }
+        long ReceiverAmount { get; set; }
 
         string GetSenderCoinSymbol();
         string GetReceiverCoinSymbol();
 
+        IUserModel GetUser(IUserDomainFactory factory);
         ITransactionModel Save();
         ITransactionModel Update();
         ITransactionModel GetBySenderAddr(string senderAddr, ITransactionDomainFactory factory);
         ITransactionModel GetById(long txId, ITransactionDomainFactory factory);
+        ITransactionModel GetByHash(string hash, ITransactionDomainFactory factory);
         ITransactionModel GetBySenderTxId(string txid, ITransactionDomainFactory factory);
         ITransactionModel GetByReceiverTxId(string txid, ITransactionDomainFactory factory);
         IEnumerable<ITransactionModel> ListByAddress(string address, ITransactionDomainFactory factory);

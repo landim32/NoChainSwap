@@ -25,6 +25,7 @@ namespace NoChainSwap.Domain.Impl.Models
 
         public long TxId { get; set; }
         public long UserId { get; set; }
+        public string Hash { get; set; }
         public ChainEnum Chain { get; set; }
         public CoinEnum SenderCoin { get; set; }
         public CoinEnum ReceiverCoin { get; set; }
@@ -40,8 +41,8 @@ namespace NoChainSwap.Domain.Impl.Models
         public string ReceiverTxid { get; set; }
         public int? SenderFee { get; set; }
         public int? ReceiverFee { get; set; }
-        public long? SenderAmount { get; set; }
-        public long? ReceiverAmount { get; set; }
+        public long SenderAmount { get; set; }
+        public long ReceiverAmount { get; set; }
 
 
 
@@ -52,6 +53,15 @@ namespace NoChainSwap.Domain.Impl.Models
         public string GetReceiverCoinSymbol()
         {
             return Utils.CoinToStr(ReceiverCoin);
+        }
+
+        public IUserModel GetUser(IUserDomainFactory factory)
+        {
+            if (UserId > 0)
+            {
+                return factory.BuildUserModel().GetById(this.UserId, factory);
+            }
+            return null;
         }
 
         public ITransactionModel GetBySenderTxId(string txid, ITransactionDomainFactory factory)
@@ -70,6 +80,11 @@ namespace NoChainSwap.Domain.Impl.Models
         public ITransactionModel GetById(long txId, ITransactionDomainFactory factory)
         {
             return _repositoryTx.GetById(txId, factory);
+        }
+
+        public ITransactionModel GetByHash(string hash, ITransactionDomainFactory factory)
+        {
+            return _repositoryTx.GetByHash(hash, factory);
         }
 
         public IEnumerable<ITransactionModel> ListByAddress(string address, ITransactionDomainFactory factory)

@@ -11,8 +11,11 @@ namespace NoChainSwap.Domain.Interfaces.Services
 {
     public interface ITransactionService
     {
-        ITransactionModel GetTx(long txId);
+        ITransactionModel GetById(long txId);
+        ITransactionModel GetByHash(string hash);
         Task<ITransactionModel> CreateTx(TransactionParamInfo param);
+        void ChangeStatus(long txId, TransactionStatusEnum status, string message);
+        void Payback(long txId, string receiverTxId, int receiverFee);
         ITransactionModel Update(TransactionInfo tx);
         IEnumerable<ITransactionModel> ListByStatusActive();
         IEnumerable<ITransactionModel> ListAll();

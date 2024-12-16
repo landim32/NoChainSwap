@@ -21,7 +21,9 @@ namespace NoChainSwap.DTO.Transaction
         public string ReceiverTxid { get; set; }
         public int? SenderFee { get; set; }
         public int? ReceiverFee { get; set; }
-        public long? SenderAmount { get; set; }
-        public long? ReceiverAmount { get; set; }
+        public long? SenderTax { get; set; }
+        public long? ReceiverTax { get; set; }
+        public long SenderAmount { get; set; }
+        public long ReceiverAmount { get; set; }
     }
 }

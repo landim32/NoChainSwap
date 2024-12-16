@@ -79,16 +79,14 @@ namespace NoChainSwap.Domain.Impl.Services
 
         public async Task<ITransactionModel> CreateTx(TransactionParamInfo param)
         {
-            /*
-            if (string.IsNullOrEmpty(param.SenderAddress))
+            if (!(param.SenderAmount > 0))
             {
-                throw new Exception($"Sender Address '{param.SenderAddress}' not informed");
+                throw new Exception("Sender amount is empty");
             }
-            if (string.IsNullOrEmpty(param.ReceiverAddress))
+            if (!(param.ReceiverAmount > 0))
             {
-                throw new Exception($"Receiver Address '{param.SenderAddress}' not informed");
+                throw new Exception("Receiver amount is empty");
             }
-            */
             if (param.UserId > 0)
             {
                 var user = _userService.GetUserByID(param.UserId);
@@ -100,6 +98,7 @@ namespace NoChainSwap.Domain.Impl.Services
             {
                 throw new Exception("User not found");
             }
+
             if (!string.IsNullOrEmpty(param.SenderTxid))
             {
                 var m1 = _txFactory.BuildTransactionModel().GetBySenderTxId(param.SenderTxid, _txFactory);
@@ -112,10 +111,9 @@ namespace NoChainSwap.Domain.Impl.Services
             {
                 var model = _txFactory.BuildTransactionModel();
                 model.UserId = param.UserId;
-                //model.Type = param.BtcToStx ? TransactionEnum.BtcToStx : TransactionEnum.StxToBtc;
+                model.Hash = Guid.NewGuid().ToString();
                 model.SenderCoin = Core.Utils.StrToCoin(param.SenderCoin);
                 model.ReceiverCoin = Core.Utils.StrToCoin(param.ReceiverCoin);
-                //model.RecipientAddress = param.RecipientAddress;
                 model.SenderAddress = param.SenderAddress;
                 model.ReceiverAddress = param.ReceiverAddress;
                 model.CreateAt = DateTime.Now;
@@ -130,21 +128,24 @@ namespace NoChainSwap.Domain.Impl.Services
 
                 if (model.SenderCoin == CoinEnum.BRL)
                 {
-                    double tax = Convert.ToDouble(model.SenderAmount) * 0.03;
-                    model.SenderTax = Convert.ToInt64(Math.Truncate(tax));
-                    model.ReceiverTax = 0;
+                    double tax = Convert.ToDouble(model.ReceiverAmount) * 0.03;
+                    model.SenderTax = null;
+                    model.ReceiverTax = Convert.ToInt64(Math.Truncate(tax));
+                    //model.ReceiverAmount -= model.ReceiverTax;
                 }
                 else if (model.ReceiverCoin == CoinEnum.BRL)
                 {
-                    double tax = Convert.ToDouble(model.ReceiverAmount) * 0.03;
-                    model.SenderTax = 0;
-                    model.ReceiverTax = Convert.ToInt64(Math.Truncate(tax));
+                    double tax = Convert.ToDouble(model.SenderAmount) * 0.03;
+                    model.SenderTax = Convert.ToInt64(Math.Truncate(tax));
+                    model.ReceiverTax = null;
+                    //model.SenderAmount -= model.SenderTax;
                 }
                 else
                 {
                     double tax = Convert.ToDouble(model.SenderAmount) * 0.03;
                     model.SenderTax = Convert.ToInt64(Math.Truncate(tax));
-                    model.ReceiverTax = 0;
+                    model.ReceiverTax = null;
+                    //model.SenderAmount -= model.SenderTax;
                 }
 
                 model.Save();
@@ -162,43 +163,77 @@ namespace NoChainSwap.Domain.Impl.Services
             }
         }
 
-        public ITransactionModel GetTx(long txId)
+        public void ChangeStatus(long txId, TransactionStatusEnum status, string message)
         {
-            try
+            var tx = GetById(txId);
+            var senderService = _coinFactory.BuildCoinTxService(tx.SenderCoin);
+            if (senderService == null)
             {
-                return _txFactory.BuildTransactionModel().GetById(txId, _txFactory);
+                throw new Exception("Transaction not suported");
             }
-            catch (Exception)
+            tx.Status = status;
+            tx.Update();
+
+            senderService.AddLog(tx.TxId, message, LogTypeEnum.Warning, _txLogFactory);
+        }
+
+        public void Payback(long txId, string receiverTxId, int receiverFee)
+        {
+            if (!(txId > 0))
             {
-                throw;
+                throw new Exception("Transaction ID is empty");
             }
+            if (string.IsNullOrEmpty(receiverTxId))
+            {
+                throw new Exception("Receiver Transaction ID is empty");
+            }
+
+            var tx = GetById(txId);
+            if (!(tx.Status == TransactionStatusEnum.WaitingSenderPayment ||
+                  tx.Status == TransactionStatusEnum.SenderConfirmed))
+            {
+                throw new Exception("Transaction invalid for payback");
+            }
+
+            tx.ReceiverFee = receiverFee;
+            tx.ReceiverTxid = receiverTxId;
+            tx.Status = TransactionStatusEnum.SenderConfirmedReiceiverNotConfirmed;
+            tx.Update();
+
+            var receiverService = _coinFactory.BuildCoinTxService(tx.ReceiverCoin);
+            receiverService.AddLog(tx.TxId, "Transaction payback send with success", LogTypeEnum.Information, _txLogFactory);
+        }
+
+        public ITransactionModel GetById(long txId)
+        {
+            return _txFactory.BuildTransactionModel().GetById(txId, _txFactory);
+        }
+
+        public ITransactionModel GetByHash(string hash)
+        {
+            return _txFactory.BuildTransactionModel().GetByHash(hash, _txFactory);
         }
 
         public ITransactionModel Update(TransactionInfo tx)
         {
-            try
+            var model = _txFactory.BuildTransactionModel().GetById(tx.TxId, _txFactory);
+            if (model == null)
             {
-                var model = _txFactory.BuildTransactionModel().GetById(tx.TxId, _txFactory);
-                if (model == null)
-                {
-                    throw new Exception("Transaction not found.");
-                }
-                model.SenderAddress = tx.SenderAddress;
-                model.ReceiverAddress = tx.ReceiverAddress;
-                model.UpdateAt = DateTime.Now;
-                model.Status = tx.Status;
-                model.SenderAmount = tx.SenderAmount;
-                model.ReceiverAmount = tx.ReceiverAmount;
-                model.SenderTxid = tx.SenderTxid;
-                model.ReceiverTxid = tx.ReceiverTxid;
-                model.SenderFee = tx.SenderFee;
-                model.ReceiverFee = tx.ReceiverFee;
-                return model.Update();
+                throw new Exception("Transaction not found.");
             }
-            catch (Exception)
-            {
-                throw;
-            }
+            model.SenderAddress = tx.SenderAddress;
+            model.ReceiverAddress = tx.ReceiverAddress;
+            model.RecipientAddress = tx.RecipientAddress;
+            model.UpdateAt = DateTime.Now;
+            model.Status = tx.Status;
+            model.SenderAmount = tx.SenderAmount;
+            model.ReceiverAmount = tx.ReceiverAmount;
+            model.SenderTxid = tx.SenderTxid;
+            model.ReceiverTxid = tx.ReceiverTxid;
+            model.SenderFee = tx.SenderFee;
+            model.ReceiverFee = tx.ReceiverFee;
+            model.SenderTax = tx.SenderTax;
+            return model.Update();
         }
 
         public IEnumerable<ITransactionModel> ListByStatusActive()

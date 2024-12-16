@@ -136,6 +136,15 @@ export default function Menu() {
                         if (authContext.chain == ChainEnum.NoChain) {
                           navigate("/login");
                         }
+                        else if (authContext.chain == ChainEnum.BNBChain) {
+                          let ret = await authContext.loginEther();
+                          if (ret.sucesso) {
+                            authContext.loadUserSession();
+                          }
+                          else {
+                            throwError(ret.mensagemErro);
+                          }
+                        }
                         else {
                           const handleCallback = () => {
                             authContext.loadUserSession();

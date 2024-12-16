@@ -16,6 +16,7 @@ namespace NoChainSwap.DTO.Transaction
         SenderConfirmedReiceiverNotConfirmed = 6,
         Finished = 7,
         InvalidInformation = 8,
-        CriticalError = 9
+        CriticalError = 9,
+        Canceled = 10
     }
 }

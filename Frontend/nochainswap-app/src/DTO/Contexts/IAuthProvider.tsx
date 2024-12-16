@@ -11,8 +11,9 @@ interface IAuthProvider {
     //checkUserRegister: () => Promise<ProviderResult>;
     setChain: (chain: ChainEnum) => void;
     setSession: (session: AuthSession) => void;
-    loginCallback: (callback?: any) => void;
     loginWithEmail: (email: string, password: string) => Promise<ProviderResult>;
+    loginCallback: (callback?: any) => void;
+    loginEther: () => Promise<ProviderResult>;
     logout: () => ProviderResult;
     loadUserSession: () => void;
     //updateUser: (name: string, email: string) => Promise<ProviderResult>;

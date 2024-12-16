@@ -11,6 +11,7 @@ namespace NoChainSwap.Domain.Interfaces.Models
         string Hash { get; set; }
         string Name { get; set; }
         string Email { get; set; }
+        bool IsAdmin { get; set; }
         DateTime CreateAt { get; set; }
         DateTime UpdateAt { get; set; }
 

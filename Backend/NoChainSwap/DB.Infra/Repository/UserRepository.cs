@@ -26,6 +26,7 @@ namespace DB.Infra.Repository
             md.Hash = u.Hash;
             md.Name = u.Name;
             md.Email = u.Email;
+            md.IsAdmin = u.IsAdmin;
             md.CreateAt = u.CreateAt;
             md.UpdateAt = u.UpdateAt;
             return md;
@@ -37,6 +38,7 @@ namespace DB.Infra.Repository
             row.Hash = md.Hash;
             row.Name = md.Name;
             row.Email = md.Email;
+            row.IsAdmin = md.IsAdmin;
             row.CreateAt = md.CreateAt;
             row.UpdateAt = md.UpdateAt;
         }

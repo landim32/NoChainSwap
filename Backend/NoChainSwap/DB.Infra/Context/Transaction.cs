@@ -25,15 +25,15 @@ public partial class Transaction
 
     public int? ReceiverFee { get; set; }
 
-    public long? SenderAmount { get; set; }
+    public long SenderAmount { get; set; }
 
-    public long? ReceiverAmount { get; set; }
+    public long ReceiverAmount { get; set; }
 
     public string SenderCoin { get; set; }
 
     public string ReceiverCoin { get; set; }
 
-    public long? UserId { get; set; }
+    public long UserId { get; set; }
 
     public int? ChainId { get; set; }
 
@@ -42,6 +42,8 @@ public partial class Transaction
     public long? SenderTax { get; set; }
 
     public long? ReceiverTax { get; set; }
+
+    public string Hash { get; set; }
 
     public virtual ICollection<TransactionLog> TransactionLogs { get; set; } = new List<TransactionLog>();
 

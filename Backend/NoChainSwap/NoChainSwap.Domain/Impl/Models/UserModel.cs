@@ -23,6 +23,7 @@ namespace NoChainSwap.Domain.Impl.Models
         public string Hash { get; set; }
         public string Name { get; set; }
         public string Email { get; set; }
+        public bool IsAdmin { get; set; }
         public DateTime CreateAt { get; set; }
         public DateTime UpdateAt { get; set; }
 

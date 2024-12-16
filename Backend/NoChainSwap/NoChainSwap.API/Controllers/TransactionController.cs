@@ -24,21 +24,40 @@ namespace NoChainSwap.API.Controllers
     public class TransactionController: Controller
     {
         private IUserService _userService;
+        protected readonly IUserDomainFactory _userFactory;
         private ITransactionService _txService;
-        private IStacksService _stacksService;
         protected readonly ICoinTxServiceFactory _coinFactory;
 
         public TransactionController(
             IUserService userService, 
+            IUserDomainFactory userFactory,
             ITransactionService txService,
-            IStacksService stacksService,
             ICoinTxServiceFactory coinFactory
         )
         {
             _userService = userService;
+            _userFactory = userFactory;
             _txService = txService;
-            _stacksService = stacksService;
             _coinFactory = coinFactory;
+        }
+
+        private string GetUsername(ITransactionModel md)
+        {
+            var str = string.Empty;
+            var user = md.GetUser(_userFactory);
+            if (user != null)
+            {
+                str = user.Name;
+                if (string.IsNullOrEmpty(str) && !string.IsNullOrEmpty(user.Email))
+                {
+                    str = user.Email.Substring(0, user.Email.IndexOf('@'));
+                }
+            }
+            if (string.IsNullOrEmpty(str) && !string.IsNullOrEmpty(md.SenderAddress))
+            {
+                return md.SenderAddress.Substring(0, 4) + "..." + md.SenderAddress.Substring(-5);
+            }
+            return str;
         }
 
         private TxResult ModelToInfo(ITransactionModel md)
@@ -48,6 +67,8 @@ namespace NoChainSwap.API.Controllers
             return new TxResult
             {
                 TxId = md.TxId,
+                Hash = md.Hash,
+                Username = GetUsername(md),
                 SenderCoin = md.GetSenderCoinSymbol(),
                 ReceiverCoin = md.GetReceiverCoinSymbol(),
                 RecipientAddress = md.RecipientAddress,
@@ -57,20 +78,24 @@ namespace NoChainSwap.API.Controllers
                 ReceiverAddressUrl = (md.ReceiverAddress != null) ? receiverTx.GetAddressUrl(md.ReceiverAddress) : null,
                 CreateAt = md.CreateAt.ToString("MM/dd HH:mm:ss"),
                 UpdateAt = md.UpdateAt.ToString("MM/dd HH:mm:ss"),
-                Status = TransactionService.GetTransactionEnumToString(md.Status),
+                //Status = TransactionService.GetTransactionEnumToString(md.Status),
+                Status = (int)md.Status,
                 SenderTxid = md.SenderTxid,
                 SenderTxidUrl = !string.IsNullOrEmpty(md.SenderTxid) ? senderTx.GetTransactionUrl(md.SenderTxid) : null,
                 ReceiverTxid = md.ReceiverTxid,
                 ReceiverTxidUrl = !string.IsNullOrEmpty(md.ReceiverTxid) ? receiverTx.GetTransactionUrl(md.ReceiverTxid) : null,
                 SenderFee = md.SenderFee.HasValue ? senderTx.ConvertToString(md.SenderFee.Value) : null,
-                ReceiverFee = md.ReceiverFee.HasValue ? _stacksService.ConvertToString(md.ReceiverFee.Value) : null,
-                SenderAmount = md.SenderAmount.HasValue ? senderTx.ConvertToString(md.SenderAmount.Value) : null,
-                ReceiverAmount = md.ReceiverAmount.HasValue ? _stacksService.ConvertToString(md.ReceiverAmount.Value) : null
+                ReceiverFee = md.ReceiverFee.HasValue ? receiverTx.ConvertToString(md.ReceiverFee.Value) : null,
+                SenderTax = md.SenderTax.HasValue ? senderTx.ConvertToString(md.SenderTax.Value) : null,
+                ReceiverTax = md.ReceiverTax.HasValue ? receiverTx.ConvertToString(md.ReceiverTax.Value) : null,
+                SenderAmount = senderTx.ConvertToString(md.SenderAmount),
+                ReceiverAmount = receiverTx.ConvertToString(md.ReceiverAmount),
+                ReceiverPayback = md.ReceiverAmount - md.ReceiverTax.GetValueOrDefault()
             };
         }
 
         [HttpPost("createTx")]
-        public async Task<ActionResult<long>> CreateTx([FromBody] TransactionParamInfo param)
+        public async Task<ActionResult<string>> CreateTx([FromBody] TransactionParamInfo param)
         {
             try
             {
@@ -83,7 +108,39 @@ namespace NoChainSwap.API.Controllers
                 */
                 var tx = await _txService.CreateTx(param);
                 
-                return new ActionResult<long>(tx.TxId);
+                return new ActionResult<string>(tx.Hash);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPost("payback")]
+        public ActionResult<bool> Payback([FromBody] TxPaybackParam param)
+        {
+            try
+            {
+                _txService.Payback(param.TxId, param.ReceiverTxId, param.ReceiverFee);
+
+                return new ActionResult<bool>(true);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPost("changestatus")]
+        public ActionResult<bool> ChangeStatus([FromBody] TxRevertStatusParam param) {
+            try
+            {
+                var tx = _txService.GetById(param.TxId);
+                if (tx == null) {
+                    throw new Exception("Transaction not found");
+                }
+                _txService.ChangeStatus(param.TxId, (TransactionStatusEnum)param.Status, param.Message);
+                return new ActionResult<bool>(true);
             }
             catch (Exception ex)
             {
@@ -177,8 +234,8 @@ namespace NoChainSwap.API.Controllers
             }
         }
 
-        [HttpGet("gettransaction/{txid}")]
-        public ActionResult<TxResult> GetTransaction(long txid)
+        [HttpGet("gettransaction/{hash}")]
+        public ActionResult<TxResult> GetTransaction(string hash)
         {
             try
             {
@@ -189,7 +246,7 @@ namespace NoChainSwap.API.Controllers
                     return StatusCode(401, "Not Authorized");
                 }
                 */
-                return ModelToInfo(_txService.GetTx(txid));
+                return ModelToInfo(_txService.GetByHash(hash));
             }
             catch (Exception ex)
             {
@@ -209,7 +266,7 @@ namespace NoChainSwap.API.Controllers
                     return StatusCode(401, "Not Authorized");
                 }
                 */
-                var tx = _txService.GetTx(txid);
+                var tx = _txService.GetById(txid);
                 if (tx == null)
                 {
                     return StatusCode(500, $"Dont find transaction with ID {txid}");

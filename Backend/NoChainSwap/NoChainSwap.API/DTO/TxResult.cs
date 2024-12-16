@@ -6,6 +6,10 @@ namespace NoChainSwap.API.DTO
     {
         [JsonPropertyName("txid")]
         public long TxId { get; set; }
+        [JsonPropertyName("hash")]
+        public string Hash { get; set; }
+        [JsonPropertyName("username")]
+        public string Username { get; set; }
         [JsonPropertyName("sendercoin")]
         public string SenderCoin { get; set; }
         [JsonPropertyName("receivercoin")]
@@ -25,7 +29,7 @@ namespace NoChainSwap.API.DTO
         [JsonPropertyName("updateat")]
         public string UpdateAt { get; set; }
         [JsonPropertyName("status")]
-        public string Status { get; set; }
+        public int Status { get; set; }
         [JsonPropertyName("sendertxid")]
         public string SenderTxid { get; set; }
         [JsonPropertyName("sendertxidurl")]
@@ -38,9 +42,17 @@ namespace NoChainSwap.API.DTO
         public string SenderFee { get; set; }
         [JsonPropertyName("receiverfee")]
         public string ReceiverFee { get; set; }
+
+        [JsonPropertyName("sendertax")]
+        public string SenderTax { get; set; }
+        [JsonPropertyName("receivertax")]
+        public string ReceiverTax { get; set; }
+
         [JsonPropertyName("senderamount")]
         public string SenderAmount { get; set; }
         [JsonPropertyName("receiveramount")]
         public string ReceiverAmount { get; set; }
+        [JsonPropertyName("receiverpayback")]
+        public long ReceiverPayback { get; set; }
     }
 }

@@ -93,7 +93,7 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
 
         public override Task<bool> VerifyTransaction(ITransactionModel tx)
         {
-            return Task<bool>.FromResult<bool>(false);
+            return Task<bool>.FromResult<bool>(true);
         }
     }
 }

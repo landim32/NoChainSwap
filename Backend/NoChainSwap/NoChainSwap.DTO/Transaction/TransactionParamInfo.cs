@@ -22,12 +22,8 @@ namespace NoChainSwap.DTO.Transaction
         [JsonPropertyName("sendertxid")]
         public string SenderTxid { get; set; }
         [JsonPropertyName("senderamount")]
-        public long? SenderAmount { get; set; }
+        public long SenderAmount { get; set; }
         [JsonPropertyName("receiveramount")]
-        public long? ReceiverAmount { get; set; }
-        [JsonPropertyName("senderfee")]
-        public long? SenderFee { get; set; }
-        [JsonPropertyName("receiverfee")]
-        public long? ReceiverFee { get; set; }
+        public long ReceiverAmount { get; set; }
     }
 }

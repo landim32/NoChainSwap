@@ -15,5 +15,7 @@ public partial class TransactionLog
 
     public string Message { get; set; }
 
+    public int? LastStatus { get; set; }
+
     public virtual Transaction Tx { get; set; }
 }

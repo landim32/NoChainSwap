@@ -7,6 +7,10 @@ import TxLogInfo from '../../DTO/Domain/TxLogInfo';
 import TxFactory from '../../Business/Factory/TxFactory';
 import AuthFactory from '../../Business/Factory/AuthFactory';
 import { CoinEnum } from '../../DTO/Enum/CoinEnum';
+import { TransactionStatusEnum } from '../../DTO/Enum/TransactionStatusEnum';
+import ContractFactory from '../../Contracts/ContractFactory';
+import EtherBusiness from '../../Business/Impl/EtherBusiness';
+import EtherFactory from '../../Business/Factory/EtherFactory';
 
 export default function TxProvider(props: any) {
 
@@ -14,6 +18,8 @@ export default function TxProvider(props: any) {
   const [loadingTxInfoList, setLoadingTxInfoList] = useState<boolean>(false);
   const [loadingTxLogs, setLoadingTxLogs] = useState<boolean>(false);
   const [reloadingTx, setReloadingTx] = useState<boolean>(false);
+  const [loadingUpdate, setLoadingUpdate] = useState<boolean>(false);
+  const [loadingPay, setLoadingPay] = useState<boolean>(false);
   const [txInfo, _setTxInfo] = useState<TxInfo>(null);
   const [txInfoList, setTxInfoList] = useState<TxInfo[]>(null);
   const [txLogs, setTxLogs] = useState<TxLogInfo[]>(null);
@@ -83,6 +89,8 @@ export default function TxProvider(props: any) {
     loadingTxInfoList: loadingTxInfoList,
     loadingTxLogs: loadingTxLogs,
     reloadingTx: reloadingTx,
+    loadingUpdate: loadingUpdate,
+    loadingPay: loadingPay,
     txInfo: txInfo,
     txInfoList: txInfoList,
     txLogs: txLogs,
@@ -92,6 +100,74 @@ export default function TxProvider(props: any) {
       }
       return "";
     },
+    getStatus: (status: number) => {
+      let str: string;
+      switch (status) {
+        case TransactionStatusEnum.Initialized:
+          str = "Initialized";
+          break;
+        case TransactionStatusEnum.Calculated:
+          str = "Calculated";
+          break;
+        case TransactionStatusEnum.WaitingSenderPayment:
+          str = "Waiting Payment";
+          break;
+        case TransactionStatusEnum.SenderNotConfirmed:
+          str = "Sender Not Confirmed";
+          break;
+        case TransactionStatusEnum.SenderConfirmed:
+          str = "Sender Confirmed";
+          break;
+        case TransactionStatusEnum.SenderConfirmedReiceiverNotConfirmed:
+          str = "Receiver not Confirmed";
+          break;
+        case TransactionStatusEnum.Finished:
+          str = "Finished";
+          break;
+        case TransactionStatusEnum.InvalidInformation:
+          str = "Invalid Information";
+          break;
+        case TransactionStatusEnum.CriticalError:
+          str = "Critical Error";
+          break;
+        case TransactionStatusEnum.Canceled:
+          str = "Canceled";
+          break;
+      }
+      return str;
+    },
+    changeStatus: async (txId: number, status: TransactionStatusEnum, message: string) => {
+      let ret: Promise<ProviderResult>;
+      setLoadingUpdate(true);
+      try {
+        let brt = await TxFactory.TxBusiness.changeStatus(txId, status, message);
+        if (brt.sucesso) {
+          setLoadingUpdate(false);
+          return {
+            ...ret,
+            sucesso: true,
+            mensagemSucesso: "Transaction status changed"
+          };
+        }
+        else {
+          setLoadingUpdate(false);
+          return {
+            ...ret,
+            sucesso: false,
+            mensagemErro: brt.mensagem
+          };
+        }
+      }
+      catch (err) {
+        setLoadingUpdate(false);
+        return {
+          ...ret,
+          sucesso: false,
+          mensagemErro: JSON.stringify(err)
+        };
+      }
+    },
+    /*
     getFormatedSenderAmount: () => {
       if (txInfo) {
         console.log("coin: ", StrToCoin(txInfo.sendercoin), txInfo.senderamount);
@@ -105,22 +181,33 @@ export default function TxProvider(props: any) {
       }
       return "";
     },
+    */
     setTxInfo: (txInfo: TxInfo) => {
       _setTxInfo(txInfo);
     },
-    loadTx: async (txid: number) => {
+    loadTx: async (hash: string) => {
       let ret: Promise<ProviderResult>;
       setLoadingTxInfo(true);
       try {
-        let brt = await TxFactory.TxBusiness.getTx(txid);
+        let brt = await TxFactory.TxBusiness.getByHash(hash);
         if (brt.sucesso) {
           setLoadingTxInfo(false);
           _setTxInfo(brt.dataResult);
-          return {
-            ...ret,
-            sucesso: true,
-            mensagemSucesso: "Transaction load"
-          };
+          let retLog = await txProviderValue.loadTxLogs(brt.dataResult.txid);
+          if (retLog.sucesso) {
+            return {
+              ...ret,
+              sucesso: true,
+              mensagemSucesso: "Transaction load"
+            };
+          }
+          else {
+            return {
+              ...ret,
+              sucesso: false,
+              mensagemSucesso: retLog.mensagemErro
+            };
+          }
         }
         else {
           setLoadingTxInfo(false);
@@ -248,31 +335,33 @@ export default function TxProvider(props: any) {
         };
       }
     },
-    reloadTx: async (txid: number) => {
+    reloadTx: async () => {
       let ret: Promise<ProviderResult>;
+      if (!txInfo) {
+        return {
+          ...ret,
+          sucesso: false,
+          mensagemErro: "Transaction is not load"
+        };
+      }
       setReloadingTx(true);
       try {
-        let brt = await TxFactory.TxBusiness.processTx(txid);
-        let newTx = await TxFactory.TxBusiness.getTx(txid);
-        if (newTx.sucesso) {
-          _setTxInfo(newTx.dataResult);
-          let logs = await TxFactory.TxBusiness.listTxLogs(txid);
-          if (logs.sucesso) {
-            setTxLogs(logs.dataResult);
-          }
-          else {
-            throw new Error("Failed to reload transaction logs");
-          }
-        }
-        else {
-          throw new Error("Failed to reload transaction");
-        }
-        if (!brt.sucesso) {
+        let retPx = await TxFactory.TxBusiness.processTx(txInfo.txid);
+        if (!retPx.sucesso) {
           setReloadingTx(false);
           return {
             ...ret,
+            sucesso: false,
+            mensagemErro: retPx.mensagem
+          };
+        }
+        let retTx = await TxFactory.TxBusiness.getByHash(txInfo.hash);
+        if (retTx.sucesso) {
+          _setTxInfo(retTx.dataResult);
+          return {
+            ...ret,
             sucesso: true,
-            mensagemSucesso: brt.mensagem
+            mensagemSucesso: "Transaction successfully realoaded"
           };
         }
         else {
@@ -280,7 +369,7 @@ export default function TxProvider(props: any) {
           return {
             ...ret,
             sucesso: false,
-            mensagemErro: brt.mensagem
+            mensagemErro: "Cant reload transaction"
           };
         }
       }
@@ -291,6 +380,67 @@ export default function TxProvider(props: any) {
           sucesso: false,
           mensagemErro: JSON.stringify(err)
         };
+      }
+    },
+    paybackTx: async () => {
+      let ret: Promise<ProviderResult>;
+      setLoadingPay(true);
+      if (!txInfo) {
+        setLoadingPay(false);
+        return {
+          ...ret,
+          sucesso: false,
+          mensagemErro: "Transaction is not loaded"
+        };
+      }
+      if (
+        txInfo.status != TransactionStatusEnum.WaitingSenderPayment &&
+        txInfo.status != TransactionStatusEnum.SenderConfirmed
+      ) {
+        setLoadingPay(false);
+        return {
+          ...ret,
+          sucesso: false,
+          mensagemErro: "Transaction invalid for payback"
+        };
+      }
+      if (StrToCoin(txInfo.receivercoin) == CoinEnum.USDT) {
+        let retTx = await EtherFactory.EtherBusiness.transferUSDT(txInfo.receiveraddress, txInfo.receiverpayback);
+        if (retTx.sucesso) {
+          let retPB = await TxFactory.TxBusiness.payback(txInfo.txid, retTx.dataResult.transactionHash, parseInt(retTx.dataResult.cumulativeGasUsed));
+          if (retPB.sucesso) {
+            setLoadingPay(false);
+            return {
+              ...ret,
+              sucesso: true,
+              mensagemSucesso: "Transaction successful"
+            }
+          }
+          else {
+            setLoadingPay(false);
+            return {
+              ...ret,
+              sucesso: false,
+              mensagemErro: retPB.mensagem
+            }
+          }
+        }
+        else {
+          setLoadingPay(false);
+          return {
+            ...ret,
+            sucesso: false,
+            mensagemErro: retTx.mensagem
+          }
+        }
+      }
+      else {
+        setLoadingPay(false);
+        return {
+          ...ret,
+          sucesso: false,
+          mensagemErro: "Coin not suported"
+        }
       }
     }
   };

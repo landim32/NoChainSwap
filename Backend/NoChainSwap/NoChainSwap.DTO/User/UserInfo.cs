@@ -15,6 +15,8 @@ namespace NoChainSwap.DTO.User
         public string Email { get; set; }
         [JsonPropertyName("hash")]
         public string Hash { get; set; }
+        [JsonPropertyName("isAdmin")]
+        public bool IsAdmin { get; set; }
         [JsonPropertyName("createAt")]
         public DateTime CreateAt { get; set; }
         [JsonPropertyName("updateAt")]

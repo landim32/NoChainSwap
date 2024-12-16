@@ -2,7 +2,10 @@ import BusinessResult from "../../DTO/Business/BusinessResult";
 import TxInfo from "../../DTO/Domain/TxInfo";
 import TxLogInfo from "../../DTO/Domain/TxLogInfo";
 import TxParamInfo from "../../DTO/Domain/TxParamInfo";
+import TxRevertInfo from "../../DTO/Domain/TxRevertInfo";
 import { CoinEnum } from "../../DTO/Enum/CoinEnum";
+import { TransactionStatusEnum } from "../../DTO/Enum/TransactionStatusEnum";
+import TxPaybackParam from "../../DTO/Services/TxPaybackParam";
 import ITxService from "../../Services/Interfaces/ITxService";
 import ITxBusiness from "../Interfaces/ITxBusiness";
 
@@ -32,13 +35,13 @@ const TxBusiness: ITxBusiness = {
     _txService = txService;
   },
   createTx: async (param: TxParamInfo) => {
-    let ret: BusinessResult<number> = null;
+    let ret: BusinessResult<string> = null;
     let retServ = await _txService.createTx(param);
 
     if (retServ.sucesso) {
       return {
         ...ret,
-        dataResult: retServ.txId,
+        dataResult: retServ.hash,
         sucesso: true
       };
     } else {
@@ -49,25 +52,45 @@ const TxBusiness: ITxBusiness = {
       };
     }
   },
-  getTx: async (txid: number) => {
-    try {
-      let ret: BusinessResult<TxInfo> = null;
-      let retServ = await _txService.getTx(txid);
-      if (retServ.sucesso) {
-        return {
-          ...ret,
-          dataResult: retServ.transaction,
-          sucesso: true
-        };
-      } else {
-        return {
-          ...ret,
-          sucesso: false,
-          mensagem: retServ.mensagem
-        };
-      }
-    } catch {
-      throw new Error("Failed to get transaction");
+  getByHash: async (hash: string) => {
+    let ret: BusinessResult<TxInfo> = null;
+    let retServ = await _txService.getByHash(hash);
+    if (retServ.sucesso) {
+      return {
+        ...ret,
+        dataResult: retServ.transaction,
+        sucesso: true
+      };
+    } else {
+      return {
+        ...ret,
+        sucesso: false,
+        mensagem: retServ.mensagem
+      };
+    }
+  },
+  changeStatus: async (txid: number, status: TransactionStatusEnum, message: string) => {
+    let ret: BusinessResult<boolean> = null;
+    let param: TxRevertInfo;
+    let retServ = await _txService.changeStatus({
+      ...param,
+      txId: txid,
+      status: status,
+      message: message
+    });
+
+    if (retServ.sucesso) {
+      return {
+        ...ret,
+        dataResult: true,
+        sucesso: true
+      };
+    } else {
+      return {
+        ...ret,
+        sucesso: false,
+        mensagem: retServ.mensagem
+      };
     }
   },
   listAllTx: async () => {
@@ -154,6 +177,29 @@ const TxBusiness: ITxBusiness = {
       }
     } catch {
       throw new Error("Failed to process transaction");
+    }
+  },
+  payback: async (txid: number, receiverTxId: string, receiverFee: number) => {
+    let ret: BusinessResult<boolean>;
+    let param: TxPaybackParam;
+    let retServ = await _txService.payback({
+      ...param,
+      txId: txid,
+      receiverTxId: receiverTxId,
+      receiverFee: receiverFee
+    });
+    if (retServ.sucesso) {
+      return {
+        ...ret,
+        dataResult: retServ.sucesso,
+        sucesso: true
+      };
+    } else {
+      return {
+        ...ret,
+        sucesso: false,
+        mensagem: retServ.mensagem
+      };
     }
   }
 }

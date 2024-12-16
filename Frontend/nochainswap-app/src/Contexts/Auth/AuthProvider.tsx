@@ -10,11 +10,12 @@ import { SignInEnum } from '../../DTO/Enum/SignInEnum';
 import StacksFactory from '../../Business/Factory/StacksFactory';
 import UserInfo from '../../DTO/Domain/UserInfo';
 import UserAddressFactory from '../../Business/Factory/UserAddressFactory';
+import EtherFactory from '../../Business/Factory/EtherFactory';
 
 export default function AuthProvider(props: any) {
 
   const [loading, setLoading] = useState(false);
-  const [chain, _setChain] = useState<ChainEnum>(ChainEnum.NoChain);
+  const [chain, _setChain] = useState<ChainEnum>(ChainEnum.BNBChain);
   const [sessionInfo, _setSessionInfo] = useState<AuthSession>(null);
 
   const authProviderValue: IAuthProvider = {
@@ -74,6 +75,81 @@ export default function AuthProvider(props: any) {
     loginCallback: (callback?: any) => {
       if (chain == ChainEnum.BitcoinAndStack) {
         StacksFactory.StacksBusiness.logIn(callback);
+      }
+    },
+    loginEther: async () => {
+      let ret: Promise<ProviderResult>;
+      let authSession: AuthSession;
+      let chainId: number;
+      switch (chain) {
+        case ChainEnum.BNBChain:
+          chainId = 97; //testenet
+          break;
+      }
+      setLoading(true);
+      let retLogin = await EtherFactory.EtherBusiness.logIn(chainId);
+      if (retLogin.sucesso) {
+        let user = await UserFactory.UserBusiness.getUserByAddress(ChainEnum.BNBChain, retLogin.dataResult);
+        if (user.sucesso) {
+          authProviderValue.setSession({
+            ...authSession,
+            id: user.dataResult.id,
+            hash: user.dataResult.hash,
+            name: user.dataResult.name,
+            email: user.dataResult.email,
+            loginWith: SignInEnum.WebWallet,
+            chain: ChainEnum.BNBChain
+          });
+          setLoading(false);
+          return {
+            ...ret,
+            sucesso: true,
+            mensagemSucesso: "Login successfully"
+          };
+        }
+        else {
+          let userAddr = retLogin.dataResult.substr(0, 6) + '...' + retLogin.dataResult.substr(-4);
+          let emptyUser: UserInfo;
+          let newUser = await UserFactory.UserBusiness.insert({
+            ...emptyUser,
+            name: userAddr
+          });
+          if (newUser.sucesso) {
+            let retAddr = await UserAddressFactory.UserAddressBusiness.addOrChangeAddress(newUser.dataResult.id, chain, retLogin.dataResult);
+            if (!retAddr.sucesso) {
+              setLoading(false);
+              return {
+                ...ret,
+                sucesso: false,
+                mensagemErro: retAddr.mensagem
+              };
+            }
+            authProviderValue.setSession({
+              ...authSession,
+              id: newUser.dataResult.id,
+              hash: newUser.dataResult.hash,
+              name: newUser.dataResult.name,
+              email: newUser.dataResult.email,
+              loginWith: SignInEnum.WebWallet,
+              chain: ChainEnum.BNBChain,
+              address: retLogin.dataResult
+            });
+            setLoading(false);
+            return {
+              ...ret,
+              sucesso: true,
+              mensagemSucesso: "Login successfully"
+            };
+          }
+          else {
+            setLoading(false);
+            return {
+              ...ret,
+              sucesso: false,
+              mensagemErro: newUser.mensagem
+            };
+          }
+        }
       }
     },
     logout: function (): ProviderResult {

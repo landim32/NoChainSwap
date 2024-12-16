@@ -18,6 +18,7 @@ import { MessageToastEnum } from '../../DTO/Enum/MessageToastEnum';
 import { faEnvelope, faLock, faRightLeft } from '@fortawesome/free-solid-svg-icons';
 import InputGroup from 'react-bootstrap/InputGroup';
 import AuthContext from '../../Contexts/Auth/AuthContext';
+import TxContext from '../../Contexts/Transaction/TxContext';
 
 export default function SwapForm() {
 
@@ -32,6 +33,7 @@ export default function SwapForm() {
 
     const authContext = useContext(AuthContext);
     const swapContext = useContext(SwapContext);
+    const txContext = useContext(TxContext);
 
     const throwError = (message: string) => {
         setDialog(MessageToastEnum.Error)
@@ -314,7 +316,7 @@ export default function SwapForm() {
                                                     if (swapContext.senderAmount > 0) {
                                                         let ret = await swapContext.createTx(authContext.chain, email, address);
                                                         if (ret.sucesso) {
-                                                            navigate("/tx/" + ret.txId);
+                                                            navigate("/tx/" + ret.hash);
                                                             //alert("/tx/" + ret.txId);
                                                         }
                                                         else {

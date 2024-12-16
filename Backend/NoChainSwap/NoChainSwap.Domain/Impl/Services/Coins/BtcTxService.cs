@@ -137,6 +137,13 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
 
         public override async Task<bool> VerifyTransaction(ITransactionModel tx)
         {
+            if (string.IsNullOrEmpty(tx.SenderTxid) && string.IsNullOrEmpty(tx.ReceiverTxid))
+            {
+                AddLog(tx.TxId, "Transaction tx_id is empty", LogTypeEnum.Error, _txLogFactory);
+                tx.Status = TransactionStatusEnum.InvalidInformation;
+                tx.Update();
+                return await Task.FromResult(false);
+            }
             var mempoolTx = await GetCurrentTxMemPool(tx.SenderTxid);
             if (mempoolTx == null)
             {

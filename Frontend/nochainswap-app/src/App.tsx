@@ -47,7 +47,7 @@ function App() {
             <Route index element={<ListTxPage OnlyMyTx={false} />} />
             <Route path=":txid" element={<ListTxPage OnlyMyTx={false} />} />
           </Route>
-          <Route path="tx/:txId" element={<TxPage />} />
+          <Route path="tx/:txHash" element={<TxPage />} />
           <Route path="login" element={<LoginPage />} />
           <Route path="edit-account" element={<UserPage />} />
           <Route path="new-account" element={<UserPage />} />

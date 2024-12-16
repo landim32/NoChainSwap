@@ -27,6 +27,8 @@ namespace DB.Infra.Repository
         {
             var md = factory.BuildTransactionModel();
             md.TxId = u.TxId;
+            md.UserId = u.UserId;
+            md.Hash = u.Hash;
             md.SenderCoin = Utils.StrToCoin(u.SenderCoin);
             md.ReceiverCoin = Utils.StrToCoin(u.ReceiverCoin);
             md.RecipientAddress = u.RecipientAddress;
@@ -39,6 +41,8 @@ namespace DB.Infra.Repository
             md.ReceiverTxid = u.ReceiverTxid;
             md.SenderFee = u.SenderFee;
             md.ReceiverFee = u.ReceiverFee;
+            md.SenderTax = u.SenderTax;
+            md.ReceiverTax = u.ReceiverTax;
             md.SenderAmount = u.SenderAmount;
             md.ReceiverAmount = u.ReceiverAmount;
             return md;
@@ -47,6 +51,8 @@ namespace DB.Infra.Repository
         private void ModelToDb(ITransactionModel u, Transaction md)
         {
             md.TxId = u.TxId;
+            md.UserId = u.UserId;
+            md.Hash = u.Hash;
             md.SenderCoin = Utils.CoinToStr(u.SenderCoin);
             md.ReceiverCoin = Utils.CoinToStr(u.ReceiverCoin);
             md.RecipientAddress = u.RecipientAddress;
@@ -59,6 +65,8 @@ namespace DB.Infra.Repository
             md.ReceiverTxid = u.ReceiverTxid;
             md.SenderFee = u.SenderFee;
             md.ReceiverFee = u.ReceiverFee;
+            md.SenderTax = u.SenderTax;
+            md.ReceiverTax = u.ReceiverTax;
             md.SenderAmount = u.SenderAmount;
             md.ReceiverAmount = u.ReceiverAmount;
         }
@@ -85,6 +93,23 @@ namespace DB.Infra.Repository
             try
             {
                 var row = _ccsContext.Transactions.Where(x => x.TxId == txId).FirstOrDefault();
+                if (row != null)
+                {
+                    return DbToModel(factory, row);
+                }
+                return null;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public ITransactionModel GetByHash(string hash, ITransactionDomainFactory factory)
+        {
+            try
+            {
+                var row = _ccsContext.Transactions.Where(x => x.Hash == hash).FirstOrDefault();
                 if (row != null)
                 {
                     return DbToModel(factory, row);

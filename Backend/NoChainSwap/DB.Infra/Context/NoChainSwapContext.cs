@@ -44,6 +44,10 @@ public partial class NoChainSwapContext : DbContext
             entity.Property(e => e.CreateAt)
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("create_at");
+            entity.Property(e => e.Hash)
+                .IsRequired()
+                .HasMaxLength(40)
+                .HasColumnName("hash");
             entity.Property(e => e.ReceiverAddress)
                 .HasMaxLength(256)
                 .HasColumnName("receiver_address");
@@ -79,6 +83,7 @@ public partial class NoChainSwapContext : DbContext
 
             entity.HasOne(d => d.User).WithMany(p => p.Transactions)
                 .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_user_transaction");
         });
 
@@ -92,6 +97,7 @@ public partial class NoChainSwapContext : DbContext
             entity.Property(e => e.Date)
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("date");
+            entity.Property(e => e.LastStatus).HasColumnName("last_status");
             entity.Property(e => e.LogType)
                 .HasDefaultValue(1)
                 .HasColumnName("log_type");
@@ -122,6 +128,9 @@ public partial class NoChainSwapContext : DbContext
             entity.Property(e => e.Hash)
                 .HasMaxLength(128)
                 .HasColumnName("hash");
+            entity.Property(e => e.IsAdmin)
+                .HasDefaultValue(false)
+                .HasColumnName("is_admin");
             entity.Property(e => e.Name)
                 .HasMaxLength(120)
                 .HasColumnName("name");

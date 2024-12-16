@@ -38,7 +38,8 @@ namespace NoChainSwap.API.Controllers
                 CreateAt = md.CreateAt,
                 UpdateAt = md.UpdateAt,
                 Name = md.Name,
-                Email = md.Email
+                Email = md.Email,
+                IsAdmin = md.IsAdmin
             };
             return user;
         }

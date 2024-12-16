@@ -1,4 +1,5 @@
-﻿using NoChainSwap.Domain.Impl.Core;
+﻿using NBitcoin.Secp256k1;
+using NoChainSwap.Domain.Impl.Core;
 using NoChainSwap.Domain.Impl.Models;
 using NoChainSwap.Domain.Interfaces.Factory;
 using NoChainSwap.Domain.Interfaces.Models;
@@ -12,6 +13,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static NBitcoin.Scripting.OutputDescriptor.TapTree;
 
 namespace NoChainSwap.Domain.Impl.Services.Coins
 {
@@ -47,6 +49,7 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
 
         public async Task<bool> ProcessTransaction(ITransactionModel tx, ICoinTxService receiverService)
         {
+            /*
             if (string.IsNullOrEmpty(tx.SenderTxid) && string.IsNullOrEmpty(tx.ReceiverTxid))
             {
                 AddLog(tx.TxId, "Transaction tx_id is empty", LogTypeEnum.Error, _txLogFactory);
@@ -54,6 +57,7 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
                 tx.Update();
                 return await Task.FromResult(false);
             }
+            */
             if (! await VerifyTransaction(tx))
             {
                 return await Task.FromResult(false);
@@ -104,6 +108,9 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
                 case TransactionStatusEnum.CriticalError:
                     AddLog(tx.TxId, "Cant reprocess a transaction with critical error", LogTypeEnum.Error, _txLogFactory);
                     break;
+                case TransactionStatusEnum.Canceled:
+                    AddLog(tx.TxId, "Cant process a canceled transaction", LogTypeEnum.Error, _txLogFactory);
+                    break;
                 default:
                     var statusStr = TransactionService.GetTransactionEnumToString(tx.Status);
                     AddLog(tx.TxId, string.Format("'{0}' is not a valid status to transaction", statusStr), LogTypeEnum.Error, _txLogFactory);
@@ -121,33 +128,95 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
             ICoinTxService receiverService
         )
         {
-            var senderAmount = await GetSenderAmount(tx.SenderTxid, tx.SenderAddress);
-            //var senderProportion = GetSenderProportion(receiverService);
+            var senderAmount = Convert.ToDecimal(tx.SenderAmount);
+            var receiverAmount = Convert.ToDecimal(tx.ReceiverAmount);
+            int txFee = 0;
+            if (!string.IsNullOrEmpty(tx.SenderTxid) && !string.IsNullOrEmpty(tx.SenderAddress))
+            {
+                var txSenderAmount = await GetSenderAmount(tx.SenderTxid, tx.SenderAddress);
+                txFee = await GetFee(tx.SenderTxid);
+
+                if (senderAmount != txSenderAmount)
+                {
+                    if (txFee > 0)
+                    {
+                        tx.SenderFee = txFee;
+                    }
+                    tx.Status = TransactionStatusEnum.InvalidInformation;
+                    tx = tx.Update();
+
+                    AddLog(tx.TxId, string.Format(
+                        "Invalid sender amount, sender inform {0:N8}, tx sender {1:N8}.",
+                        senderAmount,
+                        txSenderAmount
+                    ), LogTypeEnum.Error, _txLogFactory);
+                    return await Task.FromResult(new TransactionStepInfo
+                    {
+                        Success = false,
+                        DoNextStep = false
+                    });
+                }
+            }
             var price = _coinMarketCapService.GetCurrentPrice(GetCoin(), receiverService.GetCoin(), CurrencyEnum.USD);
-            decimal receiverAmountFloat = senderAmount / price.ReceiverProportion;
-            var receiverAmount = Convert.ToInt64(receiverAmountFloat);
+            var receiverAmountCalc = senderAmount / price.ReceiverProportion;
 
-            var fee = await GetFee(tx.SenderTxid);
+            if (receiverAmount > receiverAmountCalc)
+            {
+                var receiverSpread = receiverAmount - receiverAmountCalc;
+                var spreadPercent = (receiverSpread / receiverAmount) * 100M;
+                if (spreadPercent > 2M)
+                {
+                    tx.Status = TransactionStatusEnum.CriticalError;
+                    tx = tx.Update();
+                    AddLog(tx.TxId, string.Format(
+                        "Transaction generated a spread {0:N2}%, receiver amount {1} > {2} ({3}).",
+                        spreadPercent,
+                        receiverService.ConvertToString(Convert.ToDecimal(receiverAmount)),
+                        receiverService.ConvertToString(Convert.ToDecimal(receiverAmountCalc)),
+                        receiverService.ConvertToString(Convert.ToDecimal(receiverSpread))
+                    ), LogTypeEnum.Error, _txLogFactory);
+                    return await Task.FromResult(new TransactionStepInfo
+                    {
+                        Success = false,
+                        DoNextStep = false
+                    });
+                }
+                else
+                {
+                    AddLog(tx.TxId, string.Format(
+                        "Transaction generated a spread {0:N2}%, receiver amount {1} > {2} ({3}).",
+                        spreadPercent,
+                        receiverService.ConvertToString(Convert.ToDecimal(receiverAmount)),
+                        receiverService.ConvertToString(Convert.ToDecimal(receiverAmountCalc)),
+                        receiverService.ConvertToString(Convert.ToDecimal(receiverSpread))
+                    ), LogTypeEnum.Warning, _txLogFactory);
+                }
+            }
 
-            var senderSymbol = Utils.CoinToStr(GetCoin());
-            var receiverSymbol = Utils.CoinToStr(receiverService.GetCoin());
-
-            tx.SenderAmount = senderAmount;
-            tx.ReceiverAmount = receiverAmount;
-            tx.SenderFee = fee;
+            if (txFee > 0)
+            {
+                tx.SenderFee = txFee;
+            }
             tx.Status = TransactionStatusEnum.Calculated;
-            tx.Update();
+            tx = tx.Update();
 
-            decimal feeValue = Math.Round(fee / 100000000M, 5);
-            decimal senderValue = Math.Round(senderAmount / 100000000M, 5);
-            decimal receiverValue = Math.Round(receiverAmount / 100000000M, 5);
-
-            AddLog(tx.TxId, string.Format(
-                "Transaction has {0:N5} {1}, Fee {2:N5} {3} and extimate {4:N5} {5}.",
-                senderValue, senderSymbol.ToUpper(),
-                feeValue, senderSymbol.ToUpper(),
-                receiverValue, receiverSymbol.ToUpper()
-            ), LogTypeEnum.Information, _txLogFactory);
+            if (tx.SenderFee > 0)
+            {
+                AddLog(tx.TxId, string.Format(
+                    "Transaction sender amount {0}, Fee {1} and receiver amount {2}.",
+                    ConvertToString(Convert.ToDecimal(tx.SenderAmount)),
+                    ConvertToString(Convert.ToDecimal(tx.SenderFee)),
+                    receiverService.ConvertToString(Convert.ToDecimal(tx.ReceiverAmount))
+                ), LogTypeEnum.Information, _txLogFactory);
+            }
+            else
+            {
+                AddLog(tx.TxId, string.Format(
+                    "Transaction sender amount {0} and receiver amount {1}.",
+                    ConvertToString(Convert.ToDecimal(tx.SenderAmount)),
+                    receiverService.ConvertToString(Convert.ToDecimal(tx.ReceiverAmount))
+                ), LogTypeEnum.Information, _txLogFactory);
+            }
 
             return await Task.FromResult(new TransactionStepInfo
             {
@@ -157,7 +226,17 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
         }
         private async Task<TransactionStepInfo> SenderFirstConfirmStep(ITransactionModel tx, ICoinTxService receiverService)
         {
-            if (await IsTransactionSuccessful(tx.SenderTxid))
+            if (string.IsNullOrEmpty(tx.SenderTxid))
+            {
+                tx.Status = TransactionStatusEnum.WaitingSenderPayment;
+                tx.Update();
+                return await Task.FromResult(new TransactionStepInfo
+                {
+                    Success = true,
+                    DoNextStep = false
+                });
+            }
+            else if (await IsTransactionSuccessful(tx.SenderTxid))
             {
                 tx.Status = TransactionStatusEnum.SenderConfirmed;
                 tx.Update();
@@ -174,7 +253,7 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
                 tx.Update();
                 return await Task.FromResult(new TransactionStepInfo
                 {
-                    Success = false,
+                    Success = true,
                     DoNextStep = false
                 });
             }
@@ -205,7 +284,7 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
 
         private async Task<TransactionStepInfo> ReceiverSendTxStep(ITransactionModel tx, ICoinTxService receiverService)
         {
-            if (!await IsTransactionSuccessful(tx.SenderTxid))
+            if (!string.IsNullOrEmpty(tx.SenderTxid) && !await IsTransactionSuccessful(tx.SenderTxid))
             {
                 AddLog(tx.TxId, "Transaction local is confirmed, but not confirm on chain", LogTypeEnum.Error, _txLogFactory);
                 tx.Status = TransactionStatusEnum.InvalidInformation;
@@ -216,7 +295,12 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
                     DoNextStep = false
                 });
             }
-            var senderAmount = await GetSenderAmount(tx.SenderTxid, tx.SenderAddress);
+            //var senderAmount = await GetSenderAmount(tx.SenderTxid, tx.SenderAddress);
+            var senderAmount = tx.SenderAmount;
+            if (!string.IsNullOrEmpty(tx.SenderTxid) && !string.IsNullOrEmpty(tx.SenderAddress))
+            {
+                senderAmount = await GetSenderAmount(tx.SenderTxid, tx.SenderAddress);
+            }
             var price = _coinMarketCapService.GetCurrentPrice(GetCoin(), receiverService.GetCoin(), CurrencyEnum.USD);
             var receiverAmount = Convert.ToInt64(senderAmount / price.ReceiverProportion);
 
