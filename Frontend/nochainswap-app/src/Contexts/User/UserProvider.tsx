@@ -7,6 +7,7 @@ import ProviderResult from "../../DTO/Contexts/ProviderResult";
 import UserFactory from "../../Business/Factory/UserFactory";
 import UserAddressInfo from "../../DTO/Domain/UserAddressInfo";
 import UserAddressFactory from "../../Business/Factory/UserAddressFactory";
+import { UserAddrProvideResult } from "../../DTO/Contexts/UserAddrProviderResult";
 
 export default function UserProvider(props: any) {
 
@@ -19,6 +20,7 @@ export default function UserProvider(props: any) {
     const [userHasPassword, setUserHasPassword] = useState<boolean>(false);
 
     const [user, _setUser] = useState<UserInfo>(null);
+    const [userAddress, setUserAddress] = useState<UserAddressInfo>(null);
     const [userAddresses, setUserAddresses] = useState<UserAddressInfo[]>([]);
 
     const userProviderValue: IUserProvider = {
@@ -29,15 +31,16 @@ export default function UserProvider(props: any) {
         loadingUpdateAddr: loadingUpdateAddr,
         userHasPassword: userHasPassword,
         user: user,
+        userAddress: userAddress,
         userAddresses: userAddresses,
         setUser: (user: UserInfo) => {
             _setUser(user);
         },
-        getUserById: async (userId: number) => {
+        getMe: async () => {
             let ret: Promise<ProviderResult>;
             setLoading(true);
             try {
-                let brt = await UserFactory.UserBusiness.getUserById(userId);
+                let brt = await UserFactory.UserBusiness.getMe();
                 if (brt.sucesso) {
                     setLoading(false);
                     _setUser(brt.dataResult);
@@ -225,13 +228,12 @@ export default function UserProvider(props: any) {
                 };
             }
         },
-        hasPassword: async (userId: number) => {
+        hasPassword: async () => {
             let ret: Promise<ProviderResult>;
             setLoadingPassword(true);
             setUserHasPassword(false);
             try {
-                let brt = await UserFactory.UserBusiness.hasPassword(userId);
-                //console.log("hashPassword: ", brt.sucesso);
+                let brt = await UserFactory.UserBusiness.hasPassword();
                 if (brt.sucesso) {
                     setUserHasPassword(true);
                     setLoadingPassword(false);
@@ -259,11 +261,11 @@ export default function UserProvider(props: any) {
                 };
             }
         },
-        changePassword: async (userId: number, oldPassword: string, newPassword: string) => {
+        changePassword: async (oldPassword: string, newPassword: string) => {
             let ret: Promise<ProviderResult>;
             setLoadingUpdate(true);
             try {
-                let brt = await UserFactory.UserBusiness.changePassword(userId, oldPassword, newPassword);
+                let brt = await UserFactory.UserBusiness.changePassword(oldPassword, newPassword);
                 console.log("changePassword: ", JSON.stringify(brt));
                 if (brt.sucesso) {
                     setLoadingUpdate(false);
@@ -354,11 +356,11 @@ export default function UserProvider(props: any) {
                 };
             }
         },
-        listAddressByUser: async (userId: number) => {
+        listAddressByUser: async () => {
             let ret: Promise<ProviderResult>;
             setLoadingUserAddr(true);
             try {
-                let brt = await UserAddressFactory.UserAddressBusiness.listAddressByUser(userId);
+                let brt = await UserAddressFactory.UserAddressBusiness.listAddressByUser();
                 if (brt.sucesso) {
                     setUserAddresses(brt.dataResult);
                     setLoadingUserAddr(false);
@@ -418,11 +420,11 @@ export default function UserProvider(props: any) {
                 };
             }
         },
-        removeAddress: async (userId: number, chainId: number) => {
+        removeAddress: async (chainId: number) => {
             let ret: Promise<ProviderResult>;
             setLoadingUpdateAddr(true);
             try {
-                let brt = await UserAddressFactory.UserAddressBusiness.removeAddress(userId, chainId);
+                let brt = await UserAddressFactory.UserAddressBusiness.removeAddress(chainId);
                 if (brt.sucesso) {
                     setUserAddresses([]);
                     setLoadingUpdateAddr(false);
@@ -443,6 +445,39 @@ export default function UserProvider(props: any) {
             }
             catch (err) {
                 setLoadingUpdateAddr(false);
+                return {
+                    ...ret,
+                    sucesso: false,
+                    mensagemErro: JSON.stringify(err)
+                };
+            }
+        },
+        getAddressByChain: async (chainId: number) => {
+            let ret: Promise<UserAddrProvideResult>;
+            setLoadingUserAddr(true);
+            try {
+                let brt = await UserAddressFactory.UserAddressBusiness.getAddressByChain(chainId);
+                if (brt.sucesso) {
+                    setUserAddress(brt.dataResult);
+                    setLoadingUserAddr(false);
+                    return {
+                        ...ret,
+                        UserAddress: brt.dataResult.address,
+                        sucesso: true,
+                        mensagemSucesso: "Get user address successfully"
+                    };
+                }
+                else {
+                    setLoadingUserAddr(false);
+                    return {
+                        ...ret,
+                        sucesso: false,
+                        mensagemErro: brt.mensagem
+                    };
+                }
+            }
+            catch (err) {
+                setLoadingUserAddr(false);
                 return {
                     ...ret,
                     sucesso: false,

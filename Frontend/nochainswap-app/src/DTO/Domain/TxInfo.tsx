@@ -21,6 +21,7 @@ export default interface TxInfo {
     senderfee?: number,
     receiverfee?: number,
     senderamount: string,
+    senderamountvalue: number,
     receiveramount: string,
     receiverpayback: number
   }

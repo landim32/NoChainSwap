@@ -140,6 +140,9 @@ public partial class NoChainSwapContext : DbContext
             entity.Property(e => e.RecoveryHash)
                 .HasMaxLength(128)
                 .HasColumnName("recovery_hash");
+            entity.Property(e => e.Token)
+                .HasMaxLength(128)
+                .HasColumnName("token");
             entity.Property(e => e.UpdateAt)
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("update_at");
@@ -155,7 +158,6 @@ public partial class NoChainSwapContext : DbContext
             entity.Property(e => e.Address)
                 .IsRequired()
                 .HasMaxLength(120)
-                .IsFixedLength()
                 .HasColumnName("address");
             entity.Property(e => e.ChainId).HasColumnName("chain_id");
             entity.Property(e => e.CreateAt)

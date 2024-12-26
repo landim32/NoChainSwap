@@ -84,6 +84,27 @@ namespace NoChainSwap.Domain.Impl.Core
             return str;
         }
 
+        public static string CoinToText(CoinEnum coin)
+        {
+            string str = string.Empty;
+            switch (coin)
+            {
+                case CoinEnum.Bitcoin:
+                    str = "Bitcoin (BTC)";
+                    break;
+                case CoinEnum.Stacks:
+                    str = "Stacks (STX)";
+                    break;
+                case CoinEnum.USDT:
+                    str = "Tether (USDT)";
+                    break;
+                case CoinEnum.BRL:
+                    str = "Real (Pix)";
+                    break;
+            }
+            return str;
+        }
+
         public static string CoinToSlug(CoinEnum coin)
         {
             string str = string.Empty;

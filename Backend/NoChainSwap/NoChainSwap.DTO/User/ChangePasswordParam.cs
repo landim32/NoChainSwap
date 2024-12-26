@@ -9,8 +9,6 @@ namespace NoChainSwap.DTO.User
 {
     public class ChangePasswordParam
     {
-        [JsonPropertyName("userId")]
-        public long UserId {  get; set; }
         [JsonPropertyName("oldPassword")]
         public string OldPassword { get; set; }
         [JsonPropertyName("newPassword")]

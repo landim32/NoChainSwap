@@ -23,6 +23,8 @@ public partial class User
 
     public bool IsAdmin { get; set; }
 
+    public string Token { get; set; }
+
     public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
 
     public virtual ICollection<UserAddress> UserAddresses { get; set; } = new List<UserAddress>();

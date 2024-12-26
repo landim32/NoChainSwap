@@ -57,6 +57,10 @@ namespace NoChainSwap.API.Controllers
             {
                 return md.SenderAddress.Substring(0, 4) + "..." + md.SenderAddress.Substring(-5);
             }
+            if (string.IsNullOrEmpty(str))
+            {
+                str = "Anonymous";
+            }
             return str;
         }
 
@@ -89,6 +93,7 @@ namespace NoChainSwap.API.Controllers
                 SenderTax = md.SenderTax.HasValue ? senderTx.ConvertToString(md.SenderTax.Value) : null,
                 ReceiverTax = md.ReceiverTax.HasValue ? receiverTx.ConvertToString(md.ReceiverTax.Value) : null,
                 SenderAmount = senderTx.ConvertToString(md.SenderAmount),
+                SenderAmountValue = md.SenderAmount,
                 ReceiverAmount = receiverTx.ConvertToString(md.ReceiverAmount),
                 ReceiverPayback = md.ReceiverAmount - md.ReceiverTax.GetValueOrDefault()
             };
@@ -99,15 +104,10 @@ namespace NoChainSwap.API.Controllers
         {
             try
             {
-                /*
-                var user = _userService.GetUserInSession(HttpContext);
-                if (user == null)
-                {
-                    return StatusCode(401, "Not Authorized");
-                }
-                */
                 var tx = await _txService.CreateTx(param);
-                
+                await _txService.ProcessTransaction(tx);
+                tx = _txService.GetById(tx.TxId);
+
                 return new ActionResult<string>(tx.Hash);
             }
             catch (Exception ex)
@@ -116,11 +116,70 @@ namespace NoChainSwap.API.Controllers
             }
         }
 
+        [HttpPost("confirmsendpayment")]
+        public ActionResult<bool> ConfirmSendPayment([FromBody] TxPaymentParam param)
+        {
+            try
+            {
+                _txService.ConfirmSendPayment(param.TxId, param.SenderTxId);
+                return new ActionResult<bool>(true);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [Authorize]
+        [HttpGet("confirmpayment/{txid}")]
+        public ActionResult<bool> ConfirmPayment(long txid)
+        {
+            try
+            {
+                var userSession = _userService.GetUserInSession(HttpContext);
+                if (userSession == null)
+                {
+                    return StatusCode(401, "Not Authorized");
+                }
+                var user = _userService.GetUserByID(userSession.Id);
+                if (user == null)
+                {
+                    return StatusCode(401, "Not Authorized");
+                }
+                if (!user.IsAdmin)
+                {
+                    return StatusCode(401, "Access Denied");
+                }
+                _txService.ConfirmPayment(txid);
+
+                return new ActionResult<bool>(true);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [Authorize]
         [HttpPost("payback")]
         public ActionResult<bool> Payback([FromBody] TxPaybackParam param)
         {
             try
             {
+                var userSession = _userService.GetUserInSession(HttpContext);
+                if (userSession == null)
+                {
+                    return StatusCode(401, "Not Authorized");
+                }
+                var user = _userService.GetUserByID(userSession.Id);
+                if (user == null)
+                {
+                    return StatusCode(401, "Not Authorized");
+                }
+                if (!user.IsAdmin)
+                {
+                    return StatusCode(401, "Access Denied");
+                }
                 _txService.Payback(param.TxId, param.ReceiverTxId, param.ReceiverFee);
 
                 return new ActionResult<bool>(true);
@@ -131,10 +190,26 @@ namespace NoChainSwap.API.Controllers
             }
         }
 
+        [Authorize]
         [HttpPost("changestatus")]
         public ActionResult<bool> ChangeStatus([FromBody] TxRevertStatusParam param) {
             try
             {
+                var userSession = _userService.GetUserInSession(HttpContext);
+                if (userSession == null)
+                {
+                    return StatusCode(401, "Not Authorized");
+                }
+                var user = _userService.GetUserByID(userSession.Id);
+                if (user == null)
+                {
+                    return StatusCode(401, "Not Authorized");
+                }
+                if (!user.IsAdmin)
+                {
+                    return StatusCode(401, "Access Denied");
+                }
+
                 var tx = _txService.GetById(param.TxId);
                 if (tx == null) {
                     throw new Exception("Transaction not found");
@@ -148,19 +223,18 @@ namespace NoChainSwap.API.Controllers
             }
         }
 
-        [HttpGet("listmytransactions/{address}")]
-        public ActionResult<IList<TxResult>> ListMyTransactions(string address)
+        [Authorize]
+        [HttpGet("listmytransactions")]
+        public ActionResult<IList<TxResult>> ListMyTransactions()
         {
             try
             {
-                /*
-                var user = _userService.GetUserInSession(HttpContext);
-                if (user == null)
+                var userSession = _userService.GetUserInSession(HttpContext);
+                if (userSession == null)
                 {
                     return StatusCode(401, "Not Authorized");
                 }
-                */
-                var ds = _txService.ListByAddress(address).Select(x => ModelToInfo(x)).ToList();
+                var ds = _txService.ListByUser(userSession.Id).Select(x => ModelToInfo(x)).ToList();
                 return new ActionResult<IList<TxResult>>(ds);
             }
             catch (Exception ex)
@@ -169,18 +243,27 @@ namespace NoChainSwap.API.Controllers
             }
         }
 
+        [Authorize]
         [HttpGet("listalltransactions")]
         public ActionResult<IList<TxResult>> ListAllTransactions()
         {
             try
             {
-                /*
-                var user = _userService.GetUserInSession(HttpContext);
+                var userSession = _userService.GetUserInSession(HttpContext);
+                if (userSession == null)
+                {
+                    return StatusCode(401, "Not Authorized");
+                }
+                var user = _userService.GetUserByID(userSession.Id);
                 if (user == null)
                 {
                     return StatusCode(401, "Not Authorized");
                 }
-                */
+                if (!user.IsAdmin)
+                {
+                    return StatusCode(401, "Access Denied");
+                }
+
                 var ds = _txService.ListAll().Select(x => ModelToInfo(x)).ToList();
                 return new ActionResult<IList<TxResult>>(ds);
             }
@@ -212,13 +295,6 @@ namespace NoChainSwap.API.Controllers
         {
             try
             {
-                /*
-                var user = _userService.GetUserInSession(HttpContext);
-                if (user == null)
-                {
-                    return StatusCode(401, "Not Authorized");
-                }
-                */
                 var ds = _txService.ListLogById(txid).Select(x => new TxLogResult
                 {
                     LogType = GetLogTypeToStr(x.LogType),
@@ -239,13 +315,6 @@ namespace NoChainSwap.API.Controllers
         {
             try
             {
-                /*
-                var user = _userService.GetUserInSession(HttpContext);
-                if (user == null)
-                {
-                    return StatusCode(401, "Not Authorized");
-                }
-                */
                 return ModelToInfo(_txService.GetByHash(hash));
             }
             catch (Exception ex)
@@ -254,25 +323,34 @@ namespace NoChainSwap.API.Controllers
             }
         }
 
+        [Authorize]
         [HttpGet("processtransaction/{txid}")]
         public async Task<ActionResult<bool>> ProcessTransaction(long txid)
         {
             try
             {
-                /*
-                var user = _userService.GetUserInSession(HttpContext);
+                var userSession = _userService.GetUserInSession(HttpContext);
+                if (userSession == null)
+                {
+                    return StatusCode(401, "Not Authorized");
+                }
+                var user = _userService.GetUserByID(userSession.Id);
                 if (user == null)
                 {
                     return StatusCode(401, "Not Authorized");
                 }
-                */
+                if (!user.IsAdmin)
+                {
+                    return StatusCode(401, "Access Denied");
+                }
+
+                await _txService.DetectAllTransaction();
                 var tx = _txService.GetById(txid);
                 if (tx == null)
                 {
                     return StatusCode(500, $"Dont find transaction with ID {txid}");
                 }
                 return await _txService.ProcessTransaction(tx);
-                //return await Task.FromResult(true);
             }
             catch (Exception ex)
             {

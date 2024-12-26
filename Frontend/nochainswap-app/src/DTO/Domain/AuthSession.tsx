@@ -6,6 +6,8 @@ export default interface AuthSession {
   email: string;
   name: string;
   hash: string;
+  token: string;
+  isAdmin: boolean;
   loginWith: SignInEnum;
   chain: ChainEnum;
   address: string;

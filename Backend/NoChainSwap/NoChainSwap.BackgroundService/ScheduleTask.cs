@@ -14,6 +14,22 @@ namespace NoChainSwap.BackgroundService
             _transactionService = transactionService;
         }
 
+        public async Task<bool> DetectNewTransactions()
+        {
+            bool ret = false;
+            try
+            {
+                Console.WriteLine("Start detecting new transactions");
+                ret = await _transactionService.DetectAllTransaction();
+                Console.WriteLine("Detect transaction terminated");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error on detecting transactions:\n" + e.Message);
+            }
+            return ret;
+        }
+
         public async Task<bool> ProccessAllTransactions()
         {
             bool ret = false;

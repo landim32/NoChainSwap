@@ -5,8 +5,8 @@ import IUserAddressService from "../../Services/Interfaces/IUserAddressService";
 
 export default interface IUserAddressBusiness {
   init: (userAddrService: IUserAddressService) => void;
-  listAddressByUser: (userId: number) => Promise<BusinessResult<UserAddressInfo[]>>;
-  getAddressByChain: (userId: number, chainId: ChainEnum) => Promise<BusinessResult<UserAddressInfo>>;
+  listAddressByUser: () => Promise<BusinessResult<UserAddressInfo[]>>;
+  getAddressByChain: (chainId: ChainEnum) => Promise<BusinessResult<UserAddressInfo>>;
   addOrChangeAddress: (userId: number, chainId: ChainEnum, address: string) => Promise<BusinessResult<boolean>>;
-  removeAddress: (userId: number, chainId: ChainEnum) => Promise<BusinessResult<boolean>>;
+  removeAddress: (chainId: ChainEnum) => Promise<BusinessResult<boolean>>;
 }

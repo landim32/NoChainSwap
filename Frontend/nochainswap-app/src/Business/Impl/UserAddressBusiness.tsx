@@ -1,9 +1,11 @@
 import BusinessResult from "../../DTO/Business/BusinessResult";
+import AuthSession from "../../DTO/Domain/AuthSession";
 import UserAddressInfo from "../../DTO/Domain/UserAddressInfo";
 import UserInfo from "../../DTO/Domain/UserInfo";
 import { ChainEnum } from "../../DTO/Enum/ChainEnum";
 import IUserAddressService from "../../Services/Interfaces/IUserAddressService";
 import IUserService from "../../Services/Interfaces/IUserService";
+import AuthFactory from "../Factory/AuthFactory";
 import IUserAddressBusiness from "../Interfaces/IUserAddressBusiness";
 import IUserBusiness from "../Interfaces/IUserBusiness";
 
@@ -13,10 +15,18 @@ const UserAddressBusiness : IUserAddressBusiness = {
   init: function (userAddrService: IUserAddressService): void {
     _userAddrService = userAddrService;
   },
-  listAddressByUser: async (userId: number) => {
+  listAddressByUser: async () => {
     try {
         let ret: BusinessResult<UserAddressInfo[]>;
-        let retServ = await _userAddrService.listAddressByUser(userId);
+        let session: AuthSession = AuthFactory.AuthBusiness.getSession();
+        if (!session) {
+          return {
+            ...ret,
+            sucesso: false,
+            mensagem: "Not logged"
+          };
+        }
+        let retServ = await _userAddrService.listAddressByUser(session.token);
         if (retServ.sucesso) {
           return {
             ...ret,
@@ -34,10 +44,18 @@ const UserAddressBusiness : IUserAddressBusiness = {
         throw new Error("Failed to get user by address");
       }
   },
-  getAddressByChain: async (userId: number, chainId: ChainEnum) => {
+  getAddressByChain: async (chainId: ChainEnum) => {
     try {
         let ret: BusinessResult<UserAddressInfo>;
-        let retServ = await _userAddrService.getAddressByChain(userId, chainId);
+        let session: AuthSession = AuthFactory.AuthBusiness.getSession();
+        if (!session) {
+          return {
+            ...ret,
+            sucesso: false,
+            mensagem: "Not logged"
+          };
+        }
+        let retServ = await _userAddrService.getAddressByChain(chainId, session.token);
         if (retServ.sucesso) {
           return {
             ...ret,
@@ -76,10 +94,18 @@ const UserAddressBusiness : IUserAddressBusiness = {
         throw new Error("Failed to get user by address");
       }
   },
-  removeAddress: async (userId: number, chainId: ChainEnum) =>  {
+  removeAddress: async (chainId: ChainEnum) =>  {
     try {
         let ret: BusinessResult<boolean>;
-        let retServ = await _userAddrService.removeAddress(userId, chainId);
+        let session: AuthSession = AuthFactory.AuthBusiness.getSession();
+        if (!session) {
+          return {
+            ...ret,
+            sucesso: false,
+            mensagem: "Not logged"
+          };
+        }
+        let retServ = await _userAddrService.removeAddress(chainId, session.token);
         if (retServ.sucesso) {
           return {
             ...ret,

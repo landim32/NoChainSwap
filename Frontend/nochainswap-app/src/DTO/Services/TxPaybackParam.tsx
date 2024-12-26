@@ -1,5 +1,5 @@
 export default interface TxPaybackParam {
-    txId: number,
-    receiverTxId: string,
-    receiverFee: number
-  }
+  txId: number,
+  receiverTxId: string,
+  receiverFee: number
+}

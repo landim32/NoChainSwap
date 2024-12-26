@@ -13,6 +13,8 @@ using NoChainSwap.Domain.Interfaces.Models;
 using NoChainSwap.DTO.Domain;
 using NoChainSwap.Domain.Impl.Services;
 using System.Runtime.CompilerServices;
+using DB.Infra.Context;
+using NoChainSwap.Domain.Interfaces.Factory;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -24,10 +26,12 @@ namespace NoChainSwap.API.Controllers
     {
 
         private readonly IUserService _userService;
+        private readonly IUserDomainFactory _userFactory;
 
-        public UserController(IUserService userService)
+        public UserController(IUserService userService, IUserDomainFactory userFactory)
         {
             _userService = userService;
+            _userFactory = userFactory;
         }
 
         private UserInfo ModelToInfo(IUserModel md)
@@ -44,12 +48,65 @@ namespace NoChainSwap.API.Controllers
             return user;
         }
 
-        [HttpGet("getbyid/{userId}")]
-        public ActionResult<UserResult> GetById(long userId)
+        [HttpGet("gettokenunauthorized/{chainId}/{address}")]
+        public ActionResult<UserTokenResult> GetTokenUnauthorized(int chainId, string address)
         {
             try
             {
-                var user = _userService.GetUserByID(userId);
+                var user = _userService.GetUserByAddress((ChainEnum) chainId, address);
+                if (user == null)
+                {
+                    return new UserTokenResult() { Sucesso = false, Mensagem = "User Not Found" };
+                }
+                if (user.IsAdmin)
+                {
+                    return new UserTokenResult() { Sucesso = false, Mensagem = "Cant get token for admin" };
+                }
+
+                return new UserTokenResult()
+                {
+                    Token = user.GenerateNewToken(_userFactory)
+                };
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPost("gettokenauthorized")]
+        public ActionResult<UserTokenResult> GetTokenAuthorized([FromBody] LoginParam login)
+        {
+            try
+            {
+                var user = _userService.LoginWithEmail(login.Email, login.Password);
+                if (user == null)
+                {
+                    return new UserTokenResult() {Sucesso = false, Mensagem = "Email or password is wrong" };
+                }
+                return new UserTokenResult()
+                {
+                    Token = user.GenerateNewToken(_userFactory)
+                };
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpGet("getme")]
+        [Authorize]
+        public ActionResult<UserResult> GetMe()
+        {
+            try
+            {
+                var userSession = _userService.GetUserInSession(HttpContext);
+                if (userSession == null)
+                {
+                    return StatusCode(401, "Not Authorized");
+                }
+                var user = _userService.GetUserByID(userSession.Id);
                 if (user == null)
                 {
                     return new UserResult() { User = null, Sucesso = false, Mensagem = "User Not Found" };
@@ -110,7 +167,7 @@ namespace NoChainSwap.API.Controllers
         }
 
         [HttpPost("insert")]
-        public ActionResult<UserResult> Insert(UserParam param)
+        public ActionResult<UserResult> Insert([FromBody] UserParam param)
         {
             try
             {
@@ -136,18 +193,24 @@ namespace NoChainSwap.API.Controllers
             }
         }
 
+        [Authorize]
         [HttpPost("update")]
-        //[Authorize]
         public ActionResult<UserResult> Update(UserParam param)
         {
             try
             {
-
-                //var userSession = _userService.GetUserInSession(HttpContext);
                 if (param == null)
                 {
-                    //return StatusCode(401, "Not Authorized");
                     return new UserResult() { User = null, Sucesso = false, Mensagem = "User is empty" };
+                }
+                var userSession = _userService.GetUserInSession(HttpContext);
+                if (userSession == null)
+                {
+                    return StatusCode(401, "Not Authorized");
+                }
+                if (userSession.Id != param.Id)
+                {
+                    throw new Exception("Only can update your user");
                 }
 
                 var user = _userService.Update(new UserInfo
@@ -188,14 +251,25 @@ namespace NoChainSwap.API.Controllers
             }
         }
 
-        [HttpGet("haspassword/{userId}")]
-        public ActionResult<StatusResult> HasPassword(long userId)
+        [Authorize]
+        [HttpGet("haspassword")]
+        public ActionResult<StatusResult> HasPassword()
         {
             try
             {
+                var userSession = _userService.GetUserInSession(HttpContext);
+                if (userSession == null)
+                {
+                    return StatusCode(401, "Not Authorized");
+                }
+                var user = _userService.GetUserByID(userSession.Id);
+                if (user == null)
+                {
+                    return new UserResult() { User = null, Sucesso = false, Mensagem = "User Not Found" };
+                }
                 return new StatusResult
                 {
-                    Sucesso = _userService.HasPassword(userId),
+                    Sucesso = _userService.HasPassword(user.Id),
                     Mensagem = "Password verify successfully"
                 };
             }
@@ -205,17 +279,23 @@ namespace NoChainSwap.API.Controllers
             }
         }
 
+        [Authorize]
         [HttpPost("changepassword")]
         public ActionResult<StatusResult> ChangePassword([FromBody]ChangePasswordParam param)
         {
             try
             {
-                var user = _userService.GetUserByID(param.UserId);
+                var userSession = _userService.GetUserInSession(HttpContext);
+                if (userSession == null)
+                {
+                    return StatusCode(401, "Not Authorized");
+                }
+                var user = _userService.GetUserByID(userSession.Id);
                 if (user == null)
                 {
                     return new UserResult() { User = null, Sucesso = false, Mensagem = "Email or password is wrong" };
                 }
-                _userService.ChangePassword(param.UserId, param.OldPassword, param.NewPassword);
+                _userService.ChangePassword(user.Id, param.OldPassword, param.NewPassword);
                 return new StatusResult
                 {
                     Sucesso = true,

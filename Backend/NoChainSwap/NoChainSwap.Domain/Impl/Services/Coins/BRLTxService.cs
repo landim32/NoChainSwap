@@ -18,11 +18,15 @@ using System.Threading.Tasks;
 namespace NoChainSwap.Domain.Impl.Services.Coins
 {
 
-    public class BRLTxService : CoinTxService, IBRLTxService
+    public class BRLTxService : IBRLTxService
     {
         private const string CHAVE_PIX =
             "00020126360014BR.GOV.BCB.PIX0114+55619987525885204000053039865802BR5923" +
             "RODRIGO LANDIM CARNEIRO6008BRASILIA622605224FxfGt3HNLyWnYNzHFy6wZ6304F090";
+
+        protected readonly ICoinMarketCapService _coinMarketCapService;
+        protected readonly ITransactionDomainFactory _txFactory;
+        protected readonly ITransactionLogDomainFactory _txLogFactory;
 
         public BRLTxService(ICoinMarketCapService coinMarketCapService, ITransactionDomainFactory txFactory, ITransactionLogDomainFactory txLogFactory)
         {
@@ -30,70 +34,81 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
             _txFactory = txFactory;
             _txLogFactory = txLogFactory;
         }
-
-        public override string ConvertToString(decimal coin)
+        public bool IsPaybackAutomatic()
         {
-            return (coin / 100000000M).ToString("N2");
+            return false;
         }
 
-        public override string GetAddressUrl(string address)
+        public string ConvertToString(decimal coin)
+        {
+            return "R$ " + (coin / 100000000M).ToString("N2");
+        }
+
+        public string GetAddressUrl(string address)
         {
             return "";
         }
 
-        public override CoinEnum GetCoin()
+        public CoinEnum GetCoin()
         {
             return CoinEnum.BRL;
         }
 
-        public override Task<int> GetFee(string txid)
+        public Task<TxResumeInfo> GetResumeTransaction(string txId)
         {
-            return Task.FromResult(0);
+            return Task.FromResult(new TxResumeInfo());
         }
 
-        public override Task<string> GetNewAddress(int index)
+        public Task<string> GetNewAddress(int index)
         {
             return Task<string>.FromResult(CHAVE_PIX);
         }
 
-        public override Task<string> GetPoolAddress()
+        public Task<string> GetPoolAddress()
         {
             return Task<string>.FromResult("");
         }
 
-        public override Task<long> GetPoolBalance()
+        public Task<long> GetPoolBalance()
         {
             return Task<long>.FromResult<long>(0);
         }
 
-        public override Task<long> GetSenderAmount(string txid, string senderAddr)
+        /*
+        public string GetSwapDescription(decimal proportion)
         {
-            return Task<long>.FromResult<long>(0);
+            return "";
         }
+        */
 
-        public override string GetSwapDescription(decimal proportion)
+        public string GetTransactionUrl(string txId)
         {
             return "";
         }
 
-        public override string GetTransactionUrl(string txId)
-        {
-            return "";
-        }
-
-        public override Task<bool> IsTransactionSuccessful(string txid)
-        {
-            return Task<bool>.FromResult<bool>(false);
-        }
-
-        public override Task<string> Transfer(string address, long amount)
+        public Task<string> Transfer(string address, long amount)
         {
             return Task<string>.FromResult<string>("");
         }
 
-        public override Task<bool> VerifyTransaction(ITransactionModel tx)
+        public Task<bool> VerifyTransaction(ITransactionModel tx)
         {
             return Task<bool>.FromResult<bool>(true);
+        }
+
+        public Task<IList<TxDetectedInfo>> DetectNewTransactions(IList<string> addresses)
+        {
+            return Task.FromResult<IList<TxDetectedInfo>>(new List<TxDetectedInfo>());
+        }
+
+        public void AddLog(long txId, string msg, LogTypeEnum t, ITransactionLogDomainFactory txLogFactory)
+        {
+            var md = txLogFactory.BuildTransactionLogModel();
+            md.TxId = txId;
+            md.Date = DateTime.Now;
+            md.LogType = t;
+            md.Message = msg;
+            md.Insert();
         }
     }
 }

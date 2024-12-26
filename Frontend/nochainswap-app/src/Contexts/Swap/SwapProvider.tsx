@@ -231,7 +231,7 @@ export default function SwapProvider(props: any) {
         let user: UserInfo;
         let authSession = AuthFactory.AuthBusiness.getSession();
         if (authSession && authSession.id) {
-            let userRet = await UserFactory.UserBusiness.getUserById(authSession.id);
+            let userRet = await UserFactory.UserBusiness.getMe();
             if (userRet.sucesso) {
                 user = userRet.dataResult;
                 if (email && !user.email) {

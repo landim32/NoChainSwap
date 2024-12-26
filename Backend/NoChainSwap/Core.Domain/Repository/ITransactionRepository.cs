@@ -10,6 +10,7 @@ namespace Core.Domain.Repository
     {
         TModel SaveTx(TModel model);
         TModel GetBySenderAddr(string senderAddr, TFactory factory);
+        TModel GetByRecipientAddr(string recipientAddr, TFactory factory);
         TModel GetById(long txId, TFactory factory);
         TModel GetByHash(string hash, TFactory factory);
         TModel UpdateTx(TModel model);
@@ -19,5 +20,6 @@ namespace Core.Domain.Repository
         IEnumerable<TModel> ListByStatus(IList<int> status, TFactory factory);
         IEnumerable<TModel> ListAll(TFactory factory);
         IEnumerable<TModel> ListByUser(long userId, TFactory factory);
+        IEnumerable<TModel> ListToDetect(TFactory factory);
     }
 }

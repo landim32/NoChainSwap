@@ -20,6 +20,8 @@ namespace NoChainSwap.Domain.Interfaces.Models
         IUserModel GetByAddress(ChainEnum chain, string address, IUserDomainFactory factory);
         IUserModel GetByEmail(string email, IUserDomainFactory factory);
         IUserModel GetById(long userId, IUserDomainFactory factory);
+        IUserModel GetByToken(string token, IUserDomainFactory factory);
+        string GenerateNewToken(IUserDomainFactory factory);
         IUserModel GetByRecoveryHash(string recoveryHash, IUserDomainFactory factory);
         IEnumerable<IUserModel> ListAllUsers(IUserDomainFactory factory);
         IUserModel LoginWithEmail(string email, string password, IUserDomainFactory factory);

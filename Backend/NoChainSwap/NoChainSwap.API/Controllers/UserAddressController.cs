@@ -42,12 +42,19 @@ namespace NoChainSwap.API.Controllers
             return userAddr;
         }
 
-        [HttpGet("listaddressbyuser/{userId}")]
-        public ActionResult<UserAddressListResult> ListAddressByUser(long userId)
+        [Authorize]
+        [HttpGet("listaddressbyuser")]
+        public ActionResult<UserAddressListResult> ListAddressByUser()
         {
             try
             {
-                var userAddrs = _userService.ListAddressByUser(userId);
+                var userSession = _userService.GetUserInSession(HttpContext);
+                if (userSession == null)
+                {
+                    return StatusCode(401, "Not Authorized");
+                }
+
+                var userAddrs = _userService.ListAddressByUser(userSession.Id);
                 if (userAddrs == null)
                 {
                     return new UserAddressListResult() { UserAddresses = null, Sucesso = false, Mensagem = "User Addresses Not Found" };
@@ -63,12 +70,19 @@ namespace NoChainSwap.API.Controllers
             }
         }
 
-        [HttpGet("getaddressbychain/{userId}/{chainId}")]
-        public ActionResult<UserAddressResult> ListAddressByUser(long userId, int chainId)
+        [Authorize]
+        [HttpGet("getaddressbychain/{chainId}")]
+        public ActionResult<UserAddressResult> ListAddressByUser(int chainId)
         {
             try
             {
-                var userAddr = _userService.GetAddressByChain(userId, (ChainEnum)chainId);
+                var userSession = _userService.GetUserInSession(HttpContext);
+                if (userSession == null)
+                {
+                    return StatusCode(401, "Not Authorized");
+                }
+
+                var userAddr = _userService.GetAddressByChain(userSession.Id, (ChainEnum)chainId);
                 if (userAddr == null)
                 {
                     return new UserAddressResult() { UserAddress = null, Sucesso = false, Mensagem = "User Addresses Not Found" };
@@ -102,12 +116,19 @@ namespace NoChainSwap.API.Controllers
             }
         }
 
-        [HttpGet("removeaddress/{userId}/{chainId}")]
-        public ActionResult<StatusResult> RemoveAddress(long userId, int chainId)
+        [Authorize]
+        [HttpGet("removeaddress/{chainId}")]
+        public ActionResult<StatusResult> RemoveAddress(int chainId)
         {
             try
             {
-                _userService.RemoveAddress(userId, (ChainEnum)chainId);
+                var userSession = _userService.GetUserInSession(HttpContext);
+                if (userSession == null)
+                {
+                    return StatusCode(401, "Not Authorized");
+                }
+
+                _userService.RemoveAddress(userSession.Id, (ChainEnum)chainId);
                 return new StatusResult
                 {
                     Sucesso = true,

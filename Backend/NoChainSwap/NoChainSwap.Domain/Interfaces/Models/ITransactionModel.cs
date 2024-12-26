@@ -27,8 +27,8 @@ namespace NoChainSwap.Domain.Interfaces.Models
         TransactionStatusEnum Status { get; set; }
         string SenderTxid { get; set; }
         string ReceiverTxid { get; set; }
-        int? SenderFee { get; set; }
-        int? ReceiverFee { get; set; }
+        long? SenderFee { get; set; }
+        long? ReceiverFee { get; set; }
         long SenderAmount { get; set; }
         long ReceiverAmount { get; set; }
 
@@ -39,6 +39,7 @@ namespace NoChainSwap.Domain.Interfaces.Models
         ITransactionModel Save();
         ITransactionModel Update();
         ITransactionModel GetBySenderAddr(string senderAddr, ITransactionDomainFactory factory);
+        ITransactionModel GetByRecipientAddr(string recipientAddr, ITransactionDomainFactory factory);
         ITransactionModel GetById(long txId, ITransactionDomainFactory factory);
         ITransactionModel GetByHash(string hash, ITransactionDomainFactory factory);
         ITransactionModel GetBySenderTxId(string txid, ITransactionDomainFactory factory);
@@ -46,5 +47,7 @@ namespace NoChainSwap.Domain.Interfaces.Models
         IEnumerable<ITransactionModel> ListByAddress(string address, ITransactionDomainFactory factory);
         IEnumerable<ITransactionModel> ListByStatus(IList<int> status, ITransactionDomainFactory factory);
         IEnumerable<ITransactionModel> ListAll(ITransactionDomainFactory factory);
+        IEnumerable<ITransactionModel> ListByUser(long userId, ITransactionDomainFactory factory);
+        IEnumerable<ITransactionModel> ListToDetect(ITransactionDomainFactory factory);
     }
 }

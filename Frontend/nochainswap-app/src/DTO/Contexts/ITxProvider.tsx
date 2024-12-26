@@ -27,7 +27,9 @@ interface ITxProvider {
     loadListMyTx: () => Promise<ProviderResult>;
     loadTxLogs: (txid: number) => Promise<ProviderResult>;
     reloadTx: () => Promise<ProviderResult>;
+    payTx: () => Promise<ProviderResult>;
     paybackTx: () => Promise<ProviderResult>;
+    confirmTx: () => Promise<ProviderResult>;
 }
 
 export default ITxProvider;

@@ -21,6 +21,7 @@ namespace NoChainSwap.Domain.Impl.Models
 
         public long Id { get; set; }
         public string Hash { get; set; }
+        public string Token { get; set; }
         public string Name { get; set; }
         public string Email { get; set; }
         public bool IsAdmin { get; set; }
@@ -43,6 +44,17 @@ namespace NoChainSwap.Domain.Impl.Models
             return _repositoryUser.GetById(userId, factory);
         }
 
+        public IUserModel GetByToken(string token, IUserDomainFactory factory)
+        {
+            return _repositoryUser.GetByToken(token, factory);
+        }
+
+        public string GenerateNewToken(IUserDomainFactory factory)
+        {
+            var token = CreateMD5(Guid.NewGuid().ToString());
+            _repositoryUser.UpdateToken(this.Id, token);
+            return token;
+        }
 
         public IUserModel Save(IUserDomainFactory factory)
         {

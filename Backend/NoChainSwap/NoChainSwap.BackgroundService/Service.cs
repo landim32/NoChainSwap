@@ -32,6 +32,7 @@ namespace NoChainSwapBackgroundService
 
                 if (now > _nextRun)
                 {
+                    await _gwScheduleTask.DetectNewTransactions();
                     await _gwScheduleTask.ProccessAllTransactions();
                     _nextRun = _schedule.GetNextOccurrence(DateTime.UtcNow);
                 }

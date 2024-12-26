@@ -1,7 +1,9 @@
 import BusinessResult from "../../DTO/Business/BusinessResult";
+import AuthSession from "../../DTO/Domain/AuthSession";
 import UserInfo from "../../DTO/Domain/UserInfo";
 import { ChainEnum } from "../../DTO/Enum/ChainEnum";
 import IUserService from "../../Services/Interfaces/IUserService";
+import AuthFactory from "../Factory/AuthFactory";
 import IUserBusiness from "../Interfaces/IUserBusiness";
 
 let _userService: IUserService;
@@ -10,10 +12,18 @@ const UserBusiness: IUserBusiness = {
   init: function (userService: IUserService): void {
     _userService = userService;
   },
-  getUserById: async (userId: number) => {
+  getMe: async () => {
     try {
       let ret: BusinessResult<UserInfo>;
-      let retServ = await _userService.getUserById(userId);
+      let session: AuthSession = AuthFactory.AuthBusiness.getSession();
+      if (!session) {
+        return {
+          ...ret,
+          sucesso: false,
+          mensagem: "Not logged"
+        };
+      }
+      let retServ = await _userService.getMe(session.token);
       if (retServ.sucesso) {
         return {
           ...ret,
@@ -73,6 +83,40 @@ const UserBusiness: IUserBusiness = {
       throw new Error("Failed to get user by email");
     }
   },
+  getTokenUnauthorized: async (chainId: ChainEnum, address: string) => {
+    let ret: BusinessResult<string>;
+    let retServ = await _userService.getTokenUnauthorized(chainId, address);
+    if (retServ.sucesso) {
+      return {
+        ...ret,
+        dataResult: retServ.token,
+        sucesso: true
+      };
+    } else {
+      return {
+        ...ret,
+        sucesso: false,
+        mensagem: retServ.mensagem
+      };
+    }
+  },
+  getTokenAuthorized: async (email: string, password: string) => {
+    let ret: BusinessResult<string>;
+    let retServ = await _userService.getTokenAuthorized(email, password);
+    if (retServ.sucesso) {
+      return {
+        ...ret,
+        dataResult: retServ.token,
+        sucesso: true
+      };
+    } else {
+      return {
+        ...ret,
+        sucesso: false,
+        mensagem: retServ.mensagem
+      };
+    }
+  },
   insert: async (user: UserInfo) => {
     try {
       let ret: BusinessResult<UserInfo>;
@@ -97,7 +141,15 @@ const UserBusiness: IUserBusiness = {
   update: async (user: UserInfo) => {
     try {
       let ret: BusinessResult<UserInfo>;
-      let retServ = await _userService.update(user);
+      let session: AuthSession = AuthFactory.AuthBusiness.getSession();
+      if (!session) {
+        return {
+          ...ret,
+          sucesso: false,
+          mensagem: "Not logged"
+        };
+      }
+      let retServ = await _userService.update(user, session.token);
       if (retServ.sucesso) {
         return {
           ...ret,
@@ -136,10 +188,18 @@ const UserBusiness: IUserBusiness = {
       throw new Error("Failed to login with email");
     }
   },
-  hasPassword: async (userId: number) => {
+  hasPassword: async () => {
     try {
       let ret: BusinessResult<boolean>;
-      let retServ = await _userService.hasPassword(userId);
+      let session: AuthSession = AuthFactory.AuthBusiness.getSession();
+      if (!session) {
+        return {
+          ...ret,
+          sucesso: false,
+          mensagem: "Not logged"
+        };
+      }
+      let retServ = await _userService.hasPassword(session.token);
       if (retServ.sucesso) {
         return {
           ...ret,
@@ -157,9 +217,17 @@ const UserBusiness: IUserBusiness = {
       throw new Error("Failed to change password");
     }
   },
-  changePassword: async (userId: number, oldPassword: string, newPassword: string) => {
+  changePassword: async (oldPassword: string, newPassword: string) => {
     let ret: BusinessResult<boolean>;
-    let retServ = await _userService.changePassword(userId, oldPassword, newPassword);
+    let session: AuthSession = AuthFactory.AuthBusiness.getSession();
+    if (!session) {
+      return {
+        ...ret,
+        sucesso: false,
+        mensagem: "Not logged"
+      };
+    }
+    let retServ = await _userService.changePassword(oldPassword, newPassword, session.token);
     if (retServ.sucesso) {
       return {
         ...ret,

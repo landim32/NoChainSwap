@@ -2,6 +2,7 @@ import UserAddressInfo from "../Domain/UserAddressInfo";
 import UserInfo from "../Domain/UserInfo";
 import { ChainEnum } from "../Enum/ChainEnum";
 import ProviderResult from "./ProviderResult";
+import { UserAddrProvideResult } from "./UserAddrProviderResult";
 
 
 interface IUserProvider {
@@ -12,24 +13,26 @@ interface IUserProvider {
     loadingUpdateAddr: boolean;
     userHasPassword: boolean;
     user: UserInfo;
-    userAddresses: UserAddressInfo[]
+    userAddress: UserAddressInfo;
+    userAddresses: UserAddressInfo[];
 
     setUser: (user: UserInfo) => void;
-    getUserById: (userId: number) => Promise<ProviderResult>;
+    getMe: () => Promise<ProviderResult>;
     getUserByAddress: (chain: ChainEnum, address: string) => Promise<ProviderResult>;
     getUserByEmail: (email: string) => Promise<ProviderResult>;
     insert: (user: UserInfo) => Promise<ProviderResult>;
     update: (user: UserInfo) => Promise<ProviderResult>;
     loginWithEmail: (email: string, password: string) => Promise<ProviderResult>;
 
-    hasPassword: (userId: number) => Promise<ProviderResult>;
-    changePassword: (userId: number, oldPassword: string, newPassword: string) => Promise<ProviderResult>;
+    hasPassword: () => Promise<ProviderResult>;
+    changePassword: (oldPassword: string, newPassword: string) => Promise<ProviderResult>;
     sendRecoveryEmail: (email: string) => Promise<ProviderResult>;
     changePasswordUsingHash: (recoveryHash: string, newPassword: string) => Promise<ProviderResult>; 
 
-    listAddressByUser: (userId: number) => Promise<ProviderResult>;
+    listAddressByUser: () => Promise<ProviderResult>;
     addOrChangeAddress: (userId: number, chainId: number, address: string) => Promise<ProviderResult>;
-    removeAddress: (userId: number, chainId: number) => Promise<ProviderResult>;
+    removeAddress: (chainId: number) => Promise<ProviderResult>;
+    getAddressByChain: (chainId: number) => Promise<UserAddrProvideResult>;
 }
 
 export default IUserProvider;

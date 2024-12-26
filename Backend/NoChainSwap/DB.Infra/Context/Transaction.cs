@@ -21,9 +21,9 @@ public partial class Transaction
 
     public string ReceiverTxid { get; set; }
 
-    public int? SenderFee { get; set; }
+    public long? SenderFee { get; set; }
 
-    public int? ReceiverFee { get; set; }
+    public long? ReceiverFee { get; set; }
 
     public long SenderAmount { get; set; }
 

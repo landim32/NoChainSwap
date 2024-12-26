@@ -52,6 +52,8 @@ namespace NoChainSwap.API.DTO
         public string SenderAmount { get; set; }
         [JsonPropertyName("receiveramount")]
         public string ReceiverAmount { get; set; }
+        [JsonPropertyName("senderamountvalue")]
+        public long SenderAmountValue { get; set; }
         [JsonPropertyName("receiverpayback")]
         public long ReceiverPayback { get; set; }
     }

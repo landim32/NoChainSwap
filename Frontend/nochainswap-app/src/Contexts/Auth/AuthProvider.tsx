@@ -35,31 +35,44 @@ export default function AuthProvider(props: any) {
       let ret: Promise<ProviderResult>;
       setLoading(true);
       try {
-        let brt = await UserFactory.UserBusiness.loginWithEmail(email, password);
-        if (brt.sucesso) {
-          setLoading(false);
-          authProviderValue.setSession({
-            ...sessionInfo,
-            id: brt.dataResult.id,
-            hash: brt.dataResult.hash,
-            name: brt.dataResult.name,
-            email: brt.dataResult.email,
-            loginWith: SignInEnum.Email,
-            chain: chain,
-            address: ""
-          });
-          return {
-            ...ret,
-            sucesso: true,
-            mensagemSucesso: "User Logged"
-          };
+        let retLog = await UserFactory.UserBusiness.loginWithEmail(email, password);
+        if (retLog.sucesso) {
+          let retTok = await UserFactory.UserBusiness.getTokenAuthorized(email, password);
+          if (retTok.sucesso) {
+            authProviderValue.setSession({
+              ...sessionInfo,
+              id: retLog.dataResult.id,
+              hash: retLog.dataResult.hash,
+              token: retTok.dataResult,
+              isAdmin: retLog.dataResult.isAdmin,
+              name: retLog.dataResult.name,
+              email: retLog.dataResult.email,
+              loginWith: SignInEnum.Email,
+              chain: chain,
+              address: ""
+            });
+            setLoading(false);
+            return {
+              ...ret,
+              sucesso: true,
+              mensagemSucesso: "User Logged"
+            };
+          }
+          else {
+            setLoading(false);
+            return {
+              ...ret,
+              sucesso: false,
+              mensagemErro: retTok.mensagem
+            };
+          }
         }
         else {
           setLoading(false);
           return {
             ...ret,
             sucesso: false,
-            mensagemErro: brt.mensagem
+            mensagemErro: retLog.mensagem
           };
         }
       }
@@ -91,21 +104,34 @@ export default function AuthProvider(props: any) {
       if (retLogin.sucesso) {
         let user = await UserFactory.UserBusiness.getUserByAddress(ChainEnum.BNBChain, retLogin.dataResult);
         if (user.sucesso) {
-          authProviderValue.setSession({
-            ...authSession,
-            id: user.dataResult.id,
-            hash: user.dataResult.hash,
-            name: user.dataResult.name,
-            email: user.dataResult.email,
-            loginWith: SignInEnum.WebWallet,
-            chain: ChainEnum.BNBChain
-          });
-          setLoading(false);
-          return {
-            ...ret,
-            sucesso: true,
-            mensagemSucesso: "Login successfully"
-          };
+          let retTok = await UserFactory.UserBusiness.getTokenUnauthorized(ChainEnum.BNBChain, retLogin.dataResult);
+          if (retTok.sucesso) {
+            authProviderValue.setSession({
+              ...authSession,
+              id: user.dataResult.id,
+              hash: user.dataResult.hash,
+              token: retTok.dataResult,
+              isAdmin: user.dataResult.isAdmin,
+              name: user.dataResult.name,
+              email: user.dataResult.email,
+              loginWith: SignInEnum.WebWallet,
+              chain: ChainEnum.BNBChain
+            });
+            setLoading(false);
+            return {
+              ...ret,
+              sucesso: true,
+              mensagemSucesso: "Login successfully"
+            };
+          }
+          else {
+            setLoading(false);
+            return {
+              ...ret,
+              sucesso: false,
+              mensagemErro: retTok.mensagem
+            };
+          }
         }
         else {
           let userAddr = retLogin.dataResult.substr(0, 6) + '...' + retLogin.dataResult.substr(-4);
@@ -124,22 +150,35 @@ export default function AuthProvider(props: any) {
                 mensagemErro: retAddr.mensagem
               };
             }
-            authProviderValue.setSession({
-              ...authSession,
-              id: newUser.dataResult.id,
-              hash: newUser.dataResult.hash,
-              name: newUser.dataResult.name,
-              email: newUser.dataResult.email,
-              loginWith: SignInEnum.WebWallet,
-              chain: ChainEnum.BNBChain,
-              address: retLogin.dataResult
-            });
-            setLoading(false);
-            return {
-              ...ret,
-              sucesso: true,
-              mensagemSucesso: "Login successfully"
-            };
+            let retTok = await UserFactory.UserBusiness.getTokenUnauthorized(ChainEnum.BNBChain, retLogin.dataResult);
+            if (retTok.sucesso) {
+              authProviderValue.setSession({
+                ...authSession,
+                id: newUser.dataResult.id,
+                hash: newUser.dataResult.hash,
+                token: retTok.dataResult,
+                isAdmin: newUser.dataResult.isAdmin,
+                name: newUser.dataResult.name,
+                email: newUser.dataResult.email,
+                loginWith: SignInEnum.WebWallet,
+                chain: ChainEnum.BNBChain,
+                address: retLogin.dataResult
+              });
+              setLoading(false);
+              return {
+                ...ret,
+                sucesso: true,
+                mensagemSucesso: "Login successfully"
+              };
+            }
+            else {
+              setLoading(false);
+              return {
+                ...ret,
+                sucesso: false,
+                mensagemErro: retTok.mensagem
+              };
+            }
           }
           else {
             setLoading(false);
@@ -180,10 +219,19 @@ export default function AuthProvider(props: any) {
           let session = AuthFactory.AuthBusiness.getSession();
           console.log("session: ", JSON.stringify(session));
           if (session) {
+            if (!session.token) {
+              let retTok = await UserFactory.UserBusiness.getTokenUnauthorized(ChainEnum.BNBChain, session.address);
+              if (!retTok.sucesso) {
+                throw new Error(retTok.mensagem);
+              }
+              session.token = retTok.dataResult;
+            }
             authProviderValue.setSession({
               ...userSession.dataResult,
               id: session.id,
               hash: session.hash,
+              token: session.token,
+              isAdmin: session.isAdmin,
               name: session.name,
               email: session.email,
               loginWith: SignInEnum.WebWallet,
@@ -195,10 +243,16 @@ export default function AuthProvider(props: any) {
             let user = await UserFactory.UserBusiness.getUserByAddress(ChainEnum.BitcoinAndStack, userSession.dataResult.address);
             console.log("user: ", JSON.stringify(user));
             if (user.sucesso) {
+              let retTok = await UserFactory.UserBusiness.getTokenUnauthorized(ChainEnum.BitcoinAndStack, userSession.dataResult.address);
+              if (!retTok.sucesso) {
+                throw new Error(retTok.mensagem);
+              }
               authProviderValue.setSession({
                 ...userSession.dataResult,
                 id: user.dataResult.id,
                 hash: user.dataResult.hash,
+                token: retTok.dataResult,
+                isAdmin: user.dataResult.isAdmin,
                 name: user.dataResult.name,
                 email: user.dataResult.email,
                 loginWith: SignInEnum.WebWallet,
@@ -216,10 +270,16 @@ export default function AuthProvider(props: any) {
                 if (!ret.sucesso) {
                   throw new Error(ret.mensagem);
                 }
+                let retTok = await UserFactory.UserBusiness.getTokenUnauthorized(ChainEnum.BitcoinAndStack, userSession.dataResult.address);
+                if (!retTok.sucesso) {
+                  throw new Error(retTok.mensagem);
+                }
                 authProviderValue.setSession({
                   ...userSession.dataResult,
                   id: newUser.dataResult.id,
                   hash: newUser.dataResult.hash,
+                  token: retTok.dataResult,
+                  isAdmin: newUser.dataResult.isAdmin,
                   name: newUser.dataResult.name,
                   email: newUser.dataResult.email,
                   loginWith: SignInEnum.WebWallet,

@@ -8,7 +8,7 @@ import Table from 'react-bootstrap/Table';
 import InputGroup from 'react-bootstrap/InputGroup';
 import QRCode from "react-qr-code";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCancel, faClipboard, faDollar, faRefresh } from '@fortawesome/free-solid-svg-icons';
+import { faCancel, faClipboard, faDollar, faDollarSign, faRefresh } from '@fortawesome/free-solid-svg-icons';
 import { useContext, useEffect, useState } from 'react';
 import TxContext from '../../Contexts/Transaction/TxContext';
 import { useParams } from 'react-router-dom';
@@ -21,6 +21,7 @@ import DropdownButton from 'react-bootstrap/DropdownButton';
 import Dropdown from 'react-bootstrap/Dropdown';
 import { TransactionStatusEnum } from '../../DTO/Enum/TransactionStatusEnum';
 import { CoinEnum } from '../../DTO/Enum/CoinEnum';
+import AuthContext from '../../Contexts/Auth/AuthContext';
 
 export default function TxPage() {
 
@@ -34,6 +35,7 @@ export default function TxPage() {
 
     const [showConfirmation, setShowConfirmation] = useState<boolean>(false);
 
+    const authContext = useContext(AuthContext);
     const txContext = useContext(TxContext);
 
     const throwError = (message: string) => {
@@ -101,72 +103,87 @@ export default function TxPage() {
                     <Col md="12">
                         <Card className='shadow'>
                             <Card.Body>
-                                <div className='text-end'>
-                                    <ButtonGroup>
-                                        {(txContext.txInfo?.status == TransactionStatusEnum.WaitingSenderPayment ||
-                                            txContext.txInfo?.status == TransactionStatusEnum.SenderConfirmed) &&
-                                            <>
-                                                {txContext.txInfo?.receivercoin == 'usdt' &&
+                                {authContext.sessionInfo?.isAdmin &&
+                                    <div className='text-end'>
+                                        <ButtonGroup>
+                                            {(txContext.txInfo?.status == TransactionStatusEnum.WaitingSenderPayment ||
+                                                txContext.txInfo?.status == TransactionStatusEnum.SenderConfirmed) &&
+                                                <>
+                                                    {txContext.txInfo?.receivercoin == 'usdt' &&
+                                                        <Button variant="success" disabled={txContext.loadingPay} onClick={async (e) => {
+                                                            e.preventDefault();
+                                                            let ret = await txContext.paybackTx();
+                                                            if (ret.sucesso) {
+                                                                showSuccessMessage("Payback successfully!");
+                                                                loadTxHandler();
+                                                            }
+                                                            else {
+                                                                throwError(ret.mensagemErro);
+                                                            }
+                                                        }}><FontAwesomeIcon icon={faDollar} fixedWidth /> {
+                                                                txContext.loadingPay ?
+                                                                    "Loading..." :
+                                                                    "Payback (" + (txContext.txInfo?.receiverpayback / 100000000).toFixed(5) + ")"
+                                                            }</Button>
+                                                    }
+                                                </>
+                                            }
+                                            {(
+                                                txContext.txInfo?.status == TransactionStatusEnum.WaitingSenderPayment ||
+                                                txContext.txInfo?.status == TransactionStatusEnum.SenderNotConfirmed ||
+                                                txContext.txInfo?.status == TransactionStatusEnum.SenderConfirmed ||
+                                                txContext.txInfo?.status == TransactionStatusEnum.SenderConfirmedReiceiverNotConfirmed ||
+                                                txContext.txInfo?.status == TransactionStatusEnum.SenderConfirmedReiceiverPaymentWaiting
+                                            ) &&
                                                 <Button variant="success" disabled={txContext.loadingPay} onClick={async (e) => {
                                                     e.preventDefault();
-                                                    let ret = await txContext.paybackTx();
+                                                    let ret = await txContext.confirmTx();
                                                     if (ret.sucesso) {
-                                                        showSuccessMessage("Payback successfully!");
+                                                        showSuccessMessage(ret.mensagemSucesso);
                                                         loadTxHandler();
                                                     }
                                                     else {
                                                         throwError(ret.mensagemErro);
                                                     }
-                                                }}><FontAwesomeIcon icon={faDollar} fixedWidth /> {
-                                                        txContext.loadingPay ?
-                                                            "Loading..." :
-                                                            "Payback (" + (txContext.txInfo?.receiverpayback / 100000000).toFixed(5) + ")"
-                                                    }</Button>
-                                                }
-                                            </>
-
-                                        }
-                                        {txContext.txInfo?.status == TransactionStatusEnum.WaitingSenderPayment &&
-                                                   <Button variant="success" onClick={(e) => {
-                                                    e.preventDefault();
-                                                    changeStatusHandle(TransactionStatusEnum.SenderConfirmed, "Sender payment confirmed");
                                                 }}>
-                                                    <FontAwesomeIcon icon={faDollar} fixedWidth /> Confirm Payment
+                                                    <FontAwesomeIcon icon={faDollar} fixedWidth />&nbsp;
+                                                    {txContext.loadingPay ? "Loading..." : "Confirm Payment"}
                                                 </Button>
-                                        }
-                                        <Button variant="danger" onClick={(e) => {
-                                            e.preventDefault();
-                                            changeStatusHandle(TransactionStatusEnum.Initialized, "Revert All by User");
-                                        }}>Revert All</Button>
-                                        {(txContext.txInfo?.status == TransactionStatusEnum.CriticalError ||
-                                            txContext.txInfo?.status == TransactionStatusEnum.InvalidInformation) &&
-                                            <>
-                                                <Button variant="danger" onClick={(e) => {
-                                                    e.preventDefault();
-                                                    changeStatusHandle(TransactionStatusEnum.WaitingSenderPayment, "Revert to 'Waiting to payment'");
-                                                }}>Revert to "Wait Sender Payment"</Button>
-                                            </>
-                                        }
-                                        <Button variant="secondary" onClick={async (e) => {
-                                            e.preventDefault();
-                                            let ret = await txContext.reloadTx();
-                                            console.log("ret: ", JSON.stringify(ret));
-                                            if (!ret.sucesso) {
-                                                throwError(ret.mensagemErro);
                                             }
-                                        }}>
-                                            <FontAwesomeIcon icon={faRefresh} fixedWidth />
-                                        </Button>
-                                        {txContext.txInfo?.status != TransactionStatusEnum.Finished &&
                                             <Button variant="danger" onClick={(e) => {
                                                 e.preventDefault();
-                                                changeStatusHandle(TransactionStatusEnum.Canceled, "Transaction canceled by admin");
+                                                changeStatusHandle(TransactionStatusEnum.Initialized, "Revert All by User");
+                                            }}>Revert All</Button>
+                                            {(txContext.txInfo?.status == TransactionStatusEnum.CriticalError ||
+                                                txContext.txInfo?.status == TransactionStatusEnum.InvalidInformation) &&
+                                                <>
+                                                    <Button variant="danger" onClick={(e) => {
+                                                        e.preventDefault();
+                                                        changeStatusHandle(TransactionStatusEnum.WaitingSenderPayment, "Revert to 'Waiting to payment'");
+                                                    }}>Revert to "Wait Sender Payment"</Button>
+                                                </>
+                                            }
+                                            <Button variant="secondary" onClick={async (e) => {
+                                                e.preventDefault();
+                                                let ret = await txContext.reloadTx();
+                                                console.log("ret: ", JSON.stringify(ret));
+                                                if (!ret.sucesso) {
+                                                    throwError(ret.mensagemErro);
+                                                }
                                             }}>
-                                                <FontAwesomeIcon icon={faCancel} fixedWidth />
+                                                <FontAwesomeIcon icon={faRefresh} fixedWidth />
                                             </Button>
-                                        }
-                                    </ButtonGroup>
-                                </div>
+                                            {txContext.txInfo?.status != TransactionStatusEnum.Finished &&
+                                                <Button variant="danger" onClick={(e) => {
+                                                    e.preventDefault();
+                                                    changeStatusHandle(TransactionStatusEnum.Canceled, "Transaction canceled by admin");
+                                                }}>
+                                                    <FontAwesomeIcon icon={faCancel} fixedWidth />
+                                                </Button>
+                                            }
+                                        </ButtonGroup>
+                                    </div>
+                                }
                                 <h4 className="text-center">{txContext.loadingTxInfo ? <Skeleton /> : "Transaction " + txContext.getTitle()}</h4>
                                 {txContext.txInfo?.status == TransactionStatusEnum.WaitingSenderPayment &&
                                     <>
@@ -234,7 +251,20 @@ export default function TxPage() {
                                                         <Col md="6" className="mx-auto border-end">
                                                             <div className='small mb-2'>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</div>
                                                             <div className="d-flex align-items-center justify-content-evenly">
-                                                                <Button variant='danger'>Send USDT Via Metamask</Button>
+                                                                <Button
+                                                                    variant='danger'
+                                                                    disabled={txContext.loadingPay}
+                                                                    onClick={async (e) => {
+                                                                        e.preventDefault();
+                                                                        let ret = await txContext.payTx();
+                                                                        if (ret.sucesso) {
+                                                                            showSuccessMessage("Payment successfully!");
+                                                                            loadTxHandler();
+                                                                        }
+                                                                        else {
+                                                                            throwError(ret.mensagemErro);
+                                                                        }
+                                                                    }}>{txContext.loadingPay ? "Loading..." : "Send USDT Via Metamask"}</Button>
                                                             </div>
                                                         </Col>
                                                         <Col md="6" className="mx-auto">

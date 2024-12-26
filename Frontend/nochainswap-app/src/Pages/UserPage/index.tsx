@@ -72,10 +72,10 @@ export default function UserPage() {
     useEffect(() => {
         if (authContext.sessionInfo) {
             if (authContext.sessionInfo?.id > 0) {
-                userContext.getUserById(authContext.sessionInfo.id).then((ret) => {
+                userContext.getMe().then((ret) => {
                     if (ret.sucesso) {
                         setInsertMode(false);
-                        userContext.listAddressByUser(authContext.sessionInfo.id).then((retAddr) => {
+                        userContext.listAddressByUser().then((retAddr) => {
                             if (!retAddr.sucesso) {
                                 throwError(retAddr.mensagemErro);
                             }
@@ -216,7 +216,7 @@ export default function UserPage() {
                                                                 <td scope="col" style={{ textAlign: "center" }}>
                                                                     <a href="#" onClick={async (e) => {
                                                                         e.preventDefault();
-                                                                        let ret = await userContext.removeAddress(addr.userId, addr.chainId);
+                                                                        let ret = await userContext.removeAddress(addr.chainId);
                                                                         if (!ret.sucesso) {
                                                                             throwError(ret.mensagemErro);
                                                                         }

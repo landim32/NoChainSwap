@@ -18,11 +18,9 @@ import { MessageToastEnum } from '../../DTO/Enum/MessageToastEnum';
 import { faEnvelope, faLock, faRightLeft } from '@fortawesome/free-solid-svg-icons';
 import InputGroup from 'react-bootstrap/InputGroup';
 import AuthContext from '../../Contexts/Auth/AuthContext';
-import TxContext from '../../Contexts/Transaction/TxContext';
+import UserContext from '../../Contexts/User/UserContext';
 
 export default function SwapForm() {
-
-    const [showModal, setShowModal] = useState<boolean>(false);
 
     const [dialog, setDialog] = useState<MessageToastEnum>(MessageToastEnum.Error);
     const [showMessage, setShowMessage] = useState<boolean>(false);
@@ -32,8 +30,9 @@ export default function SwapForm() {
     const [email, setEmail] = useState<string>("");
 
     const authContext = useContext(AuthContext);
+    const userContext = useContext(UserContext);
     const swapContext = useContext(SwapContext);
-    const txContext = useContext(TxContext);
+    //const txContext = useContext(TxContext);
 
     const throwError = (message: string) => {
         setDialog(MessageToastEnum.Error)
@@ -79,6 +78,21 @@ export default function SwapForm() {
 
     useEffect(() => {
         swapContext.loadCurrentPrice(swapContext.senderCoin, swapContext.receiverCoin);
+        if (authContext.sessionInfo && authContext.sessionInfo?.id > 0) {
+            userContext.getMe().then((ret) => {
+                if (ret.sucesso) {
+                    userContext.getAddressByChain(authContext.chain).then((retAddr) => {
+                        if (retAddr.sucesso) {
+                            setAddress(retAddr.UserAddress);
+                        } else {
+                            throwError(retAddr.mensagemErro);
+                        }
+                    });
+                } else {
+                    throwError(ret.mensagemErro);
+                }
+            });
+        }
     }, []);
 
     return (
@@ -89,47 +103,6 @@ export default function SwapForm() {
                 messageText={messageText}
                 onClose={() => setShowMessage(false)}
             ></MessageToast>
-            <Modal
-                show={showModal}
-                size="lg"
-                onHide={() => { setShowModal(false) }}
-                backdrop="static"
-                keyboard={false}
-            >
-                <Modal.Header closeButton>
-                    <Modal.Title>Confirm Swap</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <p>You are about to make a conversion of <strong>{swapContext.getFormatedSenderAmount()}</strong> into <strong>{swapContext.getFormatedReceiverAmount()}</strong>.</p>
-                    <p><strong>{swapContext.getFormatedSenderAmount()}</strong> -&gt; <span>{swapContext.senderPoolAddress}</span> (Pool Address)</p>
-                    <p>As soon as the transaction reaches <strong>confirmation</strong> the transfer of
-                        <strong>{swapContext.getFormatedReceiverAmount()}</strong> will be initiated to the address provided by your Leather Wallet:
-                    </p>
-                    <p><strong>{swapContext.getFormatedReceiverAmount()}</strong> -&gt; <span>{swapContext.receiverPoolAddress}</span> (Your Wallet Address)</p>
-                    {/*<p>A fee of <strong>230 satoshis</strong> will be charged, please confirm if you agree.</p>*/}
-                    <p>Do you confirm this transaction?</p>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => { setShowModal(false) }}>
-                        Close
-                    </Button>
-                    <Button variant="primary" onClick={() => {
-                        let callback = (ret: ProviderResult) => {
-                            if (ret.sucesso) {
-                                console.log("txId: ", swapContext.currentTxId);
-                                //alert(ret.mensagemSucesso);
-                                setShowModal(false);
-                                redirect("/my-swaps/" + swapContext.currentTxId);
-                            }
-                            else {
-                                alert(ret.mensagemErro);
-                                setShowModal(false);
-                            }
-                        };
-                        swapContext.payWithWallet(callback);
-                    }}>Confirm Swap</Button>
-                </Modal.Footer>
-            </Modal>
             <Container>
                 <Row>
                     <Col md="6" className='offset-md-3'>
@@ -288,6 +261,7 @@ export default function SwapForm() {
                                                 </InputGroup>
                                             </Form.Group>
                                         </Row>
+                                        {!userContext.user?.email &&
                                         <Row>
                                             <Form.Group as={Col}>
                                                 <InputGroup>
@@ -302,6 +276,7 @@ export default function SwapForm() {
                                                 </InputGroup>
                                             </Form.Group>
                                         </Row>
+                                        }
                                     </Card.Body>
                                 </Card>
                                 <p className="mb-3" style={{ textAlign: 'center' }}>{swapContext.getCoinText()}</p>
@@ -317,7 +292,6 @@ export default function SwapForm() {
                                                         let ret = await swapContext.createTx(authContext.chain, email, address);
                                                         if (ret.sucesso) {
                                                             navigate("/tx/" + ret.hash);
-                                                            //alert("/tx/" + ret.txId);
                                                         }
                                                         else {
                                                             throwError(ret.mensagemErro);

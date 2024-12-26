@@ -11,8 +11,10 @@ export default interface ITxBusiness {
   getByHash: (hash: string) => Promise<BusinessResult<TxInfo>>;
   changeStatus: (txid: number, status: TransactionStatusEnum, message: string) => Promise<BusinessResult<boolean>>;
   listAllTx: () => Promise<BusinessResult<TxInfo[]>>;
-  listMyTx: (address: string) => Promise<BusinessResult<TxInfo[]>>;
+  listMyTx: () => Promise<BusinessResult<TxInfo[]>>;
   listTxLogs: (txid: number) => Promise<BusinessResult<TxLogInfo[]>>;
   processTx: (txid: number) => Promise<BusinessResult<boolean>>;
   payback: (txid: number, receiverTxId: string, receiverFee: number) => Promise<BusinessResult<boolean>>;
+  confirmSendPayment: (txid: number, senderTxId: string) => Promise<BusinessResult<boolean>>;
+  confirmPayment: (txid: number) => Promise<BusinessResult<boolean>>;
 }

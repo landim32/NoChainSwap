@@ -13,7 +13,7 @@ import ProviderResult from '../../DTO/Contexts/ProviderResult';
 import MessageToast from '../../Components/MessageToast';
 import { MessageToastEnum } from '../../DTO/Enum/MessageToastEnum';
 
-interface IListTxParam {
+export interface IListTxParam {
     OnlyMyTx: boolean
 };
 

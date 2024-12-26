@@ -10,10 +10,10 @@ const UserAddressService : IUserAddressService = {
     init: function (htppClient: IHttpClient): void {
         _httpClient = htppClient;
     },
-    listAddressByUser: async (userId: number) => {
+    listAddressByUser: async (token: string) => {
         let ret: UserAddressListResult;
-        let url = "/api/UserAddress/listaddressbyuser/" + userId;
-        let request = await _httpClient.doGet<UserAddressListResult>(url, {});
+        let url = "/api/UserAddress/listaddressbyuser";
+        let request = await _httpClient.doGetAuth<UserAddressListResult>(url, token);
         if (request.success) {
             return request.data;
         }
@@ -26,10 +26,10 @@ const UserAddressService : IUserAddressService = {
         }
         return ret;
     },
-    getAddressByChain: async (userId: number, chainId: number) => {
+    getAddressByChain: async (chainId: number, token: string) => {
         let ret: UserAddressResult;
-        let url = "/api/UserAddress/getaddressbychain/" + userId + "/" + chainId;
-        let request = await _httpClient.doGet<UserAddressResult>(url, {});
+        let url = "/api/UserAddress/getaddressbychain/" + chainId;
+        let request = await _httpClient.doGetAuth<UserAddressResult>(url, token);
         if (request.success) {
             return request.data;
         }
@@ -62,10 +62,10 @@ const UserAddressService : IUserAddressService = {
         }
         return ret;
     },
-    removeAddress: async (userId: number, chainId: number) => {
+    removeAddress: async (chainId: number, token: string) => {
         let ret: StatusRequest;
-        let url = "/api/UserAddress/removeaddress/" + userId + "/" + chainId;
-        let request = await _httpClient.doGet<StatusRequest>(url, {});
+        let url = "/api/UserAddress/removeaddress/" + chainId;
+        let request = await _httpClient.doGetAuth<StatusRequest>(url, token);
         if (request.success) {
             return request.data;
         }

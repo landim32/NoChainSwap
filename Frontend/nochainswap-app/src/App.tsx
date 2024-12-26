@@ -13,6 +13,7 @@ import LoginPage from './Pages/LoginPage';
 import RecoveryPage from './Pages/RecoveryPage';
 import UserProvider from './Contexts/User/UserProvider';
 import TxPage from './Pages/TxPage';
+import AllListTxPage from './Pages/AllListTxPage';
 
 function Error404() {
   return (
@@ -44,8 +45,8 @@ function App() {
             <Route path=":txid" element={<ListTxPage OnlyMyTx={true} />} />
           </Route>
           <Route path="all-swaps">
-            <Route index element={<ListTxPage OnlyMyTx={false} />} />
-            <Route path=":txid" element={<ListTxPage OnlyMyTx={false} />} />
+            <Route index element={<AllListTxPage />} />
+            <Route path=":txid" element={<AllListTxPage />} />
           </Route>
           <Route path="tx/:txHash" element={<TxPage />} />
           <Route path="login" element={<LoginPage />} />

@@ -161,7 +161,12 @@ namespace NoChainSwap.Domain.Impl.Services
             model.UpdateAt = DateTime.Now;
             model.Hash = GetUniqueToken();
 
-            model.Save(_userFactory);
+            var md = model.Save(_userFactory);
+            if (string.IsNullOrEmpty(md.Name))
+            {
+                md.Name = string.Format("Anonymous {0}", md.Id);
+                md.Save(_userFactory);
+            }
 
             return model;
         }
@@ -177,6 +182,14 @@ namespace NoChainSwap.Domain.Impl.Services
             if (model == null)
             {
                 throw new Exception("User not exists");
+            }
+            if (!string.IsNullOrEmpty(user.Email))
+            {
+                var userWithEmail = model.GetByEmail(user.Email, _userFactory);
+                if (userWithEmail != null && userWithEmail.Id != model.Id)
+                {
+                    throw new Exception("User with email already registered");
+                }
             }
             model.Name = user.Name;
             model.Email = user.Email;
@@ -198,6 +211,11 @@ namespace NoChainSwap.Domain.Impl.Services
         public IUserModel GetUserByID(long userId)
         {
             return _userFactory.BuildUserModel().GetById(userId, _userFactory);
+        }
+
+        public IUserModel GetUserByToken(string token)
+        {
+            return _userFactory.BuildUserModel().GetByToken(token, _userFactory);
         }
 
         public IUserModel GetUserHash(ChainEnum chain, string address)

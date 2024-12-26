@@ -7,6 +7,7 @@ import { TxIdResult } from "../../DTO/Services/TxIdResult";
 import { TxListResult } from "../../DTO/Services/TxListResult";
 import { TxLogListResult } from "../../DTO/Services/TxLogListResult";
 import TxPaybackParam from "../../DTO/Services/TxPaybackParam";
+import TxPaymentParam from "../../DTO/Services/TxPaymentParam";
 import { TxResult } from "../../DTO/Services/TxResult";
 import IHttpClient from "../../Infra/Interface/IHttpClient";
 import ITxService from "../Interfaces/ITxService";
@@ -57,9 +58,9 @@ const TxService : ITxService = {
         }
         return ret;
     },
-    changeStatus: async (param: TxRevertInfo) => {
+    changeStatus: async (param: TxRevertInfo, token: string) => {
         let ret: StatusRequest;
-        let request = await _httpClient.doPost<number>("api/Transaction/changestatus", param);
+        let request = await _httpClient.doPostAuth<number>("api/Transaction/changestatus", param, token);
         if (request.success) {
             ret = {
                 mensagem: "Transaction status changed",
@@ -76,9 +77,9 @@ const TxService : ITxService = {
         }
         return ret;
     },
-    listAllTx: async () => {
+    listAllTx: async (token: string) => {
         let ret: TxListResult;
-        let request = await _httpClient.doGet<TxInfo[]>("api/Transaction/listalltransactions", {});
+        let request = await _httpClient.doGetAuth<TxInfo[]>("api/Transaction/listalltransactions", token);
         if (request.success) {
             return {
                 sucesso: true,
@@ -95,9 +96,9 @@ const TxService : ITxService = {
         }
         return ret;
     },
-    listMyTx: async (address: string) => {
+    listMyTx: async (token: string) => {
         let ret: TxListResult;
-        let request = await _httpClient.doGet<TxInfo[]>("api/Transaction/listmytransactions/" + address, {});
+        let request = await _httpClient.doGetAuth<TxInfo[]>("api/Transaction/listmytransactions", token);
         if (request.success) {
             return {
                 sucesso: true,
@@ -133,9 +134,9 @@ const TxService : ITxService = {
         }
         return ret;
     },
-    proccessTx:  async (txid: number) => {
+    proccessTx:  async (txid: number, token: string) => {
         let ret: StatusRequest;
-        let request = await _httpClient.doGet<boolean>("api/Transaction/processtransaction/" + txid, {});
+        let request = await _httpClient.doGetAuth<boolean>("api/Transaction/processtransaction/" + txid, token);
         if (request.success) {
             return {
                 mensagem: request.data ? "Transaction processed" : "Transaction not processed" ,
@@ -152,9 +153,9 @@ const TxService : ITxService = {
         }
         return ret;
     },
-    payback: async (param: TxPaybackParam) => {
+    payback: async (param: TxPaybackParam, token: string) => {
         let ret: StatusRequest;
-        let request = await _httpClient.doPost<number>("api/Transaction/payback", param);
+        let request = await _httpClient.doPostAuth<boolean>("api/Transaction/payback", param, token);
         if (request.success) {
             ret = {
                 mensagem: "Payback proccess successfully",
@@ -170,7 +171,46 @@ const TxService : ITxService = {
             };
         }
         return ret;
-    }
+    },
+    confirmSendPayment: async (param: TxPaymentParam) => {
+        let ret: StatusRequest;
+        let request = await _httpClient.doPost<boolean>("api/Transaction/confirmpayment", param);
+        if (request.success) {
+            ret = {
+                mensagem: "Payment proccess successfully",
+                sucesso: true,
+                ...ret
+            };
+        }
+        else {
+            ret = {
+                mensagem: request.messageError,
+                sucesso: false,
+                ...ret
+            };
+        }
+        return ret;
+    },
+    confirmPayment: async (txid: number, token: string) => {
+        let ret: StatusRequest;
+        let url: string = "api/Transaction/confirmpayment/" + txid;
+        let request = await _httpClient.doGetAuth<boolean>(url, token);
+        if (request.success) {
+            ret = {
+                mensagem: "Payment proccess successfully",
+                sucesso: true,
+                ...ret
+            };
+        }
+        else {
+            ret = {
+                mensagem: request.messageError,
+                sucesso: false,
+                ...ret
+            };
+        }
+        return ret;
+    },
 }
 
 export default TxService;

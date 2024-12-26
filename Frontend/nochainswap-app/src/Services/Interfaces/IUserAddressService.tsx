@@ -5,8 +5,8 @@ import IHttpClient from "../../Infra/Interface/IHttpClient";
 
 export default interface IUserAddressService {
     init: (httpClient : IHttpClient) => void;
-    listAddressByUser: (userId: number) => Promise<UserAddressListResult>;
-    getAddressByChain: (userId: number, chainId: number) => Promise<UserAddressResult>;
+    listAddressByUser: (token: string) => Promise<UserAddressListResult>;
+    getAddressByChain: (chainId: number, token: string) => Promise<UserAddressResult>;
     addOrChangeAddress: (userId: number, chainId: number, address: string) => Promise<StatusRequest>;
-    removeAddress: (userId: number, chainId: number) => Promise<StatusRequest>;
+    removeAddress: (chainId: number, token: string) => Promise<StatusRequest>;
 }

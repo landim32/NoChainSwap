@@ -46,12 +46,12 @@ export default function PasswordPage() {
 
     useEffect(() => {
         if (authContext.sessionInfo && authContext.sessionInfo?.id > 0) {
-            userContext.getUserById(authContext.sessionInfo.id).then((ret) => {
+            userContext.getMe().then((ret) => {
                 if (!ret.sucesso) {
                     throwError(ret.mensagemErro);
                     return;
                 }
-                userContext.hasPassword(authContext.sessionInfo.id);
+                userContext.hasPassword();
             });
         }
         else {
@@ -150,7 +150,7 @@ export default function PasswordPage() {
                                                     throwError("New password and Confirmation are not equal!");
                                                     return;
                                                 }
-                                                let ret = await userContext.changePassword(userContext.user?.id, oldPassword, newPassword);
+                                                let ret = await userContext.changePassword(oldPassword, newPassword);
                                                 console.log("ret:", JSON.stringify(ret));
                                                 if (ret.sucesso) {
                                                     showSuccessMessage(ret.mensagemSucesso);

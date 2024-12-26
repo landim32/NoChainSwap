@@ -44,11 +44,18 @@ namespace NoChainSwap.Domain
                 return AuthenticateResult.Fail("Missing Authorization Header");
 
             //string btcAddress = null;
-            string stxAddress = null;
+            //string stxAddress = null;
             IUserModel user = null; 
             try
             {
                 var authHeader = AuthenticationHeaderValue.Parse(Request.Headers["Authorization"]);
+                var token = authHeader.Parameter;
+                if (string.IsNullOrEmpty(token))
+                {
+                    return AuthenticateResult.Fail("Missing Authorization Token");
+                }
+                user = _userService.GetUserByToken(token);
+                /*
                 var masterKey = authHeader.Parameter;
                 if(masterKey == "masterkeydoamor")
                 {
@@ -67,19 +74,14 @@ namespace NoChainSwap.Domain
                         user = _userService.GetUserByAddress(ChainEnum.StackAndBitcoin, STX_ADDRESS);
                         if (user == null)
                             return AuthenticateResult.Fail("Invalid Session");
-                        /*
-                        if (!_cryptoUtils.CheckPersonalSignature(user.Hash, signature, btcAddress))
-                        {
-                            return AuthenticateResult.Fail("Invalid Session");
-                        }
-                        */
                     }
                     else
                     {
                         return AuthenticateResult.Fail("Incorrect Session");
                     }
                 }
-                
+                */
+
             }
             catch (Exception)
             {

@@ -2,11 +2,13 @@ export enum TransactionStatusEnum {
     Initialized = 1,
     Calculated = 2,
     WaitingSenderPayment = 3,
-    SenderNotConfirmed = 4,
-    SenderConfirmed = 5,
-    SenderConfirmedReiceiverNotConfirmed = 6,
-    Finished = 7,
-    InvalidInformation = 8,
-    CriticalError = 9,
-    Canceled = 10
+    DetectedSenderPayment = 4,
+    SenderNotConfirmed = 5,
+    SenderConfirmed = 6,
+    SenderConfirmedReiceiverPaymentWaiting = 7,
+    SenderConfirmedReiceiverNotConfirmed = 8,
+    Finished = 9,
+    InvalidInformation = 10,
+    CriticalError = 11,
+    Canceled = 12
 }

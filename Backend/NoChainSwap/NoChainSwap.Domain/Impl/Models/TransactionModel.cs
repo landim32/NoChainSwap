@@ -39,8 +39,8 @@ namespace NoChainSwap.Domain.Impl.Models
         public TransactionStatusEnum Status { get; set; }
         public string SenderTxid { get; set; }
         public string ReceiverTxid { get; set; }
-        public int? SenderFee { get; set; }
-        public int? ReceiverFee { get; set; }
+        public long? SenderFee { get; set; }
+        public long? ReceiverFee { get; set; }
         public long SenderAmount { get; set; }
         public long ReceiverAmount { get; set; }
 
@@ -77,6 +77,11 @@ namespace NoChainSwap.Domain.Impl.Models
             return _repositoryTx.GetBySenderAddr(senderAddr, factory);
         }
 
+        public ITransactionModel GetByRecipientAddr(string recipientAddr, ITransactionDomainFactory factory)
+        {
+            return _repositoryTx.GetByRecipientAddr(recipientAddr, factory);
+        }
+
         public ITransactionModel GetById(long txId, ITransactionDomainFactory factory)
         {
             return _repositoryTx.GetById(txId, factory);
@@ -102,6 +107,11 @@ namespace NoChainSwap.Domain.Impl.Models
             return _repositoryTx.ListAll(factory);
         }
 
+        public IEnumerable<ITransactionModel> ListByUser(long userId, ITransactionDomainFactory factory)
+        {
+            return _repositoryTx.ListByUser(userId, factory);
+        }
+
         public ITransactionModel Save()
         {
             return _repositoryTx.SaveTx(this);
@@ -110,6 +120,11 @@ namespace NoChainSwap.Domain.Impl.Models
         public ITransactionModel Update()
         {
             return _repositoryTx.UpdateTx(this);
+        }
+
+        public IEnumerable<ITransactionModel> ListToDetect(ITransactionDomainFactory factory)
+        {
+            return _repositoryTx.ListToDetect(factory);
         }
     }
 }

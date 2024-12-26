@@ -9,6 +9,7 @@ using NoChainSwap.Domain.Interfaces.Services.Coins;
 using NoChainSwap.DTO.Mempool;
 using NoChainSwap.DTO.Stacks;
 using NoChainSwap.DTO.Transaction;
+using Org.BouncyCastle.Asn1.Tsp;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -20,8 +21,19 @@ using static NBitcoin.Protocol.Behaviors.ChainBehavior;
 
 namespace NoChainSwap.Domain.Impl.Services.Coins
 {
-    public class StxTxService: CoinTxService, IStxTxService
+    public class StxTxService: IStxTxService
     {
+        protected readonly ICoinMarketCapService _coinMarketCapService;
+        protected readonly ITransactionDomainFactory _txFactory;
+        protected readonly ITransactionLogDomainFactory _txLogFactory;
+
+        public static string WALLET_API { get; set; }
+        public static string STACKS_API { get; set; }
+
+        private const string TX_STATUS_SUCESS = "success";
+
+        //private TxInfo _txInfo;
+
         public StxTxService(ICoinMarketCapService coinMarketCapService, ITransactionDomainFactory txFactory, ITransactionLogDomainFactory txLogFactory)
         {
             _coinMarketCapService = coinMarketCapService;
@@ -29,12 +41,24 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
             _txLogFactory = txLogFactory;
         }
 
-        public static string WALLET_API { get; set; }
-        public static string STACKS_API { get; set; }
+        public bool IsPaybackAutomatic()
+        {
+            return true;
+        }
+        public string ConvertToString(decimal coin)
+        {
+            return (coin / 100000000M).ToString("N5") + " STX";
+        }
 
-        private const string TX_STATUS_SUCESS = "success";
+        public string GetAddressUrl(string address)
+        {
+            return $"https://explorer.hiro.so/address/{address}?chain=testnet";
+        }
 
-        private TxInfo _txInfo;
+        public CoinEnum GetCoin()
+        {
+            return CoinEnum.Stacks;
+        }
 
         private async Task<TxInfo> GetTransaction(string txId)
         {
@@ -49,6 +73,32 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
             }
         }
 
+        public async Task<TxResumeInfo> GetResumeTransaction(string txId)
+        {
+            var txInfo = await GetTransaction(txId);
+
+            long amount = 0;
+            if (!long.TryParse(txInfo.TokenTransfer.Amount, out amount))
+            {
+                throw new Exception($"{txInfo.TokenTransfer.Amount} is not a valid amount");
+            }
+
+            int fee = 0;
+            if (!int.TryParse(txInfo.FeeRate, out fee))
+            {
+                throw new Exception($"Cant convert fee to number ({txInfo.FeeRate})");
+            }
+            return new TxResumeInfo
+            {
+                Amount = amount * 100,
+                Fee = fee * 100,
+                TxId = txId,
+                SenderAddress = txInfo.SenderAddress,
+                Success = string.Compare(txInfo.TxStatus, TX_STATUS_SUCESS, true) == 0
+            };
+        }
+
+        /*
         private async Task<TxInfo> LoadTransaction(string txId)
         {
             if (_txInfo == null || string.Compare(_txInfo.TxId, txId, true) != 0)
@@ -58,22 +108,32 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
             return _txInfo;
         }
 
-        public override string ConvertToString(decimal coin)
+        public async Task<bool> IsTransactionSuccessful(string txid)
         {
-            return (coin / 100000000M).ToString("N5") + " STX";
+            var txInfo = await LoadTransaction(txid);
+            if (txInfo == null)
+            {
+                throw new Exception($"Dont find transaction on STX API ({txid})");
+            }
+            return string.Compare(txInfo.TxStatus, TX_STATUS_SUCESS, true) == 0;
         }
 
-        public override string GetAddressUrl(string address)
+        public async Task<long> GetSenderAmount(string txid, string senderAddr)
         {
-            return $"https://explorer.hiro.so/address/{address}?chain=testnet";
+            var txInfo = await LoadTransaction(txid);
+            if (txInfo == null)
+            {
+                throw new Exception($"Dont find transaction on STX API ({txid})");
+            }
+            long amount = 0;
+            if (!long.TryParse(txInfo.TokenTransfer.Amount, out amount))
+            {
+                throw new Exception($"{txInfo.TokenTransfer.Amount} is not a valid amount");
+            }
+            return amount * 100;
         }
 
-        public override CoinEnum GetCoin()
-        {
-            return CoinEnum.Stacks;
-        }
-
-        public override async Task<int> GetFee(string txid)
+        public async Task<int> GetFee(string txid)
         {
             var txInfo = await LoadTransaction(txid);
             if (txInfo == null)
@@ -88,6 +148,7 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
             }
             return fee * 100;
         }
+        */
 
         private async Task<long> GetBalance(string stxAddress)
         {
@@ -108,7 +169,7 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
             }
         }
 
-        public override async Task<string> GetNewAddress(int index)
+        public async Task<string> GetNewAddress(int index)
         {
             using (var client = new HttpClient())
             {
@@ -121,7 +182,7 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
             }
         }
 
-        public override async Task<string> GetPoolAddress()
+        public async Task<string> GetPoolAddress()
         {
             using (var client = new HttpClient())
             {
@@ -134,47 +195,17 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
             }
         }
 
-        public override async Task<long> GetPoolBalance()
+        public async Task<long> GetPoolBalance()
         {
             return await GetBalance(await GetPoolAddress());
         }
 
-        public override async Task<long> GetSenderAmount(string txid, string senderAddr)
-        {
-            var txInfo = await LoadTransaction(txid);
-            if (txInfo == null)
-            {
-                throw new Exception($"Dont find transaction on STX API ({txid})");
-            }
-            long amount = 0;
-            if (!long.TryParse(txInfo.TokenTransfer.Amount, out amount))
-            {
-                throw new Exception($"{txInfo.TokenTransfer.Amount} is not a valid amount");
-            }
-            return amount * 100;
-        }
-
-        public override string GetSwapDescription(decimal proportion)
-        {
-            return "";
-        }
-
-        public override string GetTransactionUrl(string txId)
+        public string GetTransactionUrl(string txId)
         {
             return $"https://explorer.hiro.so/txid/{txId}?chain=testnet";
         }
 
-        public override async Task<bool> IsTransactionSuccessful(string txid)
-        {
-            var txInfo = await LoadTransaction(txid);
-            if (txInfo == null)
-            {
-                throw new Exception($"Dont find transaction on STX API ({txid})");
-            }
-            return string.Compare(txInfo.TxStatus,TX_STATUS_SUCESS, true) == 0;
-        }
-
-        public override async Task<string> Transfer(string address, long amount)
+        public async Task<string> Transfer(string address, long amount)
         {
             using (var client = new HttpClient())
             {
@@ -202,7 +233,7 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
             }
         }
 
-        public override async Task<bool> VerifyTransaction(ITransactionModel tx)
+        public async Task<bool> VerifyTransaction(ITransactionModel tx)
         {
             if (string.IsNullOrEmpty(tx.SenderTxid) && string.IsNullOrEmpty(tx.ReceiverTxid))
             {
@@ -248,6 +279,20 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
                 return await Task.FromResult(false);
             }
             return await Task.FromResult(true);
+        }
+        public Task<IList<TxDetectedInfo>> DetectNewTransactions(IList<string> addresses)
+        {
+            return Task.FromResult<IList<TxDetectedInfo>>(new List<TxDetectedInfo>());
+        }
+
+        public void AddLog(long txId, string msg, LogTypeEnum t, ITransactionLogDomainFactory txLogFactory)
+        {
+            var md = txLogFactory.BuildTransactionLogModel();
+            md.TxId = txId;
+            md.Date = DateTime.Now;
+            md.LogType = t;
+            md.Message = msg;
+            md.Insert();
         }
 
     }

@@ -73,19 +73,22 @@ namespace DB.Infra.Repository
 
         public ITransactionModel GetBySenderAddr(string senderAddr, ITransactionDomainFactory factory)
         {
-            try
+            var row = _ccsContext.Transactions.Where(x => x.SenderAddress.ToLower() == senderAddr.ToLower()).FirstOrDefault();
+            if (row != null)
             {
-                var row = _ccsContext.Transactions.Where(x => x.SenderAddress == senderAddr).FirstOrDefault();
-                if (row != null)
-                {
-                    return DbToModel(factory, row);
-                }
-                return null;
+                return DbToModel(factory, row);
             }
-            catch (Exception)
+            return null;
+        }
+
+        public ITransactionModel GetByRecipientAddr(string recipientAddr, ITransactionDomainFactory factory)
+        {
+            var row = _ccsContext.Transactions.Where(x => x.RecipientAddress.ToLower() == recipientAddr.ToLower()).FirstOrDefault();
+            if (row != null)
             {
-                throw;
+                return DbToModel(factory, row);
             }
+            return null;
         }
 
         public ITransactionModel GetById(long txId, ITransactionDomainFactory factory)
@@ -109,7 +112,7 @@ namespace DB.Infra.Repository
         {
             try
             {
-                var row = _ccsContext.Transactions.Where(x => x.Hash == hash).FirstOrDefault();
+                var row = _ccsContext.Transactions.Where(x => x.Hash.ToLower() == hash.ToLower()).FirstOrDefault();
                 if (row != null)
                 {
                     return DbToModel(factory, row);
@@ -130,7 +133,7 @@ namespace DB.Infra.Repository
 
         public IEnumerable<ITransactionModel> ListByAddress(string address, ITransactionDomainFactory factory)
         {
-            var rows = _ccsContext.Transactions.Where(x => x.SenderAddress == address || x.ReceiverAddress == address).ToList();
+            var rows = _ccsContext.Transactions.Where(x => x.SenderAddress.ToLower() == address.ToLower() || x.ReceiverAddress.ToLower() == address.ToLower()).ToList();
             return rows.Select(x => DbToModel(factory, x));
         }
 
@@ -184,7 +187,7 @@ namespace DB.Infra.Repository
         {
             try
             {
-                var row = _ccsContext.Transactions.Where(x => x.SenderTxid == txid).FirstOrDefault();
+                var row = _ccsContext.Transactions.Where(x => x.SenderTxid.ToLower() == txid.ToLower()).FirstOrDefault();
                 if (row != null)
                 {
                     return DbToModel(factory, row);
@@ -201,7 +204,7 @@ namespace DB.Infra.Repository
         {
             try
             {
-                var row = _ccsContext.Transactions.Where(x => x.ReceiverTxid == txid).FirstOrDefault();
+                var row = _ccsContext.Transactions.Where(x => x.ReceiverTxid.ToLower() == txid.ToLower()).FirstOrDefault();
                 if (row != null)
                 {
                     return DbToModel(factory, row);
@@ -212,6 +215,19 @@ namespace DB.Infra.Repository
             {
                 throw;
             }
+        }
+
+        public IEnumerable<ITransactionModel> ListToDetect(ITransactionDomainFactory factory)
+        {
+            return _ccsContext.Transactions.Where(x =>
+                   x.Status == (int)TransactionStatusEnum.WaitingSenderPayment
+                   && !string.IsNullOrEmpty(x.RecipientAddress)
+                   && string.IsNullOrEmpty(x.SenderTxid)
+                   && x.SenderCoin != Utils.CoinToStr(CoinEnum.BRL)
+            )
+            .ToList()
+            .Select(x => DbToModel(factory, x))
+            .ToList();
         }
     }
 }

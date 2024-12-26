@@ -22,6 +22,7 @@ namespace NoChainSwap.Domain.Interfaces.Services
         IUserModel GetUserByAddress(ChainEnum chain, string address);
         IEnumerable<IUserModel> GetAllUserAddress();
         IUserModel GetUserByID(long userId);
+        IUserModel GetUserByToken(string token);
         IUserModel GetUserHash(ChainEnum chain, string address);
         UserInfo GetUserInSession(HttpContext httpContext);
 

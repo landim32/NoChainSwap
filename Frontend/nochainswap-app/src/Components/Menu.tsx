@@ -77,7 +77,9 @@ export default function Menu() {
               {authContext.sessionInfo &&
                 <>
                   <Link className='nav-link' to="/my-swaps">My Swaps</Link>
+                  {authContext.sessionInfo?.isAdmin &&
                   <Link className='nav-link' to="/all-swaps">All Swaps</Link>
+                  }
                 </>
               }
             </Nav>
