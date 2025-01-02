@@ -4,6 +4,7 @@ import { AppConfig, getUserData, UserData, UserSession, showConnect, disconnect 
 import IStacksBusiness from "../Interfaces/IStacksBusiness";
 import { ChainEnum } from "../../DTO/Enum/ChainEnum";
 import { SignInEnum } from "../../DTO/Enum/SignInEnum";
+import env from "react-dotenv";
 
 const StacksBusiness : IStacksBusiness = {
   logIn: (callback?: any) => {
@@ -13,7 +14,7 @@ const StacksBusiness : IStacksBusiness = {
     showConnect({
       userSession, // `userSession` from previous step, to access storage
       appDetails: {
-        name: "No Chain Swap",
+        name: env.PROJECT_NAME,
         icon: window.location.origin + '/public/logo192.png'
       },
       onFinish: () => {

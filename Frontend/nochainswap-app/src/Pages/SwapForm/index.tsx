@@ -19,6 +19,7 @@ import { faEnvelope, faLock, faRightLeft } from '@fortawesome/free-solid-svg-ico
 import InputGroup from 'react-bootstrap/InputGroup';
 import AuthContext from '../../Contexts/Auth/AuthContext';
 import UserContext from '../../Contexts/User/UserContext';
+import env from 'react-dotenv';
 
 export default function SwapForm() {
 
@@ -70,7 +71,7 @@ export default function SwapForm() {
             return "Loading...";
         }
         else {
-            return "Swap";
+            return "SWAP";
         }
     };
 
@@ -108,7 +109,7 @@ export default function SwapForm() {
                     <Col md="6" className='offset-md-3'>
                         <Card className='shadow'>
                             <Card.Body style={{ position: "relative" }}>
-                                <h4 className="text-center">No Chain Swap</h4>
+                                <h4 className="text-center">{env.PROJECT_NAME}</h4>
                                 <Card className='mb-3'>
                                     <Card.Body>
                                         <Row>
@@ -122,12 +123,17 @@ export default function SwapForm() {
                                                         if (!ret.sucesso) {
                                                             throwError(ret.mensagemErro);
                                                         }
-                                                        //swapContext.setReceiverCoin(senderCoin);
                                                     }}>
-                                                        <option value={CoinEnum.Bitcoin}>Bitcoin</option>
-                                                        <option value={CoinEnum.Stacks}>Stacks</option>
+                                                        {env.USE_BITCOIN_SWAP == true &&
+                                                            <>
+                                                                <option value={CoinEnum.Bitcoin}>Bitcoin</option>
+                                                                <option value={CoinEnum.Stacks}>Stacks</option>
+                                                            </>
+                                                        }
+                                                        {env.USER_BRL_SWAP == true &&
+                                                            <option value={CoinEnum.BRL}>Real (Pix)</option>
+                                                        }
                                                         <option value={CoinEnum.USDT}>USDT (BNB)</option>
-                                                        <option value={CoinEnum.BRL}>Real (Pix)</option>
                                                     </Form.Select>
                                                     <Form.Text className='text-right' muted>Price: {swapContext.getFormatedSenderPrice()}</Form.Text>
                                                 </Form.Group>
@@ -202,10 +208,16 @@ export default function SwapForm() {
                                                             throwError(ret.mensagemErro);
                                                         }
                                                     }}>
-                                                        <option value={CoinEnum.Bitcoin}>Bitcoin</option>
-                                                        <option value={CoinEnum.Stacks}>Stacks</option>
+                                                        {env.USE_BITCOIN_SWAP == true &&
+                                                            <>
+                                                                <option value={CoinEnum.Bitcoin}>Bitcoin</option>
+                                                                <option value={CoinEnum.Stacks}>Stacks</option>
+                                                            </>
+                                                        }
+                                                        {env.USER_BRL_SWAP == true &&
+                                                            <option value={CoinEnum.BRL}>Real (Pix)</option>
+                                                        }
                                                         <option value={CoinEnum.USDT}>USDT (BNB)</option>
-                                                        <option value={CoinEnum.BRL}>Real (Pix)</option>
                                                     </Form.Select>
                                                     <Form.Text className='text-right' muted>Price: {swapContext.getFormatedReceiverPrice()}</Form.Text>
                                                 </Form.Group>
@@ -262,20 +274,20 @@ export default function SwapForm() {
                                             </Form.Group>
                                         </Row>
                                         {!userContext.user?.email &&
-                                        <Row>
-                                            <Form.Group as={Col}>
-                                                <InputGroup>
-                                                    <InputGroup.Text><FontAwesomeIcon icon={faEnvelope} fixedWidth /></InputGroup.Text>
-                                                    <Form.Control
-                                                        type="text" size="sm"
-                                                        value={email}
-                                                        placeholder="Email to receive updates (optional)"
-                                                        onChange={(e) => {
-                                                            setEmail(e.target.value);
-                                                        }} />
-                                                </InputGroup>
-                                            </Form.Group>
-                                        </Row>
+                                            <Row>
+                                                <Form.Group as={Col}>
+                                                    <InputGroup>
+                                                        <InputGroup.Text><FontAwesomeIcon icon={faEnvelope} fixedWidth /></InputGroup.Text>
+                                                        <Form.Control
+                                                            type="text" size="sm"
+                                                            value={email}
+                                                            placeholder="Email to receive updates (optional)"
+                                                            onChange={(e) => {
+                                                                setEmail(e.target.value);
+                                                            }} />
+                                                    </InputGroup>
+                                                </Form.Group>
+                                            </Row>
                                         }
                                     </Card.Body>
                                 </Card>
@@ -285,7 +297,7 @@ export default function SwapForm() {
                                         <view className='d-grid gap-2'>
                                             <Button
                                                 size="lg"
-                                                variant="primary"
+                                                variant="danger"
                                                 disabled={swapContext.loadingPrice || swapContext.loadingExecute || address == ""}
                                                 onClick={async () => {
                                                     if (swapContext.senderAmount > 0) {

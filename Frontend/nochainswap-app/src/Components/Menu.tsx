@@ -13,6 +13,8 @@ import { faBitcoinSign, faBoltLightning, faBrazilianRealSign, faCancel, faCircle
 import MessageToast from './MessageToast';
 import { ChainEnum } from '../DTO/Enum/ChainEnum';
 import { MessageToastEnum } from '../DTO/Enum/MessageToastEnum';
+import env from 'react-dotenv';
+
 
 export default function Menu() {
 
@@ -67,9 +69,9 @@ export default function Menu() {
         messageText={messageText}
         onClose={() => setShowMessage(false)}
       ></MessageToast>
-      <Navbar expand="lg" className="navbar-dark bg-dark mb-3">
+      <Navbar expand="lg" className="mb-3 border-bottom">
         <Container>
-          <Navbar.Brand href="/">NoChain Swap</Navbar.Brand>
+          <Link className='navbar-brand' to="/">{env.PROJECT_NAME}</Link>
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="me-auto">
@@ -78,7 +80,7 @@ export default function Menu() {
                 <>
                   <Link className='nav-link' to="/my-swaps">My Swaps</Link>
                   {authContext.sessionInfo?.isAdmin &&
-                  <Link className='nav-link' to="/all-swaps">All Swaps</Link>
+                    <Link className='nav-link' to="/all-swaps">All Swaps</Link>
                   }
                 </>
               }
@@ -101,9 +103,11 @@ export default function Menu() {
                 <NavDropdown.Item onClick={async () => {
                   authContext.setChain(ChainEnum.NoChain);
                 }}>{showChainText(ChainEnum.NoChain)}</NavDropdown.Item>
-                <NavDropdown.Item onClick={async () => {
-                  authContext.setChain(ChainEnum.BitcoinAndStack);
-                }}>{showChainText(ChainEnum.BitcoinAndStack)}</NavDropdown.Item>
+                {env.USE_STACKS_CHAIN == true &&
+                  <NavDropdown.Item onClick={async () => {
+                    authContext.setChain(ChainEnum.BitcoinAndStack);
+                  }}>{showChainText(ChainEnum.BitcoinAndStack)}</NavDropdown.Item>
+                }
                 <NavDropdown.Item onClick={async () => {
                   authContext.setChain(ChainEnum.BNBChain);
                 }}>{showChainText(ChainEnum.BNBChain)}</NavDropdown.Item>
@@ -172,11 +176,11 @@ export default function Menu() {
         </Container>
       </Navbar>
       {showAlert &&
-      <Container>
-        <Alert key="danger" variant="danger" onClose={() => setShowAlert(false)} dismissible>
-          <FontAwesomeIcon icon={faWarning} /> This app is using the <strong>TestNet Network</strong>. Coins have no value here!
-        </Alert>
-      </Container>
+        <Container>
+          <Alert key="danger" variant="danger" onClose={() => setShowAlert(false)} dismissible>
+            <FontAwesomeIcon icon={faWarning} /> This app is using the <strong>TestNet Network</strong>. Coins have no value here!
+          </Alert>
+        </Container>
       }
     </>
   );
