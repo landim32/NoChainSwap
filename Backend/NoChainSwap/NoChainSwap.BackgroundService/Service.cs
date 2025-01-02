@@ -19,7 +19,8 @@ namespace NoChainSwapBackgroundService
         public Service(ScheduleTask gwScheduleTask, IConfiguration configuration)
         {
             _configuration = configuration;
-            _schedule = CrontabSchedule.Parse(_configuration["Schedule:Cron"], new CrontabSchedule.ParseOptions { IncludingSeconds = true });
+            //_schedule = CrontabSchedule.Parse(_configuration["Schedule:Cron"], new CrontabSchedule.ParseOptions { IncludingSeconds = true });
+            _schedule = CrontabSchedule.Parse("* 0/5 * * * *", new CrontabSchedule.ParseOptions { IncludingSeconds = true });
             _nextRun = _schedule.GetNextOccurrence(DateTime.UtcNow);
             _gwScheduleTask = gwScheduleTask;
         }
