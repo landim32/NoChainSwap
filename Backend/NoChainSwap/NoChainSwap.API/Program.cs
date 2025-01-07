@@ -41,6 +41,18 @@ namespace NoChainSwap.API
                         });
                     });
                     */
+                    webBuilder.UseKestrel(options =>
+                    {
+                        options.ConfigureHttpsDefaults(httpsOptions =>
+                        {
+                            var s = Assembly.GetExecutingAssembly().GetManifestResourceStream("NoChainSwap.API.nochainswap.org.pfx");
+                            using (MemoryStream ms = new MemoryStream())
+                            {
+                                s.CopyTo(ms);
+                                httpsOptions.ServerCertificate = new X509Certificate2(ms.ToArray(), "pikpro6");
+                            }
+                        });
+                    });
                     webBuilder.UseStartup<Startup>();
                 });
     }

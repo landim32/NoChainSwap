@@ -26,8 +26,8 @@ public partial class NoChainSwapContext : DbContext
     public virtual DbSet<UserRecipient> UserRecipients { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseNpgsql("Host=167.172.240.71;Port=5432;Database=crosschainswap;Username=postgres;Password=eaa69cpxy2");
-        //=> optionsBuilder.UseNpgsql("Host=172.18.0.2;Port=5432;Database=crosschainswap;Username=postgres;Password=eaa69cpxy2");
+        //=> optionsBuilder.UseNpgsql("Host=167.172.240.71;Port=5432;Database=crosschainswap;Username=postgres;Password=eaa69cpxy2");
+        => optionsBuilder.UseNpgsql("Host=172.18.0.2;Port=5432;Database=crosschainswap;Username=postgres;Password=eaa69cpxy2");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

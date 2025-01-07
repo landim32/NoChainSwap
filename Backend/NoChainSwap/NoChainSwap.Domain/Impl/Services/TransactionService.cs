@@ -639,9 +639,12 @@ namespace NoChainSwap.Domain.Impl.Services
         {
             if (string.IsNullOrEmpty(tx.SenderTxid))
             {
-                tx.Status = TransactionStatusEnum.WaitingSenderPayment;
-                tx.Update();
-                await SendEmail(tx, senderService, receiverService);
+                if (tx.Status != TransactionStatusEnum.WaitingSenderPayment)
+                {
+                    tx.Status = TransactionStatusEnum.WaitingSenderPayment;
+                    tx.Update();
+                    await SendEmail(tx, senderService, receiverService);
+                }
                 return await Task.FromResult(new TransactionStepInfo
                 {
                     Success = true,
@@ -841,13 +844,21 @@ namespace NoChainSwap.Domain.Impl.Services
                 return false;
             }
             var md = _userFactory.BuildUserModel();
-            var txUrl = $"{DOMAIN}/tx/{tx.Hash}";
 
             var mailSubject = string.Empty;
             var senderCoin = Core.Utils.CoinToText(tx.SenderCoin);
             var receiverCoin = Core.Utils.CoinToText(tx.ReceiverCoin);
             var senderAmount = senderService.ConvertToString(tx.SenderAmount);
             var receiverAmount = receiverService.ConvertToString(tx.ReceiverAmount);
+
+            var txUrl = $"{DOMAIN}/tx/{tx.Hash}";
+            var txSenderName = "NoChainSwap";
+
+            if (tx.SenderCoin == CoinEnum.BRL || tx.ReceiverCoin == CoinEnum.BRL)
+            {
+                txUrl = $"{DOMAIN}/big-whale/tx/{tx.Hash}";
+                txSenderName = "Big Bank Security";
+            }
 
             var textMessage = $"Hi {user.Name},\r\n\r\n";
             var textHtml = $"<p>Hi <b>{user.Name}</b>,</p>\r\n";
@@ -1076,14 +1087,14 @@ namespace NoChainSwap.Domain.Impl.Services
             textHtml +=
                 "<p>You can follow all the steps of the transaction by clicking on the link below:<br />\r\n<br />\r\n" +
                 $"<a href=\"{txUrl}\">{txUrl}</a></p>\r\n" +
-                "<p>Best regards,<br />\r\n<b>NoChainSwap Team</b></p>";
+                $"<p>Best regards,<br />\r\n<b>{txSenderName} Team</b></p>";
 
             var mail = new MailerInfo
             {
                 From = new MailerRecipientInfo
                 {
                     Email = "contact@nochainswap.org",
-                    Name = "NoChainSwap Mailmaster"
+                    Name = $"{txSenderName} Mailmaster"
                 },
                 To = new List<MailerRecipientInfo> {
                     new MailerRecipientInfo {
@@ -1091,7 +1102,7 @@ namespace NoChainSwap.Domain.Impl.Services
                         Name = user.Name ?? user.Email
                     }
                 },
-                Subject = $"[NoChainSwap] {mailSubject}",
+                Subject = $"[{txSenderName}] {mailSubject}",
                 Text = textMessage,
                 Html = textHtml
             };
