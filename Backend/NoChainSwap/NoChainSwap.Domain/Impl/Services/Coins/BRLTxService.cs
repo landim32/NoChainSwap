@@ -103,9 +103,12 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
 
         public void AddLog(long txId, string msg, LogTypeEnum t, ITransactionLogDomainFactory txLogFactory)
         {
+            var currentDate = DateTime.Now;
+            Console.WriteLine(string.Format("{0} - [{1}] {2}", currentDate.ToString("yyyy-MM-dd h:mm:ss"), t.ToString(), msg));
+
             var md = txLogFactory.BuildTransactionLogModel();
             md.TxId = txId;
-            md.Date = DateTime.Now;
+            md.Date = currentDate;
             md.LogType = t;
             md.Message = msg;
             md.Insert();

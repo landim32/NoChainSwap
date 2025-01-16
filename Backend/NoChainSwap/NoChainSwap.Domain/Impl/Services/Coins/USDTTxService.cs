@@ -1,9 +1,10 @@
-﻿using NBitcoin;
+﻿using Nethereum.ABI.FunctionEncoding.Attributes;
 using Nethereum.BlockchainProcessing.BlockStorage.Entities;
 using Nethereum.BlockchainProcessing.BlockStorage.Entities.Mapping;
 using Nethereum.Contracts;
 using Nethereum.HdWallet;
 using Nethereum.Hex.HexTypes;
+using Nethereum.Model;
 using Nethereum.RLP;
 using Nethereum.RPC.Eth.DTOs;
 using Nethereum.Web3;
@@ -25,6 +26,19 @@ using System.Threading.Tasks;
 
 namespace NoChainSwap.Domain.Impl.Services.Coins
 {
+    [Event("Transfer")]
+    public class TransferEventDTO : IEventDTO
+    {
+        [Parameter("address", "_from", 1, true)]
+        public string From { get; set; }
+
+        [Parameter("address", "_to", 2, true)]
+        public string To { get; set; }
+
+        [Parameter("uint256", "_value", 3, false)]
+        public BigInteger Value { get; set; }
+    }
+
     public class USDTTxService : IUSDTTxService
     {
         private const string MNEMONIC =
@@ -71,11 +85,6 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
         public async Task<TxResumeInfo> GetResumeTransaction(string txId)
         {
             /*
-            var web3 = new Web3(NODE_URL);
-            var tx = await web3.Eth.Transactions.GetTransactionReceipt.SendRequestAsync(txId);
-            */
-
-            var txs = new List<TxDetectedInfo>();
             using (var client = new HttpClient())
             {
                 string url = $"{API_URL}?module=transaction&action=tokentx" +
@@ -104,6 +113,29 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
                     throw new Exception(txResponse.Message);
                 }
             }
+             */
+
+            var web3 = new Web3(NODE_URL);
+            var tx = await web3.Eth.Transactions.GetTransactionReceipt.SendRequestAsync(txId);
+            if (tx != null)
+            {
+                var log = tx.DecodeAllEvents<TransferEventDTO>().First();
+
+                return new TxResumeInfo
+                {
+                    Amount = log.Event.Value.ToHexBigInteger().ToLong(),
+                    Fee = tx.CumulativeGasUsed.ToLong(),
+                    TxId = tx.TransactionHash,
+                    SenderAddress = tx.From,
+                    Success = tx.Succeeded()
+                };
+
+                //logs.First().Event.Value
+
+                //var transferEvent = tx.Logs.First().DecodeEvent<TransferEventDTO>();
+            }
+            return null;
+            //var txs = new List<TxDetectedInfo>();
         }
 
         /*
@@ -191,9 +223,12 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
 
         public void AddLog(long txId, string msg, LogTypeEnum t, ITransactionLogDomainFactory txLogFactory)
         {
+            var currentDate = DateTime.Now;
+            Console.WriteLine(string.Format("{0} - [{1}] {2}", currentDate.ToString("yyyy-MM-dd h:mm:ss"), t.ToString(), msg));
+
             var md = txLogFactory.BuildTransactionLogModel();
             md.TxId = txId;
-            md.Date = DateTime.Now;
+            md.Date = currentDate;
             md.LogType = t;
             md.Message = msg;
             md.Insert();

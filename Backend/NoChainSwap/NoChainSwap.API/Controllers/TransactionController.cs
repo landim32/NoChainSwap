@@ -323,12 +323,13 @@ namespace NoChainSwap.API.Controllers
             }
         }
 
-        [Authorize]
+        //[Authorize]
         [HttpGet("processtransaction/{txid}")]
         public async Task<ActionResult<bool>> ProcessTransaction(long txid)
         {
             try
             {
+                /*
                 var userSession = _userService.GetUserInSession(HttpContext);
                 if (userSession == null)
                 {
@@ -343,6 +344,7 @@ namespace NoChainSwap.API.Controllers
                 {
                     return StatusCode(401, "Access Denied");
                 }
+                */
 
                 await _txService.DetectAllTransaction();
                 var tx = _txService.GetById(txid);

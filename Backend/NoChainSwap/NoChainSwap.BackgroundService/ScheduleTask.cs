@@ -19,13 +19,13 @@ namespace NoChainSwap.BackgroundService
             bool ret = false;
             try
             {
-                Console.WriteLine("Start detecting new transactions");
+                Console.WriteLine(DateTime.Now.ToString("yyyy-MM-dd h:mm:ss") + " - Start detecting new transactions");
                 ret = await _transactionService.DetectAllTransaction();
-                Console.WriteLine("Detect transaction terminated");
+                Console.WriteLine(DateTime.Now.ToString("yyyy-MM-dd h:mm:ss") + " - Detect transaction terminated");
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error on detecting transactions:\n" + e.Message);
+                Console.WriteLine(DateTime.Now.ToString("yyyy-MM-dd h:mm:ss") + " - Error on detecting transactions:\n" + e.Message);
             }
             return ret;
         }
@@ -35,12 +35,12 @@ namespace NoChainSwap.BackgroundService
             bool ret = false;
             try
             {
-                Console.WriteLine("Start processing all transactions");
+                Console.WriteLine(DateTime.Now.ToString("yyyy-MM-dd h:mm:ss") + " - Start processing all transactions");
                 ret = await _transactionService.ProcessAllTransaction();
-                Console.WriteLine("All transaction proccess terminated");
+                Console.WriteLine(DateTime.Now.ToString("yyyy-MM-dd h:mm:ss") + " - All transaction proccess terminated");
             } catch(Exception e)
             {
-                Console.WriteLine("Error on proccessing transactions:\n" + e.Message);
+                Console.WriteLine(DateTime.Now.ToString("yyyy-MM-dd h:mm:ss") + " - Error on proccessing transactions:\n" + e.Message);
             }
             return ret;
         }

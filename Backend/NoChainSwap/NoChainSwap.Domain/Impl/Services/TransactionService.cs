@@ -439,9 +439,12 @@ namespace NoChainSwap.Domain.Impl.Services
 
         private void AddLog(long txId, string msg, LogTypeEnum t, ITransactionLogDomainFactory txLogFactory)
         {
+            var currentDate = DateTime.Now;
+            Console.WriteLine(string.Format("{0} - [{1}] {2}", currentDate.ToString("yyyy-MM-dd h:mm:ss"), t.ToString(), msg));
+
             var md = txLogFactory.BuildTransactionLogModel();
             md.TxId = txId;
-            md.Date = DateTime.Now;
+            md.Date = currentDate;
             md.LogType = t;
             md.Message = msg;
             md.Insert();
@@ -538,6 +541,10 @@ namespace NoChainSwap.Domain.Impl.Services
             if (!string.IsNullOrEmpty(tx.SenderTxid) && !string.IsNullOrEmpty(tx.SenderAddress))
             {
                 var txResume = await senderService.GetResumeTransaction(tx.SenderTxid);
+                if (txResume == null)
+                {
+                    throw new Exception("Sender transaction not found");
+                }
                 txFee = txResume.Fee;
                 //var txSenderAmount = txResume.SenderAmount;
                 //txFee = await senderService.GetFee(tx.SenderTxid);
@@ -654,6 +661,9 @@ namespace NoChainSwap.Domain.Impl.Services
             else
             {
                 var txResume = await senderService.GetResumeTransaction(tx.SenderTxid);
+                if (txResume == null) {
+                    throw new Exception("Sender transaction not found");
+                }
                 if (txResume.Success)
                 {
                     tx.Status = TransactionStatusEnum.SenderConfirmed;
@@ -672,6 +682,10 @@ namespace NoChainSwap.Domain.Impl.Services
                 {
                     tx.Status = TransactionStatusEnum.SenderNotConfirmed;
                     tx.Update();
+
+                    var currentDate = DateTime.Now.ToString("yyyy-MM-dd h:mm:ss");
+                    Console.WriteLine(string.Format("{0} - {1}", currentDate, "Sender transaction not confirmed yet"));
+
                     return await Task.FromResult(new TransactionStepInfo
                     {
                         Success = true,
@@ -688,6 +702,10 @@ namespace NoChainSwap.Domain.Impl.Services
         )
         {
             var txResume = await senderService.GetResumeTransaction(tx.SenderTxid);
+            if (txResume == null)
+            {
+                throw new Exception("Sender transaction not found");
+            }
             if (txResume.Success)
             {
                 tx.Status = TransactionStatusEnum.SenderConfirmed;
@@ -704,6 +722,8 @@ namespace NoChainSwap.Domain.Impl.Services
             }
             else
             {
+                var currentDate = DateTime.Now.ToString("yyyy-MM-dd h:mm:ss");
+                Console.WriteLine(string.Format("{0} - {1}", currentDate, "Sender transaction not confirmed yet"));
                 return await Task.FromResult(new TransactionStepInfo
                 {
                     Success = true,
@@ -721,6 +741,10 @@ namespace NoChainSwap.Domain.Impl.Services
             if (!string.IsNullOrEmpty(tx.SenderTxid))
             {
                 var txResume = await senderService.GetResumeTransaction(tx.SenderTxid);
+                if (txResume == null)
+                {
+                    throw new Exception("Sender transaction not found");
+                }
                 if (!txResume.Success)
                 {
                     AddLog(tx.TxId, "Transaction local is confirmed, but not confirm on chain", LogTypeEnum.Error, _txLogFactory);
@@ -806,7 +830,11 @@ namespace NoChainSwap.Domain.Impl.Services
                     DoNextStep = false
                 });
             }
-            var txResume = await senderService.GetResumeTransaction(tx.ReceiverTxid);
+            var txResume = await receiverService.GetResumeTransaction(tx.ReceiverTxid);
+            if (txResume == null)
+            {
+                throw new Exception("Receiver transaction not found");
+            }
             if (txResume.Success)
             {
                 tx.ReceiverFee = txResume.Fee;
@@ -822,6 +850,11 @@ namespace NoChainSwap.Domain.Impl.Services
                     Success = true,
                     DoNextStep = false
                 });
+            }
+            else
+            {
+                var currentDate = DateTime.Now.ToString("yyyy-MM-dd h:mm:ss");
+                Console.WriteLine(string.Format("{0} - {1}", currentDate, "Receiver transaction not confirmed yet"));
             }
             return await Task.FromResult(new TransactionStepInfo
             {
