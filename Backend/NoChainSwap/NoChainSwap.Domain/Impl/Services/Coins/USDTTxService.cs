@@ -221,7 +221,8 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
                     }
                 }
                 catch {
-                    Console.Write(responseBody);
+                    Console.WriteLine("URL: " + url);
+                    Console.WriteLine("Response:" + responseBody);
                     throw;
                 }
             }
