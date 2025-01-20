@@ -419,18 +419,21 @@ namespace NoChainSwap.Domain.Impl.Services
             foreach (var txGroup in txs)
             {
                 var senderService = _coinFactory.BuildCoinTxService(txGroup.SenderCoin);
-                var txsBlockchain = await senderService.DetectNewTransactions(txGroup.Addresses);
-                if (txsBlockchain.Count() > 0)
+                foreach (var addr in txGroup.Addresses)
                 {
-                    foreach (var txReturn in txsBlockchain)
+                    var txBlockchain = await senderService.DetectNewTransactions(addr);
+                    if (txBlockchain != null && txBlockchain.Count() > 0)
                     {
-                        var tx = _txFactory.BuildTransactionModel().GetByRecipientAddr(txReturn.RecipientAddress, _txFactory);
-                        tx.Status = TransactionStatusEnum.DetectedSenderPayment;
-                        tx.SenderAddress = txReturn.SenderAddress;
-                        tx.SenderTxid = txReturn.SenderTxId;
-                        tx.Update();
+                        foreach (var txResult in txBlockchain)
+                        {
+                            var tx = _txFactory.BuildTransactionModel().GetByRecipientAddr(txResult.RecipientAddress, _txFactory);
+                            tx.Status = TransactionStatusEnum.DetectedSenderPayment;
+                            tx.SenderAddress = txResult.SenderAddress;
+                            tx.SenderTxid = txResult.SenderTxId;
+                            tx.Update();
 
-                        senderService.AddLog(tx.TxId, "Transaction detected on blockchain", LogTypeEnum.Information, _txLogFactory);
+                            senderService.AddLog(tx.TxId, "Transaction detected on blockchain", LogTypeEnum.Information, _txLogFactory);
+                        }
                     }
                 }
             }

@@ -30,6 +30,6 @@ namespace NoChainSwap.Domain.Interfaces.Services.Coins
         string ConvertToString(decimal coin);
         Task<bool> VerifyTransaction(ITransactionModel tx);
         void AddLog(long txId, string msg, LogTypeEnum t, ITransactionLogDomainFactory txLogFactory);
-        Task<IList<TxDetectedInfo>> DetectNewTransactions(IList<string> addresses);
+        Task<IList<TxDetectedInfo>> DetectNewTransactions(string address);
     }
 }

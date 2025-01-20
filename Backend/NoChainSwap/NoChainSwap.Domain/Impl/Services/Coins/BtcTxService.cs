@@ -246,7 +246,7 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
             
         }
 
-        public Task<IList<TxDetectedInfo>> DetectNewTransactions(IList<string> addresses)
+        public Task<IList<TxDetectedInfo>> DetectNewTransactions(string address)
         {
             return Task.FromResult<IList<TxDetectedInfo>>(new List<TxDetectedInfo>());
         }

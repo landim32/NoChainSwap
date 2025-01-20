@@ -192,14 +192,14 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
             return Task<bool>.FromResult<bool>(true);
         }
 
-        public async Task<IList<TxDetectedInfo>> DetectNewTransactions(IList<string> addresses) {
+        public async Task<IList<TxDetectedInfo>> DetectNewTransactions(string address) {
             var txs = new List<TxDetectedInfo>();
             using (var client = new HttpClient())
             {
                 string url = $"{API_URL}?module=account&action=tokentx" +
                     $"&contractaddress={CONTRACT_ADDRESS}" +
-                    "&address=" + string.Join(',', addresses.ToArray()) +
-                    "&sort=asc" +
+                    $"&address={address}" +
+                    $"&sort=asc" +
                     $"&apikey={API_KEY}";
                 HttpResponseMessage response = await client.GetAsync(url);
                 response.EnsureSuccessStatusCode();
