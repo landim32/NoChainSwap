@@ -204,18 +204,25 @@ namespace NoChainSwap.Domain.Impl.Services.Coins
                 HttpResponseMessage response = await client.GetAsync(url);
                 response.EnsureSuccessStatusCode();
                 var responseBody = await response.Content.ReadAsStringAsync();
-
-                var txResponse = JsonConvert.DeserializeObject<TxEthResponseInfo>(responseBody);
-                if (txResponse.Status == 1 && txResponse.Result.Count() > 0)
+                try
                 {
-                    foreach (var tx in txResponse.Result) {
-                        txs.Add(new TxDetectedInfo
+                    var txResponse = JsonConvert.DeserializeObject<TxEthResponseInfo>(responseBody);
+                    if (txResponse.Status == 1 && txResponse.Result.Count() > 0)
+                    {
+                        foreach (var tx in txResponse.Result)
                         {
-                            RecipientAddress = tx.To,
-                            SenderAddress = tx.From,
-                            SenderTxId = tx.Hash
-                        });
+                            txs.Add(new TxDetectedInfo
+                            {
+                                RecipientAddress = tx.To,
+                                SenderAddress = tx.From,
+                                SenderTxId = tx.Hash
+                            });
+                        }
                     }
+                }
+                catch {
+                    Console.Write(responseBody);
+                    throw;
                 }
             }
             return txs;
