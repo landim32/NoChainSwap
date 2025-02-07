@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-//import './bootstrap-bwhale.css';
-import './bootstrap.css';
+import './bootstrap-bwhale.css';
+//import './bootstrap.css';
 import 'react-loading-skeleton/dist/skeleton.css';
 import App from './App';
 import { BrowserRouter } from "react-router-dom";
